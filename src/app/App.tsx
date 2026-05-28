@@ -9,6 +9,7 @@ import { ReviewsPage } from "../features/reviews/ReviewsPage";
 import { ConfigPage } from "../features/config/ConfigPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { UsersPage } from "../features/users/UsersPage";
 
 export function App() {
   return (
@@ -23,6 +24,7 @@ export function App() {
           <Route path="/membership" element={<MembershipPage />} />
           <Route path="/services" element={<ServicesGaragesPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/users" element={<UsersPage />} />
           <Route path="/config" element={<ConfigPage />} />
         </Route>
       </Route>

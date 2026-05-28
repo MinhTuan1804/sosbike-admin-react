@@ -9,6 +9,7 @@ const navItems: Array<{ to: string; label: string }> = [
   { to: "/membership", label: "Gói & Quyền lợi" },
   { to: "/services", label: "Dịch vụ & Garage" },
   { to: "/reviews", label: "Đánh giá" },
+  { to: "/users", label: "Tài khoản" },
   { to: "/config", label: "Config" }
 ];
 
