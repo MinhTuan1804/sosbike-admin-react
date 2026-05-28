@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import "./shell.css";
+import { clearAccessToken } from "../features/auth/authStorage";
 
 const navItems: Array<{ to: string; label: string }> = [
   { to: "/dashboard", label: "Dashboard" },
@@ -36,6 +37,15 @@ export function AppShell() {
           <div className="topbar__title">SOSBIKE Admin</div>
           <div className="topbar__meta">
             <code>{import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}</code>
+            <button
+              style={{ marginLeft: 12 }}
+              onClick={() => {
+                clearAccessToken();
+                window.location.href = "/login";
+              }}
+            >
+              Đăng xuất
+            </button>
           </div>
         </header>
         <div className="content">
@@ -45,4 +55,3 @@ export function AppShell() {
     </div>
   );
 }
-
