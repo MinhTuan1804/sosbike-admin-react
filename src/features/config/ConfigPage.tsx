@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { AppConfigSchema, defaultConfig } from "./configTypes";
+import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, saveAppConfig } from "./configApi";
 
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
-  const [draftText, setDraftText] = useState(() => JSON.stringify(localInitial, null, 2));
+  const [draftConfig, setDraftConfig] = useState<AppConfig>(localInitial);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dbUpdatedAt, setDbUpdatedAt] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function ConfigPage() {
     try {
       const res = await getAppConfig();
       setDbUpdatedAt(res.updatedAt);
-      setDraftText(JSON.stringify(res.config, null, 2));
+      setDraftConfig(res.config);
       // Backup to localStorage for offline debug.
       saveConfig(res.config);
     } catch (e) {
@@ -36,7 +36,7 @@ export function ConfigPage() {
     setError(null);
     setLoading(true);
     try {
-      const parsed = AppConfigSchema.parse(JSON.parse(draftText));
+      const parsed = AppConfigSchema.parse(draftConfig);
       await saveAppConfig(parsed);
       saveConfig(parsed);
       setSavedAt(new Date().toLocaleString());
@@ -49,12 +49,12 @@ export function ConfigPage() {
   }
 
   function onResetDefault() {
-    setDraftText(JSON.stringify(defaultConfig, null, 2));
+    setDraftConfig(defaultConfig);
     setError(null);
   }
 
   function onLoadLocal() {
-    setDraftText(JSON.stringify(loadConfig(), null, 2));
+    setDraftConfig(loadConfig());
     setError(null);
   }
 
@@ -95,16 +95,78 @@ export function ConfigPage() {
         </div>
       ) : null}
 
-      <textarea
-        value={draftText}
-        onChange={(e) => setDraftText(e.target.value)}
-        spellCheck={false}
-        style={{
-          width: "100%",
-          minHeight: 520,
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-        }}
-      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 10, maxWidth: 600 }}>
+        <fieldset style={{ display: "flex", flexDirection: "column", gap: 15, padding: 15 }}>
+          <legend style={{ fontWeight: "bold" }}>Platform Settings</legend>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            Default Platform Fee Rate (%)
+            <input
+              type="number"
+              style={{ padding: 8 }}
+              value={draftConfig.platform.defaultPlatformFeeRate}
+              onChange={(e) =>
+                setDraftConfig({
+                  ...draftConfig,
+                  platform: { ...draftConfig.platform, defaultPlatformFeeRate: Number(e.target.value) }
+                })
+              }
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            Mechanic Commission Default (%)
+            <input
+              type="number"
+              style={{ padding: 8 }}
+              value={draftConfig.platform.mechanicCommissionDefault}
+              onChange={(e) =>
+                setDraftConfig({
+                  ...draftConfig,
+                  platform: { ...draftConfig.platform, mechanicCommissionDefault: Number(e.target.value) }
+                })
+              }
+            />
+          </label>
+        </fieldset>
+
+        <fieldset style={{ display: "flex", flexDirection: "column", gap: 15, padding: 15 }}>
+          <legend style={{ fontWeight: "bold" }}>UI Settings</legend>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            Home Background URL
+            <input
+              type="text"
+              style={{ padding: 8 }}
+              value={draftConfig.ui.homeBackgroundUrl}
+              onChange={(e) =>
+                setDraftConfig({
+                  ...draftConfig,
+                  ui: { ...draftConfig.ui, homeBackgroundUrl: e.target.value }
+                })
+              }
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            Brand Name
+            <input
+              type="text"
+              style={{ padding: 8 }}
+              value={draftConfig.ui.brandName}
+              onChange={(e) =>
+                setDraftConfig({
+                  ...draftConfig,
+                  ui: { ...draftConfig.ui, brandName: e.target.value }
+                })
+              }
+            />
+          </label>
+        </fieldset>
+      </div>
+
+      <details style={{ marginTop: 20 }}>
+        <summary>Advanced: Raw JSON</summary>
+        <pre style={{ background: "#f5f5f5", padding: 10, borderRadius: 5 }}>
+          {JSON.stringify(draftConfig, null, 2)}
+        </pre>
+      </details>
     </div>
   );
 }
