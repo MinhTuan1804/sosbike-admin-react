@@ -6,9 +6,11 @@ export const http = axios.create({
 });
 
 http.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
+  config.headers["ngrok-skip-browser-warning"] = "true";
+
   const token = getAccessToken();
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

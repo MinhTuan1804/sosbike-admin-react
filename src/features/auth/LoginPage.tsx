@@ -1,10 +1,11 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { loginWithPassword } from "./authApi";
 import { setAccessToken } from "./authStorage";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [phoneNumber, setPhoneNumber] = useState("0982815244");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +17,15 @@ export function LoginPage() {
     setLoading(true);
     try {
       const data = await loginWithPassword(phoneNumber.trim(), password);
+      const userType = data.user?.userType?.toUpperCase() ?? "";
+      if (userType && userType !== "ADMIN") {
+        setError("Tài khoản không có quyền truy cập admin.");
+        return;
+      }
       setAccessToken(data.accessToken);
-      navigate("/dashboard");
+      const redirectTo =
+        (location.state as { from?: string } | null)?.from ?? "/dashboard";
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -33,11 +41,18 @@ export function LoginPage() {
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 6 }}>
           <span>Số điện thoại</span>
-          <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+          <input
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
         </label>
         <label style={{ display: "grid", gap: 6 }}>
           <span>Mật khẩu</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
         <button type="submit" disabled={loading}>
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -51,4 +66,3 @@ export function LoginPage() {
     </div>
   );
 }
-
