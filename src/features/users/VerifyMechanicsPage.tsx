@@ -1,28 +1,25 @@
-import { FormEvent, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic } from "./usersApi";
+import { listUsers, getUser, verifyMechanic } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
 
-export function UsersPage() {
+export function VerifyMechanicsPage() {
   const [q, setQ] = useState("");
-  const [userType, setUserType] = useState<string>("");
-
-  // Create User state
-  const [createPhone, setCreatePhone] = useState("");
-  const [createName, setCreateName] = useState("");
-  const [createPassword, setCreatePassword] = useState("123456");
-  const [createType, setCreateType] = useState<"CUSTOMER" | "MECHANIC" | "ADMIN">("CUSTOMER");
-  const [createIdentityCard, setCreateIdentityCard] = useState("");
-  const [createLicensePlate, setCreateLicensePlate] = useState("");
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved">("pending");
 
   // Mechanic Detail state
   const [selectedMechanic, setSelectedMechanic] = useState<any | null>(null);
 
+  // Fetch all mechanics
+  const queryKey = useMemo(() => ["admin-mechanics", { q }], [q]);
+  const mechanicsQuery = useQuery({
+    queryKey,
+    queryFn: () => listUsers({ q: q || undefined, userType: "MECHANIC", page: 1, pageSize: 100 })
+  });
+
   // Detailed Mechanic data from GET
   const { data: mechanicDetail, isFetching: loadingDetail, refetch: refetchDetail } = useQuery({
-    queryKey: ["admin-user-detail", selectedMechanic?.userId],
+    queryKey: ["admin-mechanic-detail", selectedMechanic?.userId],
     queryFn: () => selectedMechanic ? getUser(selectedMechanic.userId) : Promise.reject("No selected mechanic"),
     enabled: !!selectedMechanic?.userId
   });
@@ -38,7 +35,7 @@ export function UsersPage() {
     try {
       await verifyMechanic(selectedMechanic.userId, isVerified);
       await refetchDetail();
-      await usersQuery.refetch();
+      await mechanicsQuery.refetch();
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : "Cập nhật trạng thái duyệt thất bại");
     } finally {
@@ -46,259 +43,29 @@ export function UsersPage() {
     }
   }
 
-  const queryKey = useMemo(() => ["admin-users", { q, userType }], [q, userType]);
-  const usersQuery = useQuery({
-    queryKey,
-    queryFn: () => listUsers({ q: q || undefined, userType: userType || undefined, page: 1, pageSize: 50 })
-  });
-
-  async function onCreate(e: FormEvent) {
-    e.preventDefault();
-    setCreateError(null);
-    setCreating(true);
-    try {
-      await createUser({
-        phoneNumber: createPhone.trim(),
-        password: createPassword,
-        fullName: createName.trim(),
-        userType: createType,
-        identityCard: createType === "MECHANIC" ? createIdentityCard.trim() : undefined,
-        licensePlate: createType === "MECHANIC" ? createLicensePlate.trim() : undefined
-      });
-      setCreatePhone("");
-      setCreateName("");
-      setCreateIdentityCard("");
-      setCreateLicensePlate("");
-      setCreatePassword("123456");
-      await usersQuery.refetch();
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Tạo tài khoản thất bại");
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  function handleRowClick(user: any) {
-    if (user.userType === "MECHANIC") {
-      setSelectedMechanic(user);
-    }
-  }
+  // Client-side filtering
+  const filteredMechanics = useMemo(() => {
+    if (!mechanicsQuery.data) return [];
+    return mechanicsQuery.data.items.filter((m) => {
+      if (filterStatus === "pending") {
+        return m.isVerified !== true;
+      }
+      if (filterStatus === "approved") {
+        return m.isVerified === true;
+      }
+      return true;
+    });
+  }, [mechanicsQuery.data, filterStatus]);
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <div className="flex-between">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Quản lý tài khoản</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Tạo mới tài khoản quản trị/thợ/khách hàng, và quản lý các trạng thái hoạt động/khóa của họ.
-          </p>
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr", gap: "24px", alignItems: "start" }}>
-        
-        {/* Left Side: Create User Form Card */}
-        <div className="card" style={{ padding: "20px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)" }}>Tạo tài khoản mới</h2>
-          <form onSubmit={onCreate} style={{ display: "grid", gap: "12px" }}>
-            <div className="form-group">
-              <label>Số điện thoại</label>
-              <input
-                className="input"
-                placeholder="Ví dụ: 098xxxxxxx"
-                value={createPhone}
-                onChange={(e) => setCreatePhone(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Họ và tên</label>
-              <input
-                className="input"
-                placeholder="Ví dụ: Nguyễn Văn A"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Mật khẩu đăng nhập</label>
-              <input
-                className="input"
-                placeholder="Nhập mật khẩu"
-                type="password"
-                value={createPassword}
-                onChange={(e) => setCreatePassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Vai trò hệ thống</label>
-              <select
-                className="select"
-                value={createType}
-                onChange={(e) => setCreateType(e.target.value as any)}
-              >
-                <option value="CUSTOMER">Khách hàng (CUSTOMER)</option>
-                <option value="MECHANIC">Thợ sửa xe (MECHANIC)</option>
-                <option value="ADMIN">Quản trị viên (ADMIN)</option>
-              </select>
-            </div>
-
-            {createType === "MECHANIC" && (
-              <div style={{ display: "grid", gap: "12px", background: "var(--neutral-bg)", padding: "12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "4px" }}>Thông tin thợ cứu hộ</div>
-                
-                <div className="form-group">
-                  <label>Số CCCD / IdentityCard</label>
-                  <input
-                    className="input"
-                    placeholder="Nhập số căn cước"
-                    value={createIdentityCard}
-                    onChange={(e) => setCreateIdentityCard(e.target.value)}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Biển số xe / LicensePlate</label>
-                  <input
-                    className="input"
-                    placeholder="Ví dụ: 29A-12345"
-                    value={createLicensePlate}
-                    onChange={(e) => setCreateLicensePlate(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-
-            <button type="submit" className="btn btn--primary" style={{ marginTop: "8px" }} disabled={creating}>
-              {creating ? "Đang xử lý..." : "Xác nhận tạo"}
-            </button>
-
-            {createError && (
-              <div style={{ color: "var(--danger)", background: "var(--danger-bg)", padding: "10px", borderRadius: "var(--radius-md)", fontSize: "12px", border: "1px solid var(--danger)", marginTop: "8px" }}>
-                <strong>Lỗi:</strong> {createError}
-              </div>
-            )}
-          </form>
-        </div>
-
-        {/* Right Side: Users List Card */}
-        <div style={{ display: "grid", gap: "16px" }}>
-          
-          {/* Filters */}
-          <div style={{ display: "flex", gap: "10px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)" }}>
-            <input
-              className="input"
-              style={{ flex: 1 }}
-              placeholder="Tìm kiếm theo tên, số điện thoại..."
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <select
-              className="select"
-              style={{ width: "160px" }}
-              value={userType}
-              onChange={(e) => setUserType(e.target.value)}
-            >
-              <option value="">Tất cả vai trò</option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="CUSTOMER">CUSTOMER</option>
-              <option value="MECHANIC">MECHANIC</option>
-            </select>
-            <button className="btn" onClick={() => usersQuery.refetch()} disabled={usersQuery.isFetching}>
-              {usersQuery.isFetching ? "..." : "Tải lại"}
-            </button>
-          </div>
-
-          {/* Table Container */}
-          {usersQuery.isError ? (
-            <div className="card" style={{ color: "var(--danger)", border: "1px solid var(--danger)", background: "var(--danger-bg)" }}>
-              <strong>Lỗi:</strong> {String(usersQuery.error)}
-            </div>
-          ) : usersQuery.data ? (
-            <div className="table-container" style={{ marginTop: 0 }}>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Họ tên & Số điện thoại</th>
-                    <th>Vai trò</th>
-                    <th>Hoạt động (Active)</th>
-                    <th>Trạng thái Khóa</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usersQuery.data.items.map((u) => (
-                    <tr
-                      key={u.userId}
-                      style={{ cursor: u.userType === "MECHANIC" ? "pointer" : "default" }}
-                      onClick={() => handleRowClick(u)}
-                      title={u.userType === "MECHANIC" ? "Bấm vào để xem tài liệu thợ" : undefined}
-                    >
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{u.fullName}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{u.phoneNumber}</div>
-                      </td>
-                      <td>
-                        <span className={`badge ${
-                          u.userType === "ADMIN" ? "badge--danger" :
-                          u.userType === "MECHANIC" ? "badge--info" : "badge--success"
-                        }`} style={{ fontSize: "10px" }}>
-                          {u.userType}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${u.isActive ? "badge--success" : "badge--danger"}`} style={{ fontSize: "9px", padding: "1px 6px" }}>
-                          {u.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${u.isLocked ? "badge--danger" : "badge--success"}`} style={{ fontSize: "9px", padding: "1px 6px" }}>
-                          {u.isLocked ? "Locked" : "Unlocked"}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: "flex", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className={`btn btn--sm ${u.isLocked ? "btn--primary" : "btn--danger"}`}
-                            style={{ minWidth: "70px" }}
-                            onClick={async () => {
-                              await updateUserFlags(u.userId, { isLocked: !u.isLocked });
-                              await usersQuery.refetch();
-                            }}
-                          >
-                            {u.isLocked ? "Mở khóa" : "Khóa"}
-                          </button>
-                          <button
-                            className="btn btn--sm"
-                            style={{ minWidth: "90px" }}
-                            onClick={async () => {
-                              await updateUserFlags(u.userId, { isActive: !u.isActive });
-                              await usersQuery.refetch();
-                            }}
-                          >
-                            {u.isActive ? "Tạm ngưng" : "Kích hoạt"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {usersQuery.data.items.length === 0 && (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>Không có người dùng nào.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải người dùng...</div>
-          )}
-        </div>
+      <div>
+        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>
+          Duyệt hồ sơ thợ cứu hộ
+        </h1>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
+          Xem xét tài liệu xác thực (CCCD, GPLX, Cà vẹt xe, bảo hiểm) và phê duyệt quyền hoạt động của thợ.
+        </p>
       </div>
 
       {/* CSS injection for doc thumbnails and lightbox */}
@@ -353,6 +120,123 @@ export function UsersPage() {
             alt="Preview" 
             onClick={(e) => e.stopPropagation()} 
           />
+        </div>
+      )}
+
+      {/* Filter and search bar */}
+      <div style={{ display: "flex", gap: "12px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)", alignItems: "center" }}>
+        <input
+          className="input"
+          style={{ flex: 1 }}
+          placeholder="Tìm thợ theo tên, số điện thoại..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        
+        <div style={{ display: "flex", background: "var(--neutral-bg)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+          <button 
+            className={`btn btn--sm ${filterStatus === "pending" ? "btn--primary" : ""}`}
+            style={{ background: filterStatus === "pending" ? "" : "transparent", border: "none", color: filterStatus === "pending" ? "" : "var(--secondary)", minWidth: "100px" }}
+            onClick={() => setFilterStatus("pending")}
+          >
+            Chờ duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified !== true).length ?? 0})
+          </button>
+          <button 
+            className={`btn btn--sm ${filterStatus === "approved" ? "btn--primary" : ""}`}
+            style={{ background: filterStatus === "approved" ? "" : "transparent", border: "none", color: filterStatus === "approved" ? "" : "var(--secondary)", minWidth: "100px" }}
+            onClick={() => setFilterStatus("approved")}
+          >
+            Đã duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified === true).length ?? 0})
+          </button>
+          <button 
+            className={`btn btn--sm ${filterStatus === "all" ? "btn--primary" : ""}`}
+            style={{ background: filterStatus === "all" ? "" : "transparent", border: "none", color: filterStatus === "all" ? "" : "var(--secondary)", minWidth: "80px" }}
+            onClick={() => setFilterStatus("all")}
+          >
+            Tất cả thợ
+          </button>
+        </div>
+
+        <button className="btn" onClick={() => mechanicsQuery.refetch()} disabled={mechanicsQuery.isFetching}>
+          {mechanicsQuery.isFetching ? "..." : "Tải lại"}
+        </button>
+      </div>
+
+      {/* Main Table */}
+      {mechanicsQuery.isError ? (
+        <div className="card" style={{ color: "var(--danger)", border: "1px solid var(--danger)", background: "var(--danger-bg)" }}>
+          <strong>Lỗi:</strong> {String(mechanicsQuery.error)}
+        </div>
+      ) : mechanicsQuery.data ? (
+        <div className="table-container" style={{ marginTop: 0 }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Họ tên & Số điện thoại</th>
+                <th>Tài khoản</th>
+                <th>Trạng thái hồ sơ</th>
+                <th>Ngày tạo tài khoản</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMechanics.map((m) => (
+                <tr
+                  key={m.userId}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedMechanic(m)}
+                  title="Bấm vào để xem và duyệt tài liệu thợ"
+                >
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{m.fullName}</div>
+                    <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{m.phoneNumber}</div>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <span className={`badge ${m.isActive ? "badge--success" : "badge--danger"}`} style={{ fontSize: "9px" }}>
+                        {m.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <span className={`badge ${m.isLocked ? "badge--danger" : "badge--success"}`} style={{ fontSize: "9px" }}>
+                        {m.isLocked ? "Locked" : "Unlocked"}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${m.isVerified ? "badge--success" : "badge--warning"}`}>
+                      {m.isVerified ? "Đã xác minh" : "Chờ duyệt hồ sơ"}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                      {m.createdAt ? new Date(m.createdAt).toLocaleDateString("vi-VN", { dateStyle: "medium" }) : "---"}
+                    </div>
+                  </td>
+                  <td>
+                    <button 
+                      className="btn btn--sm btn--primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMechanic(m);
+                      }}
+                    >
+                      Duyệt hồ sơ
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredMechanics.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                    Không có thợ sửa xe nào trong bộ lọc này.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+          Đang tải danh sách thợ cứu hộ...
         </div>
       )}
 

@@ -44,6 +44,7 @@ const navGroups: NavGroup[] = [
     title: "Management",
     items: [
       { to: "/users", label: "Tài khoản", icon: "👤" },
+      { to: "/verify-mechanics", label: "Duyệt hồ sơ thợ", icon: "📋" },
       { to: "/config", label: "Cấu hình hệ thống", icon: "⚙️" }
     ]
   }

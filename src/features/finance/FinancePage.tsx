@@ -395,6 +395,7 @@ export function FinancePage() {
             >
               <option value="PENDING">PENDING (Chờ duyệt)</option>
               <option value="APPROVED">APPROVED (Đã duyệt)</option>
+              <option value="COMPLETED">COMPLETED (Hoàn tất)</option>
               <option value="REJECTED">REJECTED (Từ chối)</option>
               <option value="">Tất cả yêu cầu</option>
             </select>
@@ -434,9 +435,15 @@ export function FinancePage() {
                         <td>
                           <span className={`badge ${
                             r.status === "PENDING" ? "badge--warning" :
-                            r.status === "APPROVED" ? "badge--success" : "badge--danger"
+                            r.status === "REJECTED" ? "badge--danger" : "badge--success"
                           }`}>
-                            {r.status === "PENDING" ? "Chờ duyệt" : r.status === "APPROVED" ? "Thành công" : "Từ chối"}
+                            {r.status === "PENDING"
+                              ? "Chờ duyệt"
+                              : r.status === "APPROVED"
+                                ? "Đã duyệt"
+                                : r.status === "COMPLETED"
+                                  ? "Hoàn tất"
+                                  : "Từ chối"}
                           </span>
                           {r.note && (
                             <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", maxWidth: "200px" }}>
