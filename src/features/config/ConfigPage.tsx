@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
+import { Modal } from "../../shared/components/Modal";
 
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
@@ -15,6 +16,11 @@ export function ConfigPage() {
   const [jsonDirty, setJsonDirty] = useState(false);
   const [versions, setVersions] = useState<ConfigVersionResponse[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
+
+  // Dialog State
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
   const validation = useMemo(() => AppConfigSchema.safeParse(draftConfig), [draftConfig]);
   const validationErrors = useMemo(() => {
     if (validation.success) return {};
@@ -39,7 +45,6 @@ export function ConfigPage() {
       setDbUpdatedAt(res.updatedAt);
       const parsed = AppConfigSchema.parse(res.config);
       setDraftConfig(parsed);
-      // Backup to localStorage for offline debug.
       saveConfig(parsed);
       await loadVersions();
     } catch (e) {
@@ -69,7 +74,7 @@ export function ConfigPage() {
       }
       await saveAppConfig(validation.data);
       saveConfig(validation.data);
-      setSavedAt(new Date().toLocaleString());
+      setSavedAt(new Date().toLocaleTimeString());
       await loadFromDb();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Config không hợp lệ");
@@ -100,19 +105,24 @@ export function ConfigPage() {
     }
   }
 
+  function triggerConfirm(message: string, onConfirm: () => void) {
+    setConfirmAction({ message, onConfirm });
+    setConfirmModalOpen(true);
+  }
+
   async function onRollback(versionId: string) {
-    const ok = window.confirm("Bạn có chắc muốn rollback về phiên bản này?");
-    if (!ok) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await rollbackConfig(versionId);
-      await loadFromDb();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Rollback thất bại");
-    } finally {
-      setLoading(false);
-    }
+    triggerConfirm(`Bạn có chắc chắn muốn rollback cấu hình hệ thống về phiên bản [${versionId}] không?`, async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        await rollbackConfig(versionId);
+        await loadFromDb();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Rollback thất bại");
+      } finally {
+        setLoading(false);
+      }
+    });
   }
 
   function onApplyJson() {
@@ -123,7 +133,7 @@ export function ConfigPage() {
       setDraftConfig(normalized);
       setJsonDirty(false);
     } catch (e) {
-      setJsonError(e instanceof Error ? e.message : "JSON không hợp lệ.");
+      setJsonError(e instanceof Error ? e.message : "JSON không đúng chuẩn schema.");
     }
   }
 
@@ -139,300 +149,361 @@ export function ConfigPage() {
   }
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      <h1>Config</h1>
-      <p style={{ margin: 0, color: "#555" }}>
-        Tab này để cấu hình mọi thứ trong app (phí sàn, UI...). Config được <b>lưu DB</b> qua API. LocalStorage chỉ là bản
-        backup ở máy admin (<code>{__CONFIG_STORAGE_KEY__}</code>).
-      </p>
-
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-        <button onClick={loadFromDb} disabled={loading}>
-          {loading ? "Đang tải..." : "Reload từ DB"}
-        </button>
-        <button onClick={onSaveToDb} disabled={loading || hasValidationError}>
-          Lưu vào DB
-        </button>
-        <button onClick={onResetDefault} disabled={loading}>
-          Reset mặc định
-        </button>
-        <button onClick={onLoadLocal} disabled={loading}>
-          Load local backup
-        </button>
-        <span style={{ color: "#666" }}>
-          DB updatedAt: <code>{dbUpdatedAt ?? "-"}</code>
-        </span>
-        {savedAt ? (
-          <span style={{ color: "#666" }}>
-            Đã lưu: <code>{savedAt}</code>
-          </span>
-        ) : null}
-      </div>
-
-      {error ? (
-        <div style={{ color: "crimson" }}>
-          <strong>Lỗi:</strong> {error}
+    <div style={{ display: "grid", gap: "24px" }}>
+      <div className="flex-between">
+        <div>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Cấu hình hệ thống</h1>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
+            Quản lý phí sàn, tỷ lệ hoa hồng thợ, giao diện app và các công tắc kiểm soát hoạt động.
+          </p>
         </div>
-      ) : null}
-
-      {hasValidationError ? (
-        <div style={{ color: "#b45309" }}>
-          <strong>Cảnh báo:</strong> Có trường chưa hợp lệ. Hãy sửa trước khi lưu.
-        </div>
-      ) : null}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, marginTop: 10, maxWidth: 600 }}>
-        <fieldset style={{ display: "flex", flexDirection: "column", gap: 15, padding: 15 }}>
-          <legend style={{ fontWeight: "bold" }}>Platform Settings</legend>
-          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            Default Platform Fee Rate (%)
-            <input
-              type="number"
-              style={{ padding: 8 }}
-              value={draftConfig.platform.defaultPlatformFeeRate}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  platform: { ...draftConfig.platform, defaultPlatformFeeRate: Number(e.target.value) }
-                })
-              }
-            />
-            {fieldError("platform.defaultPlatformFeeRate") ? (
-              <span style={{ color: "crimson", fontSize: 12 }}>{fieldError("platform.defaultPlatformFeeRate")}</span>
-            ) : null}
-          </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            Mechanic Commission Default (%)
-            <input
-              type="number"
-              style={{ padding: 8 }}
-              value={draftConfig.platform.mechanicCommissionDefault}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  platform: { ...draftConfig.platform, mechanicCommissionDefault: Number(e.target.value) }
-                })
-              }
-            />
-            {fieldError("platform.mechanicCommissionDefault") ? (
-              <span style={{ color: "crimson", fontSize: 12 }}>{fieldError("platform.mechanicCommissionDefault")}</span>
-            ) : null}
-          </label>
-        </fieldset>
-
-        <fieldset style={{ display: "flex", flexDirection: "column", gap: 15, padding: 15 }}>
-          <legend style={{ fontWeight: "bold" }}>UI Settings</legend>
-          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            Home Background URL
-            <input
-              type="text"
-              style={{ padding: 8 }}
-              value={draftConfig.ui.homeBackgroundUrl}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  ui: { ...draftConfig.ui, homeBackgroundUrl: e.target.value }
-                })
-              }
-            />
-            {fieldError("ui.homeBackgroundUrl") ? (
-              <span style={{ color: "crimson", fontSize: 12 }}>{fieldError("ui.homeBackgroundUrl")}</span>
-            ) : null}
-          </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            Brand Name
-            <input
-              type="text"
-              style={{ padding: 8 }}
-              value={draftConfig.ui.brandName}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  ui: { ...draftConfig.ui, brandName: e.target.value }
-                })
-              }
-            />
-            {fieldError("ui.brandName") ? (
-              <span style={{ color: "crimson", fontSize: 12 }}>{fieldError("ui.brandName")}</span>
-            ) : null}
-          </label>
-        </fieldset>
-
-        <fieldset style={{ display: "flex", flexDirection: "column", gap: 12, padding: 15 }}>
-          <legend style={{ fontWeight: "bold" }}>Feature Flags</legend>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={draftConfig.featureFlags.maintenanceMode}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  featureFlags: { ...draftConfig.featureFlags, maintenanceMode: e.target.checked }
-                })
-              }
-            />
-            Maintenance mode (hiển thị banner bảo trì)
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={draftConfig.featureFlags.sosEnabled}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  featureFlags: { ...draftConfig.featureFlags, sosEnabled: e.target.checked }
-                })
-              }
-            />
-            SOS enabled (hiện nút SOS)
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={draftConfig.featureFlags.customerRegisterEnabled}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  featureFlags: { ...draftConfig.featureFlags, customerRegisterEnabled: e.target.checked }
-                })
-              }
-            />
-            Customer registration enabled
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={draftConfig.featureFlags.mechanicRegisterEnabled}
-              onChange={(e) =>
-                setDraftConfig({
-                  ...draftConfig,
-                  featureFlags: { ...draftConfig.featureFlags, mechanicRegisterEnabled: e.target.checked }
-                })
-              }
-            />
-            Mechanic registration enabled
-          </label>
-        </fieldset>
-
-        <fieldset style={{ display: "flex", flexDirection: "column", gap: 12, padding: 15 }}>
-          <legend style={{ fontWeight: "bold" }}>Preview</legend>
-          <div
-            style={{
-              width: "100%",
-              height: 180,
-              borderRadius: 12,
-              overflow: "hidden",
-              background: "#f3f4f6",
-              border: "1px solid #e5e7eb",
-              position: "relative"
-            }}
-          >
-            {draftConfig.ui.homeBackgroundUrl ? (
-              <img
-                src={draftConfig.ui.homeBackgroundUrl}
-                alt="Home background preview"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9ca3af",
-                  fontSize: 12
-                }}
-              >
-                Chưa có ảnh nền
-              </div>
-            )}
-            <div
-              style={{
-                position: "absolute",
-                left: 12,
-                bottom: 12,
-                padding: "6px 10px",
-                background: "rgba(0,0,0,0.45)",
-                borderRadius: 8,
-                color: "white",
-                fontWeight: 600,
-                fontSize: 14
-              }}
-            >
-              {draftConfig.ui.brandName || "Brand Name"}
-            </div>
-          </div>
-          <div style={{ color: "#6b7280", fontSize: 12 }}>
-            Preview này mô phỏng nền + brandName trên home customer.
-          </div>
-        </fieldset>
-      </div>
-
-      <details style={{ marginTop: 20 }}>
-        <summary>Advanced: Raw JSON</summary>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10, maxWidth: 800 }}>
-          <textarea
-            value={jsonText}
-            onChange={(e) => {
-              setJsonText(e.target.value);
-              setJsonDirty(true);
-            }}
-            rows={16}
-            style={{ width: "100%", fontFamily: "monospace", padding: 10 }}
-          />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={onApplyJson} disabled={loading}>
-              Apply JSON
-            </button>
-            <button onClick={onFormatJson} disabled={loading}>
-              Format JSON
-            </button>
-          </div>
-          {jsonError ? <div style={{ color: "crimson" }}>{jsonError}</div> : null}
-        </div>
-      </details>
-
-      <details style={{ marginTop: 20 }}>
-        <summary>Version history</summary>
-        <div style={{ marginTop: 10 }}>
-          <button onClick={loadVersions} disabled={versionsLoading || loading}>
-            {versionsLoading ? "Đang tải..." : "Reload history"}
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="btn" onClick={loadFromDb} disabled={loading}>
+            {loading ? "Đang tải..." : "Reload cấu hình"}
+          </button>
+          <button className="btn btn--primary" onClick={onSaveToDb} disabled={loading || hasValidationError}>
+            Lưu cài đặt vào DB
           </button>
         </div>
+      </div>
+
+      {/* Connection and Sync Status Alert */}
+      <div className="card" style={{ padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--neutral-bg)", gap: "16px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "24px" }}>☁️</span>
+          <div>
+            <div style={{ fontWeight: "700", fontSize: "13px" }}>Trạng thái đồng bộ cơ sở dữ liệu</div>
+            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>Đồng bộ lần cuối: {dbUpdatedAt ?? "Chưa rõ"}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button className="btn btn--sm" onClick={onResetDefault}>Reset Default</button>
+          <button className="btn btn--sm" onClick={onLoadLocal}>Tải bản backup local</button>
+        </div>
+      </div>
+
+      {/* Error and Alert Message Banners */}
+      {error && (
+        <div style={{ color: "var(--danger)", background: "var(--danger-bg)", border: "1px solid var(--danger)", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px" }}>
+          <b>Lỗi đồng bộ:</b> {error}
+        </div>
+      )}
+
+      {hasValidationError && (
+        <div style={{ color: "var(--warning)", background: "var(--warning-bg)", border: "1px solid var(--warning)", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px" }}>
+          <b>Cảnh báo:</b> Có một vài giá trị nhập vào chưa đúng định dạng. Hãy kiểm tra các ô màu đỏ trước khi lưu.
+        </div>
+      )}
+
+      {/* Config Grid Panels */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
+        
+        {/* Left Column: Form Settings */}
+        <div style={{ display: "grid", gap: "24px" }}>
+          
+          {/* 1. Platform Settings */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+              💳 Cấu hình Phí & Chiết khấu
+            </h3>
+            
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div className="form-group">
+                <label>Phí sàn mặc định (%)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.platform.defaultPlatformFeeRate}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      platform: { ...draftConfig.platform, defaultPlatformFeeRate: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("platform.defaultPlatformFeeRate") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("platform.defaultPlatformFeeRate")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Tỷ lệ hoa hồng chia sẻ cho Thợ mặc định (%)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.platform.mechanicCommissionDefault}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      platform: { ...draftConfig.platform, mechanicCommissionDefault: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("platform.mechanicCommissionDefault") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("platform.mechanicCommissionDefault")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. UI App Settings */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+              🎨 Cấu hình Giao diện Khách hàng
+            </h3>
+
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div className="form-group">
+                <label>Tên thương hiệu ứng dụng (Brand Name)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.ui.brandName}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      ui: { ...draftConfig.ui, brandName: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("ui.brandName") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("ui.brandName")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Đường dẫn hình nền trang chủ (Home Background URL)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.ui.homeBackgroundUrl}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      ui: { ...draftConfig.ui, homeBackgroundUrl: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("ui.homeBackgroundUrl") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("ui.homeBackgroundUrl")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Flags & Previews */}
+        <div style={{ display: "grid", gap: "24px" }}>
+          
+          {/* 3. Feature Flags Switch Toggles (Premium Micro-interactions) */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+              ⚙️ Công tắc chức năng hệ thống (Feature Flags)
+            </h3>
+
+            <div style={{ display: "grid", gap: "14px" }}>
+              
+              <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--neutral-bg)" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Bảo trì hệ thống (Maintenance Mode)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Khóa ứng dụng và hiện banner bảo trì</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.featureFlags.maintenanceMode}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        featureFlags: { ...draftConfig.featureFlags, maintenanceMode: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+              <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--neutral-bg)" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Chức năng SOS Khẩn cấp (SOS Button)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Hiển thị nút gọi khẩn cấp trên app</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.featureFlags.sosEnabled}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        featureFlags: { ...draftConfig.featureFlags, sosEnabled: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+              <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--neutral-bg)" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Đăng ký Khách hàng mới (Customer Gate)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Cho phép khách hàng tạo mới tài khoản</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.featureFlags.customerRegisterEnabled}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        featureFlags: { ...draftConfig.featureFlags, customerRegisterEnabled: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+              <div className="flex-between" style={{ padding: "4px 0" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Đăng ký Thợ sửa xe mới (Mechanic Gate)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Cho phép thợ nộp hồ sơ xin việc trên app</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.featureFlags.mechanicRegisterEnabled}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        featureFlags: { ...draftConfig.featureFlags, mechanicRegisterEnabled: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+            </div>
+          </div>
+
+          {/* 4. Mock Screen Background Preview */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", color: "var(--secondary)" }}>Mockup Giao diện ứng dụng</h3>
+            
+            <div style={{ width: "100%", height: "180px", position: "relative", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", background: "#1e293b", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {draftConfig.ui.homeBackgroundUrl ? (
+                <img
+                  src={draftConfig.ui.homeBackgroundUrl}
+                  alt="Homebg mockup"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.65 }}
+                />
+              ) : (
+                <span style={{ color: "#94a3b8" }}>Chưa cấu hình ảnh nền</span>
+              )}
+              
+              {/* Brand Floating Badge mockup */}
+              <div style={{ position: "absolute", left: "16px", bottom: "16px", padding: "8px 14px", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(4px)", borderRadius: "var(--radius-md)", color: "#fff", fontWeight: "700", border: "1px solid rgba(255, 255, 255, 0.15)" }}>
+                {draftConfig.ui.brandName || "SOSBIKE App"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Advanced: Raw JSON Panel */}
+      <div className="card" style={{ padding: "20px" }}>
+        <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "12px", color: "var(--secondary)" }}>Cấu hình nâng cao (Raw JSON Editor)</h3>
+        <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>
+          Chỉ chỉnh sửa nội dung bên dưới khi bạn hiểu rõ cấu trúc dữ liệu cấu hình. Bấm Apply JSON trước khi Lưu cài đặt.
+        </p>
+
+        <textarea
+          className="textarea"
+          style={{ fontFamily: "monospace", fontSize: "13px", background: "#0f172a", color: "#38bdf8", border: "1px solid #1e293b" }}
+          rows={12}
+          value={jsonText}
+          onChange={(e) => {
+            setJsonText(e.target.value);
+            setJsonDirty(true);
+          }}
+        />
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+          <button className="btn btn--sm" onClick={onApplyJson}>Áp dụng thay đổi JSON</button>
+          <button className="btn btn--sm" onClick={onFormatJson}>Tự động Định dạng</button>
+          {jsonError && (
+            <span style={{ color: "var(--danger)", fontSize: "12px", alignSelf: "center", fontWeight: "600" }}>⚠️ {jsonError}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Version History Log Timeline */}
+      <div className="card" style={{ padding: "20px" }}>
+        <div className="flex-between" style={{ marginBottom: "16px" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--secondary)" }}>Lịch sử chỉnh sửa cài đặt</h3>
+          <button className="btn btn--sm" onClick={loadVersions} disabled={versionsLoading}>
+            {versionsLoading ? "Đang tải..." : "Tải lại lịch sử"}
+          </button>
+        </div>
+
         {versions.length === 0 ? (
-          <div style={{ color: "#6b7280", marginTop: 10 }}>Chưa có lịch sử.</div>
+          <div style={{ textAlign: "center", padding: "24px", color: "var(--text-light)" }}>Chưa ghi nhận lịch sử chỉnh sửa cấu hình nào.</div>
         ) : (
-          <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-            {versions.map((item) => (
+          <div style={{ display: "grid", gap: "12px" }}>
+            {versions.map((ver) => (
               <div
-                key={item.versionId}
+                key={ver.versionId}
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
                   alignItems: "center",
-                  padding: 10,
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 8
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-color)",
+                  background: "var(--neutral-bg)"
                 }}
               >
-                <div style={{ display: "grid", gap: 2 }}>
-                  <div>
-                    <strong>{item.versionId}</strong>
-                  </div>
-                  <div style={{ color: "#6b7280", fontSize: 12 }}>
-                    {item.createdAt ?? "-"} • {item.createdBy ?? "-"}
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: "13px" }}>ID phiên bản: <code>{ver.versionId}</code></div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Người cập nhật: <b>{ver.createdBy ?? "Hệ thống"}</b> • Thời gian: {ver.createdAt ?? "Chưa rõ"}
                   </div>
                 </div>
-                <button onClick={() => onRollback(item.versionId)} disabled={loading}>
-                  Rollback
-                </button>
+                <button className="btn btn--sm btn--primary" onClick={() => onRollback(ver.versionId)}>Rollback lại bản này</button>
               </div>
             ))}
           </div>
         )}
-      </details>
+      </div>
+
+      {/* Global Confirmation Modal */}
+      <Modal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Xác nhận Rollback cấu hình"
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy bỏ</button>
+            <button
+              className="btn btn--primary"
+              onClick={() => {
+                if (confirmAction) confirmAction.onConfirm();
+                setConfirmModalOpen(false);
+              }}
+            >
+              Đồng ý Rollback
+            </button>
+          </div>
+        }
+      >
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "28px" }}>⚠️</span>
+          <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
+            {confirmAction?.message}
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 }

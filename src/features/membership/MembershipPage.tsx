@@ -15,15 +15,19 @@ import {
   updatePlan,
   upsertPlanBenefit
 } from "./membershipApi";
+import { Modal } from "../../shared/components/Modal";
+
+function formatMoney(v: number) {
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Math.round(v));
+}
 
 type TabKey = "plans" | "benefits";
-
 const AUDIENCES = ["B2C", "B2B", "DRIVER"] as const;
 
 export function MembershipPage() {
   const [tab, setTab] = useState<TabKey>("plans");
 
-  // Plans list
+  // Plans list state
   const [planQuery, setPlanQuery] = useState("");
   const [planAudience, setPlanAudience] = useState<string>("");
   const [plans, setPlans] = useState<SubscriptionPlanListItem[]>([]);
@@ -31,23 +35,63 @@ export function MembershipPage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanDetail | null>(null);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
 
-  // Benefits list
+  // Benefits list state
   const [benefitQuery, setBenefitQuery] = useState("");
   const [benefits, setBenefits] = useState<BenefitListItem[]>([]);
   const [isLoadingBenefits, setIsLoadingBenefits] = useState(false);
 
+  // Modal control states
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<SubscriptionPlanListItem | null>(null);
+  const [planForm, setPlanForm] = useState({
+    planName: "",
+    targetAudience: "B2C",
+    price: 0,
+    durationDays: 30,
+    platformFeeRate: "" as string | number,
+    isDeleted: false
+  });
+
+  const [benefitModalOpen, setBenefitModalOpen] = useState(false);
+  const [editingBenefit, setEditingBenefit] = useState<BenefitListItem | null>(null);
+  const [benefitForm, setBenefitForm] = useState({
+    benefitCode: "",
+    benefitName: "",
+    description: ""
+  });
+
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<{ planId: number; benefitId: number; benefitCode: string } | null>(null);
+  const [assignForm, setAssignForm] = useState({
+    benefitValue: "",
+    usageLimit: ""
+  });
+
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
   const selectedPlanBenefitsMap = useMemo(() => {
     const map = new Map<number, { benefitValue: number | null; usageLimit: number | null }>();
-    for (const b of selectedPlan?.benefits ?? []) map.set(b.benefitId, { benefitValue: b.benefitValue, usageLimit: b.usageLimit });
+    for (const b of selectedPlan?.benefits ?? []) {
+      map.set(b.benefitId, { benefitValue: b.benefitValue, usageLimit: b.usageLimit });
+    }
     return map;
   }, [selectedPlan]);
 
   async function refreshPlans() {
     setIsLoadingPlans(true);
     try {
-      const data = await listPlans({ q: planQuery || undefined, targetAudience: planAudience || undefined, includeDeleted: true, page: 1, pageSize: 50 });
+      const data = await listPlans({
+        q: planQuery || undefined,
+        targetAudience: planAudience || undefined,
+        includeDeleted: true,
+        page: 1,
+        pageSize: 50
+      });
       setPlans(data.items);
-      if (selectedPlanId && !data.items.some((p) => p.planId === selectedPlanId)) setSelectedPlanId(null);
+      if (selectedPlanId && !data.items.some((p) => p.planId === selectedPlanId)) {
+        setSelectedPlanId(null);
+      }
     } finally {
       setIsLoadingPlans(false);
     }
@@ -86,313 +130,652 @@ export function MembershipPage() {
     refreshSelectedPlan(selectedPlanId);
   }, [selectedPlanId]);
 
-  async function onCreatePlan() {
-    const planName = window.prompt("Tên gói (PlanName) là gì?");
-    if (!planName) return;
-
-    const targetAudience = (window.prompt("TargetAudience (B2C/B2B/DRIVER)?", "B2C") || "B2C").toUpperCase();
-    const price = Number(window.prompt("Giá (Price)?", "0") || "0");
-    const durationDays = Number(window.prompt("Số ngày hiệu lực (DurationDays)?", "30") || "30");
-    const platformFeeRateStr = window.prompt("PlatformFeeRate (vd 10.00) - có thể bỏ trống", "");
-    const platformFeeRate = platformFeeRateStr ? Number(platformFeeRateStr) : null;
-
-    const { planId } = await createPlan({ planName, targetAudience, price, durationDays, platformFeeRate });
-    await refreshPlans();
-    setSelectedPlanId(planId);
+  // Trigger Confirmation Modal
+  function triggerConfirm(message: string, onConfirm: () => void) {
+    setConfirmAction({ message, onConfirm });
+    setConfirmModalOpen(true);
   }
 
-  async function onUpdatePlan(plan: SubscriptionPlanListItem) {
-    const planName = window.prompt("PlanName mới (bỏ trống để giữ nguyên)", plan.planName);
-    if (planName === null) return;
-    const targetAudience = window.prompt("TargetAudience (B2C/B2B/DRIVER) - bỏ trống để giữ", plan.targetAudience);
-    if (targetAudience === null) return;
-    const priceStr = window.prompt("Price - bỏ trống để giữ", String(plan.price));
-    if (priceStr === null) return;
-    const durationStr = window.prompt("DurationDays - bỏ trống để giữ", String(plan.durationDays));
-    if (durationStr === null) return;
-    const feeStr = window.prompt("PlatformFeeRate - bỏ trống để giữ", plan.platformFeeRate == null ? "" : String(plan.platformFeeRate));
-    if (feeStr === null) return;
-    const isDeletedStr = window.prompt("IsDeleted (true/false) - bỏ trống để giữ", String(plan.isDeleted));
-    if (isDeletedStr === null) return;
+  // Plan Handlers
+  function openCreatePlanModal() {
+    setEditingPlan(null);
+    setPlanForm({
+      planName: "",
+      targetAudience: "B2C",
+      price: 0,
+      durationDays: 30,
+      platformFeeRate: "",
+      isDeleted: false
+    });
+    setPlanModalOpen(true);
+  }
 
-    const payload: any = {};
-    if (planName.trim().length > 0 && planName !== plan.planName) payload.planName = planName;
-    if (targetAudience.trim().length > 0 && targetAudience.toUpperCase() !== plan.targetAudience) payload.targetAudience = targetAudience.toUpperCase();
-    if (priceStr.trim().length > 0) payload.price = Number(priceStr);
-    if (durationStr.trim().length > 0) payload.durationDays = Number(durationStr);
-    if (feeStr.trim().length > 0) payload.platformFeeRate = Number(feeStr);
-    if (feeStr.trim().length === 0) payload.platformFeeRate = null;
-    if (isDeletedStr.trim().length > 0) payload.isDeleted = isDeletedStr.trim().toLowerCase() === "true";
+  function openEditPlanModal(plan: SubscriptionPlanListItem) {
+    setEditingPlan(plan);
+    setPlanForm({
+      planName: plan.planName,
+      targetAudience: plan.targetAudience,
+      price: plan.price,
+      durationDays: plan.durationDays,
+      platformFeeRate: plan.platformFeeRate == null ? "" : plan.platformFeeRate,
+      isDeleted: plan.isDeleted
+    });
+    setPlanModalOpen(true);
+  }
 
-    await updatePlan(plan.planId, payload);
-    await refreshPlans();
-    if (selectedPlanId === plan.planId) await refreshSelectedPlan(plan.planId);
+  async function savePlanSubmit() {
+    const feeVal = planForm.platformFeeRate === "" ? null : Number(planForm.platformFeeRate);
+    if (!planForm.planName.trim()) {
+      alert("Tên gói không được bỏ trống");
+      return;
+    }
+
+    try {
+      if (editingPlan) {
+        await updatePlan(editingPlan.planId, {
+          planName: planForm.planName,
+          targetAudience: planForm.targetAudience,
+          price: Number(planForm.price),
+          durationDays: Number(planForm.durationDays),
+          platformFeeRate: feeVal,
+          isDeleted: planForm.isDeleted
+        });
+      } else {
+        const { planId } = await createPlan({
+          planName: planForm.planName,
+          targetAudience: planForm.targetAudience,
+          price: Number(planForm.price),
+          durationDays: Number(planForm.durationDays),
+          platformFeeRate: feeVal
+        });
+        setSelectedPlanId(planId);
+      }
+      setPlanModalOpen(false);
+      await refreshPlans();
+      if (editingPlan && selectedPlanId === editingPlan.planId) {
+        await refreshSelectedPlan(editingPlan.planId);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Thao tác lỗi.");
+    }
   }
 
   async function onDeletePlan(planId: number) {
-    if (!window.confirm("Xóa mềm (soft delete) gói này?")) return;
-    await deletePlan(planId);
-    await refreshPlans();
-    if (selectedPlanId === planId) setSelectedPlanId(null);
+    triggerConfirm("Bạn có chắc muốn xóa mềm gói dịch vụ này không?", async () => {
+      await deletePlan(planId);
+      await refreshPlans();
+      if (selectedPlanId === planId) setSelectedPlanId(null);
+    });
   }
 
-  async function onCreateBenefit() {
-    const benefitCode = window.prompt("BenefitCode là gì? (vd FREE_KM)");
-    if (!benefitCode) return;
-    const benefitName = window.prompt("BenefitName là gì?");
-    if (!benefitName) return;
-    const description = window.prompt("Description (tuỳ chọn)", "") ?? "";
-    await createBenefit({ benefitCode, benefitName, description });
-    await refreshBenefits();
+  // Benefit Handlers
+  function openCreateBenefitModal() {
+    setEditingBenefit(null);
+    setBenefitForm({ benefitCode: "", benefitName: "", description: "" });
+    setBenefitModalOpen(true);
   }
 
-  async function onUpdateBenefit(b: BenefitListItem) {
-    const benefitCode = window.prompt("BenefitCode mới (bỏ trống để giữ)", b.benefitCode);
-    if (benefitCode === null) return;
-    const benefitName = window.prompt("BenefitName mới (bỏ trống để giữ)", b.benefitName);
-    if (benefitName === null) return;
-    const description = window.prompt("Description mới (bỏ trống để clear)", b.description ?? "");
-    if (description === null) return;
+  function openEditBenefitModal(b: BenefitListItem) {
+    setEditingBenefit(b);
+    setBenefitForm({
+      benefitCode: b.benefitCode,
+      benefitName: b.benefitName,
+      description: b.description ?? ""
+    });
+    setBenefitModalOpen(true);
+  }
 
-    const payload: any = {};
-    if (benefitCode.trim().length > 0 && benefitCode !== b.benefitCode) payload.benefitCode = benefitCode;
-    if (benefitName.trim().length > 0 && benefitName !== b.benefitName) payload.benefitName = benefitName;
-    payload.description = description;
-
-    await updateBenefit(b.benefitId, payload);
-    await refreshBenefits();
-    if (selectedPlanId) await refreshSelectedPlan(selectedPlanId);
+  async function saveBenefitSubmit() {
+    if (!benefitForm.benefitCode.trim() || !benefitForm.benefitName.trim()) {
+      alert("Vui lòng điền mã và tên quyền lợi.");
+      return;
+    }
+    try {
+      if (editingBenefit) {
+        await updateBenefit(editingBenefit.benefitId, {
+          benefitCode: benefitForm.benefitCode,
+          benefitName: benefitForm.benefitName,
+          description: benefitForm.description
+        });
+      } else {
+        await createBenefit({
+          benefitCode: benefitForm.benefitCode,
+          benefitName: benefitForm.benefitName,
+          description: benefitForm.description
+        });
+      }
+      setBenefitModalOpen(false);
+      await refreshBenefits();
+      if (selectedPlanId) await refreshSelectedPlan(selectedPlanId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Thao tác lỗi.");
+    }
   }
 
   async function onDeleteBenefit(benefitId: number) {
-    if (!window.confirm("Xóa benefit này? (chỉ xóa được nếu chưa dùng trong plan)")) return;
-    await deleteBenefit(benefitId);
-    await refreshBenefits();
+    triggerConfirm("Bạn có chắc chắn muốn xóa quyền lợi này không? Chỉ có thể xóa nếu quyền lợi chưa được gắn vào gói nào.", async () => {
+      try {
+        await deleteBenefit(benefitId);
+        await refreshBenefits();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Xóa quyền lợi lỗi.");
+      }
+    });
   }
 
-  async function onTogglePlanBenefit(planId: number, benefitId: number) {
+  // Plan-Benefit Assignment Handlers
+  async function onTogglePlanBenefit(planId: number, benefitId: number, benefitCode: string) {
     const isAssigned = selectedPlanBenefitsMap.has(benefitId);
     if (!isAssigned) {
-      const benefitValueStr = window.prompt("BenefitValue (vd 5.00) - có thể bỏ trống", "");
-      const usageLimitStr = window.prompt("UsageLimit (vd 10) - có thể bỏ trống", "");
-      await upsertPlanBenefit(planId, benefitId, {
-        benefitValue: benefitValueStr ? Number(benefitValueStr) : null,
-        usageLimit: usageLimitStr ? Number(usageLimitStr) : null
-      });
+      // Open Assignment Modal
+      setAssignTarget({ planId, benefitId, benefitCode });
+      setAssignForm({ benefitValue: "", usageLimit: "" });
+      setAssignModalOpen(true);
     } else {
-      if (!window.confirm("Gỡ benefit khỏi plan?")) return;
-      await removePlanBenefit(planId, benefitId);
+      triggerConfirm(`Bạn muốn gỡ quyền lợi [${benefitCode}] khỏi gói hiện tại?`, async () => {
+        await removePlanBenefit(planId, benefitId);
+        await refreshSelectedPlan(planId);
+      });
     }
-    await refreshSelectedPlan(planId);
+  }
+
+  async function saveAssignmentSubmit() {
+    if (!assignTarget) return;
+    const { planId, benefitId } = assignTarget;
+    try {
+      await upsertPlanBenefit(planId, benefitId, {
+        benefitValue: assignForm.benefitValue === "" ? null : Number(assignForm.benefitValue),
+        usageLimit: assignForm.usageLimit === "" ? null : Number(assignForm.usageLimit)
+      });
+      setAssignModalOpen(false);
+      setAssignTarget(null);
+      await refreshSelectedPlan(planId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gán quyền lợi thất bại.");
+    }
   }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => setTab("plans")} disabled={tab === "plans"}>
-          Gói dịch vụ
+    <div style={{ display: "grid", gap: "24px" }}>
+      {/* Tab Switcher */}
+      <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "24px", marginBottom: "8px" }}>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            borderBottom: tab === "plans" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
+            color: tab === "plans" ? "var(--primary)" : "var(--text-muted)",
+            fontWeight: tab === "plans" ? "700" : "500",
+            padding: "12px 4px",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "all var(--transition-fast)"
+          }}
+          onClick={() => setTab("plans")}
+        >
+          🎟️ Gói dịch vụ hội viên
         </button>
-        <button onClick={() => setTab("benefits")} disabled={tab === "benefits"}>
-          Quyền lợi
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            borderBottom: tab === "benefits" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
+            color: tab === "benefits" ? "var(--primary)" : "var(--text-muted)",
+            fontWeight: tab === "benefits" ? "700" : "500",
+            padding: "12px 4px",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "all var(--transition-fast)"
+          }}
+          onClick={() => setTab("benefits")}
+        >
+          🌟 Danh mục quyền lợi
         </button>
       </div>
 
-      {tab === "plans" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+      {/* Plans Workspace */}
+      {tab === "plans" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
+          
+          {/* Plans list */}
           <div>
-            <h1>Gói & Quyền lợi</h1>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-              <input
-                placeholder="Tìm theo tên gói..."
-                value={planQuery}
-                onChange={(e) => setPlanQuery(e.target.value)}
-                style={{ minWidth: 220 }}
-              />
-              <select value={planAudience} onChange={(e) => setPlanAudience(e.target.value)}>
-                <option value="">Tất cả Audience</option>
-                {AUDIENCES.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
-              <button onClick={refreshPlans} disabled={isLoadingPlans}>
-                {isLoadingPlans ? "Đang tải..." : "Tải lại"}
-              </button>
-              <button onClick={onCreatePlan}>+ Tạo gói</button>
+            <div className="flex-between">
+              <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Gói hội viên</h2>
+              <button className="btn btn--primary btn--sm" onClick={openCreatePlanModal}>+ Tạo gói mới</button>
             </div>
 
-            <table width="100%" cellPadding={8} style={{ borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-                  <th>ID</th>
-                  <th>Tên</th>
-                  <th>Audience</th>
-                  <th>Giá</th>
-                  <th>Ngày</th>
-                  <th>Deleted</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((p) => (
-                  <tr key={p.planId} style={{ borderBottom: "1px solid #eee", background: selectedPlanId === p.planId ? "#f6f8ff" : "transparent" }}>
-                    <td>{p.planId}</td>
-                    <td>
-                      <button
-                        style={{ padding: 0, border: "none", background: "transparent", cursor: "pointer", textDecoration: "underline" }}
-                        onClick={() => setSelectedPlanId(p.planId)}
-                      >
-                        {p.planName}
-                      </button>
-                    </td>
-                    <td>{p.targetAudience}</td>
-                    <td>{p.price}</td>
-                    <td>{p.durationDays}</td>
-                    <td>{String(p.isDeleted)}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button onClick={() => onUpdatePlan(p)}>Sửa</button>{" "}
-                      <button onClick={() => onDeletePlan(p.planId)}>Xóa</button>
-                    </td>
-                  </tr>
-                ))}
-                {plans.length === 0 ? (
+            <div style={{ display: "flex", gap: "8px", margin: "16px 0", flexWrap: "wrap" }}>
+              <input
+                className="input"
+                style={{ flex: 1, minWidth: "150px" }}
+                placeholder="Tìm gói..."
+                value={planQuery}
+                onChange={(e) => setPlanQuery(e.target.value)}
+              />
+              <select className="select" style={{ width: "160px" }} value={planAudience} onChange={(e) => setPlanAudience(e.target.value)}>
+                <option value="">Tất cả Audience</option>
+                {AUDIENCES.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+              <button className="btn btn--sm" onClick={refreshPlans} disabled={isLoadingPlans}>
+                {isLoadingPlans ? "..." : "Lọc"}
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table className="table">
+                <thead>
                   <tr>
-                    <td colSpan={7} style={{ padding: 12, color: "#666" }}>
-                      Không có dữ liệu.
-                    </td>
+                    <th>Gói dịch vụ</th>
+                    <th>Audience</th>
+                    <th>Giá / Hạn</th>
+                    <th>Soft Deleted</th>
+                    <th />
                   </tr>
-                ) : null}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {plans.map((p) => (
+                    <tr
+                      key={p.planId}
+                      style={{
+                        background: selectedPlanId === p.planId ? "var(--primary-light)" : "transparent",
+                        cursor: "pointer"
+                      }}
+                      onClick={() => setSelectedPlanId(p.planId)}
+                    >
+                      <td style={{ fontWeight: 600 }}>{p.planName}</td>
+                      <td>
+                        <span className="badge badge--info" style={{ fontSize: "10px" }}>{p.targetAudience}</span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: "700" }}>{formatMoney(p.price)}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{p.durationDays} ngày</div>
+                      </td>
+                      <td>
+                        <span className={`badge ${p.isDeleted ? "badge--danger" : "badge--success"}`}>
+                          {p.isDeleted ? "Yes" : "No"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
+                          <button className="btn btn--sm" onClick={() => openEditPlanModal(p)}>Sửa</button>
+                          <button className="btn btn--sm btn--danger" onClick={() => onDeletePlan(p.planId)}>Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {plans.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>Không có gói nào.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
+          {/* Plan Details Panel */}
           <div>
-            <h2>Chi tiết gói</h2>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Chi tiết & Phân quyền lợi</h2>
             {!selectedPlan ? (
-              <p style={{ color: "#666" }}>Chọn 1 gói để xem / gán quyền lợi.</p>
+              <div className="card" style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>
+                👉 Hãy chọn một gói dịch vụ từ danh sách bên trái để quản lý cấu hình các quyền lợi đi kèm.
+              </div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
-                <div>
-                  <div>
-                    <b>{selectedPlan.planName}</b> (ID: {selectedPlan.planId})
+              <div style={{ display: "grid", gap: "20px" }}>
+                
+                {/* Active Details Card */}
+                <div className="card" style={{ background: "var(--neutral-bg)", padding: "16px" }}>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>GÓI ĐANG XEM</div>
+                  <div style={{ fontSize: "18px", fontWeight: "800", color: "var(--secondary)", marginTop: "4px" }}>{selectedPlan.planName}</div>
+                  <div style={{ display: "flex", gap: "16px", marginTop: "8px", fontSize: "13px" }}>
+                    <span>Audience: <b>{selectedPlan.targetAudience}</b></span>
+                    <span>Giá: <b>{formatMoney(selectedPlan.price)}</b></span>
+                    <span>Hiệu lực: <b>{selectedPlan.durationDays} ngày</b></span>
                   </div>
-                  <div style={{ color: "#666" }}>
-                    Audience: {selectedPlan.targetAudience} · Price: {selectedPlan.price} · DurationDays: {selectedPlan.durationDays}
-                  </div>
+                  {selectedPlan.platformFeeRate != null && (
+                    <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--primary)", fontWeight: "600" }}>
+                      Chiết khấu riêng: {selectedPlan.platformFeeRate}%
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <h3>Quyền lợi trong gói</h3>
-                  <ul>
-                    {(selectedPlan.benefits ?? []).map((b) => (
-                      <li key={b.planBenefitId}>
-                        {b.benefitCode} - {b.benefitName} (value: {b.benefitValue ?? "-"}, limit: {b.usageLimit ?? "-"})
+                {/* Assigned Benefits List */}
+                <div className="card" style={{ padding: "20px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px" }}>Quyền lợi đi kèm gói này</h3>
+                  <ul style={{ listStyleType: "none", display: "grid", gap: "8px" }}>
+                    {selectedPlan.benefits && selectedPlan.benefits.map((b) => (
+                      <li
+                        key={b.planBenefitId}
+                        style={{
+                          background: "var(--neutral-bg)",
+                          border: "1px solid var(--border-color)",
+                          padding: "10px 14px",
+                          borderRadius: "var(--radius-md)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}
+                      >
+                        <div>
+                          <span className="badge badge--info" style={{ textTransform: "none", fontSize: "10px" }}>{b.benefitCode}</span>
+                          <span style={{ fontWeight: 600, marginLeft: "8px", fontSize: "13px" }}>{b.benefitName}</span>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                            Giá trị áp dụng: <b>{b.benefitValue ?? "N/A"}</b> • Giới hạn sử dụng: <b>{b.usageLimit ?? "Vô hạn"} lần</b>
+                          </div>
+                        </div>
                       </li>
                     ))}
-                    {selectedPlan.benefits.length === 0 ? <li style={{ color: "#666" }}>Chưa có quyền lợi nào.</li> : null}
+                    {(!selectedPlan.benefits || selectedPlan.benefits.length === 0) && (
+                      <li style={{ color: "var(--text-light)", fontStyle: "italic", fontSize: "13px" }}>Chưa cấu hình quyền lợi nào.</li>
+                    )}
                   </ul>
                 </div>
 
-                <div>
-                  <h3>Gán / gỡ quyền lợi</h3>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                {/* Assignment Management Table */}
+                <div className="card" style={{ padding: "20px" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Quản lý gán quyền lợi</h3>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                     <input
-                      placeholder="Tìm benefit..."
+                      className="input"
+                      placeholder="Tìm quyền lợi..."
                       value={benefitQuery}
                       onChange={(e) => setBenefitQuery(e.target.value)}
-                      style={{ minWidth: 220 }}
                     />
-                    <button onClick={refreshBenefits} disabled={isLoadingBenefits}>
-                      {isLoadingBenefits ? "Đang tải..." : "Tải benefits"}
-                    </button>
+                    <button className="btn btn--sm" onClick={refreshBenefits} disabled={isLoadingBenefits}>Tải</button>
                   </div>
 
-                  <table width="100%" cellPadding={8} style={{ borderCollapse: "collapse" }}>
-                    <thead>
-                      <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-                        <th>Code</th>
-                        <th>Tên</th>
-                        <th>Đang gán</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {benefits.map((b) => {
-                        const assigned = selectedPlanBenefitsMap.has(b.benefitId);
-                        return (
-                          <tr key={b.benefitId} style={{ borderBottom: "1px solid #eee" }}>
-                            <td>{b.benefitCode}</td>
-                            <td>{b.benefitName}</td>
-                            <td>{assigned ? "Có" : "Không"}</td>
-                            <td style={{ whiteSpace: "nowrap" }}>
-                              <button onClick={() => onTogglePlanBenefit(selectedPlan.planId, b.benefitId)}>
-                                {assigned ? "Gỡ" : "Gán"}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {benefits.length === 0 ? (
+                  <div className="table-container" style={{ marginTop: 0 }}>
+                    <table className="table" style={{ fontSize: "12px" }}>
+                      <thead>
                         <tr>
-                          <td colSpan={4} style={{ padding: 12, color: "#666" }}>
-                            Không có benefit nào.
-                          </td>
+                          <th>Quyền lợi</th>
+                          <th>Đang gán</th>
+                          <th />
                         </tr>
-                      ) : null}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {benefits.map((b) => {
+                          const assigned = selectedPlanBenefitsMap.has(b.benefitId);
+                          return (
+                            <tr key={b.benefitId}>
+                              <td>
+                                <div style={{ fontWeight: 600 }}>{b.benefitName}</div>
+                                <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>{b.benefitCode}</div>
+                              </td>
+                              <td>
+                                <span className={`badge ${assigned ? "badge--success" : "badge--danger"}`}>
+                                  {assigned ? "Đã gán" : "Chưa"}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  className={`btn btn--sm ${assigned ? "btn--danger" : "btn--primary"}`}
+                                  onClick={() => onTogglePlanBenefit(selectedPlan.planId, b.benefitId, b.benefitCode)}
+                                >
+                                  {assigned ? "Gỡ bỏ" : "Cấp"}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+
               </div>
             )}
           </div>
         </div>
-      ) : (
-        <div>
-          <h1>Quyền lợi (Benefits)</h1>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            <input placeholder="Tìm theo code/tên..." value={benefitQuery} onChange={(e) => setBenefitQuery(e.target.value)} style={{ minWidth: 260 }} />
-            <button onClick={refreshBenefits} disabled={isLoadingBenefits}>
-              {isLoadingBenefits ? "Đang tải..." : "Tải lại"}
-            </button>
-            <button onClick={onCreateBenefit}>+ Tạo benefit</button>
+      )}
+
+      {/* Benefits Workspace */}
+      {tab === "benefits" && (
+        <div style={{ display: "grid", gap: "16px" }}>
+          <div className="flex-between">
+            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Danh mục quyền lợi hệ thống</h2>
+            <button className="btn btn--primary btn--sm" onClick={openCreateBenefitModal}>+ Tạo quyền lợi mới</button>
           </div>
 
-          <table width="100%" cellPadding={8} style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Tên</th>
-                <th>Mô tả</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {benefits.map((b) => (
-                <tr key={b.benefitId} style={{ borderBottom: "1px solid #eee" }}>
-                  <td>{b.benefitId}</td>
-                  <td>{b.benefitCode}</td>
-                  <td>{b.benefitName}</td>
-                  <td style={{ color: "#666" }}>{b.description ?? ""}</td>
-                  <td style={{ whiteSpace: "nowrap" }}>
-                    <button onClick={() => onUpdateBenefit(b)}>Sửa</button>{" "}
-                    <button onClick={() => onDeleteBenefit(b.benefitId)}>Xóa</button>
-                  </td>
-                </tr>
-              ))}
-              {benefits.length === 0 ? (
+          <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+            <input
+              className="input"
+              style={{ flex: 1 }}
+              placeholder="Tìm theo mã code hoặc tên quyền lợi..."
+              value={benefitQuery}
+              onChange={(e) => setBenefitQuery(e.target.value)}
+            />
+            <button className="btn" onClick={refreshBenefits} disabled={isLoadingBenefits}>
+              {isLoadingBenefits ? "..." : "Tải lại"}
+            </button>
+          </div>
+
+          <div className="table-container">
+            <table className="table">
+              <thead>
                 <tr>
-                  <td colSpan={5} style={{ padding: 12, color: "#666" }}>
-                    Không có dữ liệu.
-                  </td>
+                  <th>Mã quyền lợi</th>
+                  <th>Tên quyền lợi</th>
+                  <th>Mô tả chức năng</th>
+                  <th>Thao tác</th>
                 </tr>
-              ) : null}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {benefits.map((b) => (
+                  <tr key={b.benefitId}>
+                    <td style={{ fontWeight: "700", color: "var(--primary)" }}>{b.benefitCode}</td>
+                    <td style={{ fontWeight: 600 }}>{b.benefitName}</td>
+                    <td style={{ color: "var(--text-muted)", fontSize: "13px" }}>{b.description ?? "-"}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button className="btn btn--sm" onClick={() => openEditBenefitModal(b)}>Sửa</button>
+                        <button className="btn btn--sm btn--danger" onClick={() => onDeleteBenefit(b.benefitId)}>Xóa</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      {/* Custom Dialog Modals */}
+      
+      {/* 1. Plan Form Modal */}
+      <Modal
+        isOpen={planModalOpen}
+        onClose={() => setPlanModalOpen(false)}
+        title={editingPlan ? "Cập nhật gói dịch vụ" : "Tạo gói dịch vụ mới"}
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn" onClick={() => setPlanModalOpen(false)}>Hủy</button>
+            <button className="btn btn--primary" onClick={savePlanSubmit}>Lưu cấu hình</button>
+          </div>
+        }
+      >
+        <div style={{ display: "grid", gap: "12px" }}>
+          <div className="form-group">
+            <label>Tên gói hội viên</label>
+            <input
+              className="input"
+              value={planForm.planName}
+              onChange={(e) => setPlanForm({ ...planForm, planName: e.target.value })}
+              placeholder="Ví dụ: Standard Rider, Premium Partner..."
+            />
+          </div>
+
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Đối tượng áp dụng (Audience)</label>
+              <select
+                className="select"
+                value={planForm.targetAudience}
+                onChange={(e) => setPlanForm({ ...planForm, targetAudience: e.target.value })}
+              >
+                {AUDIENCES.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Thời gian hiệu lực (ngày)</label>
+              <input
+                className="input"
+                type="number"
+                value={planForm.durationDays}
+                onChange={(e) => setPlanForm({ ...planForm, durationDays: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Giá bán (VND)</label>
+              <input
+                className="input"
+                type="number"
+                value={planForm.price}
+                onChange={(e) => setPlanForm({ ...planForm, price: Number(e.target.value) })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Chiết khấu riêng (% - để trống nếu mặc định)</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="Ví dụ: 8.5"
+                value={planForm.platformFeeRate}
+                onChange={(e) => setPlanForm({ ...planForm, platformFeeRate: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {editingPlan && (
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={planForm.isDeleted}
+                onChange={(e) => setPlanForm({ ...planForm, isDeleted: e.target.checked })}
+              />
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--danger)" }}>Đã xóa mềm (Ngừng cung cấp gói này)</span>
+            </label>
+          )}
+        </div>
+      </Modal>
+
+      {/* 2. Benefit Form Modal */}
+      <Modal
+        isOpen={benefitModalOpen}
+        onClose={() => setBenefitModalOpen(false)}
+        title={editingBenefit ? "Cập nhật quyền lợi" : "Tạo quyền lợi hệ thống"}
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn" onClick={() => setBenefitModalOpen(false)}>Hủy</button>
+            <button className="btn btn--primary" onClick={saveBenefitSubmit}>Lưu quyền lợi</button>
+          </div>
+        }
+      >
+        <div style={{ display: "grid", gap: "12px" }}>
+          <div className="form-group">
+            <label>Mã code quyền lợi (viết hoa, không dấu)</label>
+            <input
+              className="input"
+              value={benefitForm.benefitCode}
+              onChange={(e) => setBenefitForm({ ...benefitForm, benefitCode: e.target.value })}
+              placeholder="Ví dụ: FREE_REPAIR, REFUND_50K..."
+              disabled={!!editingBenefit} // Do not change code if editing
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Tên quyền lợi hiển thị</label>
+            <input
+              className="input"
+              value={benefitForm.benefitName}
+              onChange={(e) => setBenefitForm({ ...benefitForm, benefitName: e.target.value })}
+              placeholder="Ví dụ: Miễn phí sửa chữa, Hoàn tiền khi hủy..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Mô tả chi tiết</label>
+            <textarea
+              className="textarea"
+              rows={4}
+              value={benefitForm.description}
+              onChange={(e) => setBenefitForm({ ...benefitForm, description: e.target.value })}
+              placeholder="Mô tả cụ thể cách hoạt động và quyền lợi để admin/khách nắm thông tin..."
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* 3. Assign Plan-Benefit Modal */}
+      <Modal
+        isOpen={assignModalOpen}
+        onClose={() => { setAssignModalOpen(false); setAssignTarget(null); }}
+        title={`Thiết lập quyền lợi: ${assignTarget?.benefitCode}`}
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn" onClick={() => { setAssignModalOpen(false); setAssignTarget(null); }}>Hủy</button>
+            <button className="btn btn--primary" onClick={saveAssignmentSubmit}>Lưu thiết lập</button>
+          </div>
+        }
+      >
+        {assignTarget && (
+          <div style={{ display: "grid", gap: "12px" }}>
+            <div className="form-group">
+              <label>Giá trị áp dụng (Benefit Value - Ví dụ: 50000 hoặc 5 km)</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="Nhập giá trị số (ví dụ: 100000)"
+                value={assignForm.benefitValue}
+                onChange={(e) => setAssignForm({ ...assignForm, benefitValue: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Giới hạn sử dụng tối đa (lần - để trống nếu vô hạn)</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="Ví dụ: 5"
+                value={assignForm.usageLimit}
+                onChange={(e) => setAssignForm({ ...assignForm, usageLimit: e.target.value })}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 4. Global Confirm Modal */}
+      <Modal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Xác nhận thao tác"
+        footer={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy bỏ</button>
+            <button
+              className="btn btn--danger"
+              onClick={() => {
+                if (confirmAction) confirmAction.onConfirm();
+                setConfirmModalOpen(false);
+              }}
+            >
+              Đồng ý xác nhận
+            </button>
+          </div>
+        }
+      >
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ fontSize: "28px" }}>⚠️</span>
+          <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
+            {confirmAction?.message}
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 }
-
