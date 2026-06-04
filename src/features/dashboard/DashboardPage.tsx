@@ -3,16 +3,22 @@ import { getDashboardOverview, type DashboardOverviewResponse } from "./dashboar
 import { SimpleLineChart } from "../../shared/charts/SimpleLineChart";
 import { SimpleStackedBars } from "../../shared/charts/SimpleStackedBars";
 import { SimpleDonut } from "../../shared/charts/SimpleDonut";
+import { listBlogs, type BlogListItem } from "../blogs/blogsApi";
+import { useNavigate } from "react-router-dom";
 
 function formatMoney(v: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Math.round(v));
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DashboardOverviewResponse | null>(null);
+  const [blogLoading, setBlogLoading] = useState(false);
+  const [blogError, setBlogError] = useState<string | null>(null);
+  const [blogs, setBlogs] = useState<BlogListItem[]>([]);
 
   async function refresh() {
     setLoading(true);
@@ -24,8 +30,23 @@ export function DashboardPage() {
     }
   }
 
+  async function refreshBlogs() {
+    setBlogLoading(true);
+    setBlogError(null);
+    try {
+      const res = await listBlogs({ includeDeleted: false, page: 1, pageSize: 8 });
+      setBlogs(res.items);
+    } catch (err) {
+      setBlogs([]);
+      setBlogError(err instanceof Error ? err.message : "Không tải được blog");
+    } finally {
+      setBlogLoading(false);
+    }
+  }
+
   useEffect(() => {
     refresh();
+    refreshBlogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -159,6 +180,84 @@ export function DashboardPage() {
                   <span>{Math.round(data.kpis.avgCompleteMins)}m</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ display: "grid", gap: "16px" }}>
+            <div className="flex-between" style={{ flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--secondary)" }}>Blog & landing content</h2>
+                <div style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
+                  Quản lý bài viết hiển thị ở landing page và theo dõi trạng thái xuất bản.
+                </div>
+              </div>
+              <button className="btn btn--primary btn--sm" onClick={() => navigate("/blogs")}>
+                Mở trang quản lý Blog
+              </button>
+            </div>
+
+            <div className="grid-4">
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Tổng bài viết</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)" }}>{blogs.length.toLocaleString()}</div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Đã đăng</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)" }}>
+                  {blogs.filter((b) => b.ispublished && !b.isdeleted).length.toLocaleString()}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Nháp</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--warning)" }}>
+                  {blogs.filter((b) => !b.ispublished && !b.isdeleted).length.toLocaleString()}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Đang tải</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)" }}>
+                  {blogLoading ? "..." : "OK"}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              {blogError ? (
+                <div className="badge badge--danger" style={{ marginBottom: "12px", textTransform: "none" }}>
+                  {blogError}
+                </div>
+              ) : null}
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Tiêu đề</th>
+                    <th>Danh mục</th>
+                    <th>Trạng thái</th>
+                    <th>Xuất bản</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {blogs.slice(0, 5).map((blog) => (
+                    <tr key={blog.blogpostid}>
+                      <td style={{ fontWeight: 700 }}>{blog.title}</td>
+                      <td>{blog.category ?? "-"}</td>
+                      <td>
+                        <span className={`badge ${blog.isdeleted ? "badge--danger" : blog.ispublished ? "badge--success" : "badge--warning"}`}>
+                          {blog.isdeleted ? "Đã xóa" : blog.ispublished ? "Đã đăng" : "Nháp"}
+                        </span>
+                      </td>
+                      <td>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
+                    </tr>
+                  ))}
+                  {blogs.length === 0 && !blogLoading ? (
+                    <tr>
+                      <td colSpan={4} style={{ color: "var(--text-muted)", textAlign: "center", padding: "20px" }}>
+                        Chưa có bài viết nào.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
             </div>
           </div>
 

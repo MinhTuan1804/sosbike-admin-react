@@ -25,7 +25,8 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/orders", label: "Đơn cứu hộ", icon: "🚨" },
       { to: "/services", label: "Dịch vụ & Garage", icon: "🔧" },
-      { to: "/reviews", label: "Đánh giá & Review", icon: "💬" }
+      { to: "/reviews", label: "Đánh giá & Review", icon: "💬" },
+      { to: "/blogs", label: "Blog", icon: "📝" }
     ]
   },
   {
