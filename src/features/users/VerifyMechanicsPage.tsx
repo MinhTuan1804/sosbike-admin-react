@@ -467,8 +467,8 @@ export function VerifyMechanicsPage() {
                         <div>Số tài khoản: <strong>{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
                         <div>Chủ tài khoản: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
                         <div style={{ marginTop: "4px" }}>
-                          Trạng thái: <span className={`badge ${mechanicDetail.wallet.isBankVerified ? "badge--success" : "badge--danger"}`} style={{ fontSize: "9px" }}>
-                            {mechanicDetail.wallet.isBankVerified ? "Đã liên kết" : "Chưa liên kết"}
+                          Trạng thái: <span className={`badge ${mechanicDetail.wallet.bankName ? "badge--success" : "badge--danger"}`} style={{ fontSize: "9px" }}>
+                            {mechanicDetail.wallet.bankName ? "Đã liên kết" : "Chưa liên kết"}
                           </span>
                         </div>
                       </div>

@@ -20,6 +20,34 @@ function formatDate(dateStr?: string | null) {
   return new Date(dateStr).toLocaleString("vi-VN");
 }
 
+function getVietQRBankId(bankName: string): string {
+  if (!bankName) return "";
+  const normalized = bankName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]/g, "");
+
+  if (normalized.includes("vietcombank") || normalized.includes("vcb")) return "vietcombank";
+  if (normalized.includes("techcombank") || normalized.includes("tcb")) return "techcombank";
+  if (normalized.includes("vietinbank") || normalized.includes("ctg") || normalized.includes("vietin")) return "vietinbank";
+  if (normalized.includes("bidv")) return "bidv";
+  if (normalized.includes("agribank") || normalized.includes("vba")) return "agribank";
+  if (normalized.includes("mbbank") || normalized === "mb" || normalized.includes("mb")) return "mb";
+  if (normalized.includes("acb")) return "acb";
+  if (normalized.includes("sacombank") || normalized.includes("stb")) return "sacombank";
+  if (normalized.includes("tpbank") || normalized === "tpb") return "tpb";
+  if (normalized.includes("vpbank") || normalized === "vpb") return "vpbank";
+  if (normalized.includes("shb")) return "shb";
+  if (normalized.includes("hdbank") || normalized === "hdb" || normalized.includes("hd")) return "hdbank";
+  if (normalized.includes("seabank") || normalized === "seab") return "seabank";
+  if (normalized.includes("vib")) return "vib";
+  if (normalized.includes("ocb")) return "ocb";
+  if (normalized.includes("msb")) return "msb";
+  return bankName;
+}
+
 export function FinancePage() {
   const [tab, setTab] = useState<Tab>("wallets");
 
@@ -226,11 +254,7 @@ export function FinancePage() {
                                 {w.accountNumber} • <span style={{ textTransform: "uppercase" }}>{w.accountHolderName}</span>
                               </div>
                               <div style={{ marginTop: "2px" }}>
-                                {w.isBankVerified ? (
-                                  <span className="badge badge--success" style={{ fontSize: "9px", padding: "1px 6px" }}>Đã xác thực</span>
-                                ) : (
-                                  <span className="badge badge--warning" style={{ fontSize: "9px", padding: "1px 6px" }}>Chờ xác thực</span>
-                                )}
+                                <span className="badge badge--success" style={{ fontSize: "9px", padding: "1px 6px" }}>Đã liên kết</span>
                               </div>
                             </div>
                           ) : (
@@ -534,7 +558,7 @@ export function FinancePage() {
               onClick={handleSettleAction}
               disabled={submittingAction}
             >
-              {submittingAction ? "Đang xử lý..." : actionType === "approve" ? "Xác nhận & Chi tiền" : "Xác nhận Từ chối"}
+              {submittingAction ? "Đang xử lý..." : actionType === "approve" ? "Xác nhận hoàn tất" : "Xác nhận Từ chối"}
             </button>
           </div>
         }
@@ -561,6 +585,46 @@ export function FinancePage() {
               <span style={{ fontWeight: "600" }}>Số tiền giao dịch:</span>
               <span style={{ fontSize: "18px", fontWeight: "800", color: "var(--primary)" }}>{formatMoney(currentRequest.amount)}</span>
             </div>
+
+            {actionType === "approve" && (
+              <div style={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center", 
+                padding: "16px", 
+                background: "rgba(255, 255, 255, 0.03)", 
+                border: "1px solid var(--border-color)", 
+                borderRadius: "12px", 
+                margin: "4px 0" 
+              }}>
+                <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: "12px" }}>QUÉT MÃ VIETQR ĐỂ CHUYỂN KHOẢN TAY</span>
+                <div style={{ 
+                  padding: "12px", 
+                  background: "#ffffff", 
+                  borderRadius: "16px", 
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  display: "inline-block"
+                }}>
+                  <img 
+                    src={`https://img.vietqr.io/image/${getVietQRBankId(currentRequest.bankName ?? "")}-${currentRequest.accountNumber}-compact.png?amount=${currentRequest.amount}&addInfo=${encodeURIComponent("SOSBIKE RUT " + currentRequest.phoneNumber)}&accountName=${encodeURIComponent(currentRequest.accountHolderName ?? "")}`} 
+                    alt="VietQR code" 
+                    style={{ width: "180px", height: "180px", display: "block", borderRadius: "8px" }} 
+                  />
+                </div>
+                <p style={{ 
+                  fontSize: "12px", 
+                  color: "var(--text-muted)", 
+                  textAlign: "center", 
+                  marginTop: "12px", 
+                  marginBottom: 0,
+                  maxWidth: "280px", 
+                  lineHeight: "1.5" 
+                }}>
+                  Vui lòng dùng ứng dụng Ngân hàng để quét mã QR và thực hiện chuyển tiền thủ công trước khi nhấn <strong>Xác nhận hoàn tất</strong>.
+                </p>
+              </div>
+            )}
 
             <div className="form-group">
               <label>Ghi chú của Admin (nếu có)</label>
