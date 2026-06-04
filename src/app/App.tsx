@@ -7,6 +7,7 @@ import { MembershipPage } from "../features/membership/MembershipPage";
 import { ServicesGaragesPage } from "../features/services/ServicesGaragesPage";
 import { ReviewsPage } from "../features/reviews/ReviewsPage";
 import { ConfigPage } from "../features/config/ConfigPage";
+import { BlogsPage } from "../features/blogs/BlogsPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { UsersPage } from "../features/users/UsersPage";
@@ -25,6 +26,7 @@ export function App() {
           <Route path="/membership" element={<MembershipPage />} />
           <Route path="/services" element={<ServicesGaragesPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/blogs" element={<BlogsPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/verify-mechanics" element={<VerifyMechanicsPage />} />
           <Route path="/config" element={<ConfigPage />} />
