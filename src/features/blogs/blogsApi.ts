@@ -18,11 +18,41 @@ export type BlogListItem = {
   isdeleted: boolean;
   publishedat: string | null;
   createdat: string | null;
+  viewCount: number;
+  uniqueViewers: number;
+  appViews: number;
+  landingPageViews: number;
+  lastViewedAt: string | null;
 };
 
 export type BlogDetail = BlogListItem & {
   content: string;
   updatedat: string | null;
+};
+
+export type BlogAnalyticsRow = {
+  blogpostid: string;
+  slug: string;
+  title: string;
+  category: string | null;
+  viewCount: number;
+  uniqueViewers: number;
+  appViews: number;
+  landingPageViews: number;
+  lastViewedAt: string | null;
+};
+
+export type BlogAnalyticsResponse = {
+  from: string | null;
+  to: string | null;
+  totalViews: number;
+  uniqueViewers: number;
+  appViews: number;
+  landingPageViews: number;
+  totalBlogs: number;
+  publishedBlogs: number;
+  topBlog: BlogAnalyticsRow | null;
+  items: BlogAnalyticsRow[];
 };
 
 export type BlogUpsertPayload = {
@@ -55,4 +85,17 @@ export async function updateBlog(blogpostId: string, payload: BlogUpsertPayload)
 
 export async function deleteBlog(blogpostId: string) {
   await http.delete(`/admin/blogs/${blogpostId}`);
+}
+
+export async function getBlogAnalytics(params?: { from?: string; to?: string; top?: number }) {
+  const res = await http.get<BlogAnalyticsResponse>("/admin/blog-analytics", { params });
+  return res.data;
+}
+
+export async function exportBlogAnalytics(params?: { from?: string; to?: string }) {
+  const res = await http.get("/admin/blog-analytics/export", {
+    params,
+    responseType: "blob"
+  });
+  return res.data as Blob;
 }

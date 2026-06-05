@@ -28,3 +28,11 @@ export async function getDashboardOverview(params?: { from?: string; to?: string
   return res.data;
 }
 
+export async function exportDashboardOverview(params?: { from?: string; to?: string }) {
+  const res = await http.get("/admin/dashboard/export", {
+    params,
+    responseType: "blob"
+  });
+  return res.data;
+}
+

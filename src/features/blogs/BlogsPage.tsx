@@ -7,11 +7,14 @@ import {
   deleteBlog,
   getBlog,
   listBlogs,
-  updateBlog
+  updateBlog,
+  getBlogAnalytics,
+  BlogAnalyticsResponse
 } from "./blogsApi";
 
 export function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
+  const [analytics, setAnalytics] = useState<BlogAnalyticsResponse | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<BlogListItem | null>(null);
@@ -32,6 +35,12 @@ export function BlogsPage() {
     try {
       const res = await listBlogs({ q: query || undefined, page: 1, pageSize: 100, includeDeleted: true });
       setBlogs(res.items);
+      try {
+        const analyticRes = await getBlogAnalytics({ top: 3 });
+        setAnalytics(analyticRes);
+      } catch (err) {
+        console.error("Lỗi lấy thống kê blog:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +126,127 @@ export function BlogsPage() {
         <button className="btn btn--primary" onClick={openCreate}>+ Thêm bài viết</button>
       </div>
 
+      {analytics && analytics.items && analytics.items.length > 0 && (
+        <div style={{ display: "grid", gap: "12px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "5px 0 0 0", color: "var(--text-color, #2c1111)", display: "flex", alignItems: "center", gap: "6px" }}>
+            🏆 Top bài viết xem nhiều nhất
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+            {analytics.items.map((item, idx) => {
+              const totalViews = item.viewCount || 1;
+              const appPercentage = Math.round((item.appViews / totalViews) * 100);
+              const lpPercentage = Math.round((item.landingPageViews / totalViews) * 100);
+
+              return (
+                <div
+                  key={item.blogpostid}
+                  style={{
+                    background: "var(--card-bg)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: "16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                    overflow: "hidden",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.02)",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                    cursor: "default"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.06)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.02)";
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "12px",
+                      right: "12px",
+                      background: idx === 0 ? "#FFD700" : idx === 1 ? "#C0C0C0" : "#CD7F32",
+                      color: idx === 0 ? "#222" : "#fff",
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                      width: "22px",
+                      height: "22px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    {idx + 1}
+                  </div>
+
+                  <div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        fontSize: "9px",
+                        fontWeight: "bold",
+                        textTransform: "uppercase",
+                        color: "#8B1A1A",
+                        background: "rgba(139, 26, 26, 0.08)",
+                        padding: "3px 6px",
+                        borderRadius: "10px",
+                        marginBottom: "8px"
+                      }}
+                    >
+                      {item.category || "Tin tức"}
+                    </span>
+                    <h3
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        margin: "0 0 10px 0",
+                        paddingRight: "22px",
+                        lineHeight: 1.35,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        color: "var(--text-color, #2c1111)"
+                      }}
+                      title={item.title}
+                    >
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "rgba(0,0,0,0.02)", padding: "8px", borderRadius: "var(--radius-md)", marginBottom: "10px", border: "1px solid var(--border-color)" }}>
+                    <div>
+                      <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Lượt xem</div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)" }}>👁️ {(item.viewCount ?? 0).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Độc nhất</div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)" }}>👥 {(item.uniqueViewers ?? 0).toLocaleString()}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
+                      <span>💻 Landing: {item.landingPageViews} ({lpPercentage}%)</span>
+                      <span>📱 App: {item.appViews} ({appPercentage}%)</span>
+                    </div>
+                    <div style={{ height: "4px", background: "var(--border-color)", borderRadius: "2px", display: "flex", overflow: "hidden" }}>
+                      <div style={{ width: `${lpPercentage}%`, background: "#8B1A1A" }}></div>
+                      <div style={{ width: `${appPercentage}%`, background: "#2C1111" }}></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
         <input
           className="input"
@@ -135,6 +265,8 @@ export function BlogsPage() {
               <th>Tiêu đề</th>
               <th>Slug</th>
               <th>Danh mục</th>
+              <th>Lượt xem</th>
+              <th>Unique</th>
               <th>Trạng thái</th>
               <th>Xuất bản</th>
               <th>Thao tác</th>
@@ -146,6 +278,8 @@ export function BlogsPage() {
                 <td style={{ fontWeight: 700 }}>{blog.title}</td>
                 <td><code>{blog.slug}</code></td>
                 <td>{blog.category ?? "-"}</td>
+                <td>{(blog.viewCount ?? 0).toLocaleString()}</td>
+                <td>{(blog.uniqueViewers ?? 0).toLocaleString()}</td>
                 <td>
                   <span className={`badge ${blog.isdeleted ? "badge--danger" : blog.ispublished ? "badge--success" : "badge--warning"}`}>
                     {blog.isdeleted ? "Đã xóa" : blog.ispublished ? "Đã đăng" : "Nháp"}
@@ -160,6 +294,13 @@ export function BlogsPage() {
                 </td>
               </tr>
             ))}
+            {blogs.length === 0 && !loading ? (
+              <tr>
+                <td colSpan={8} style={{ color: "var(--text-muted)", textAlign: "center", padding: "20px" }}>
+                  Chưa có bài viết nào.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>

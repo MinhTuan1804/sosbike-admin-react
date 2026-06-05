@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { getDashboardOverview, type DashboardOverviewResponse } from "./dashboardApi";
+import { getDashboardOverview, exportDashboardOverview, type DashboardOverviewResponse } from "./dashboardApi";
 import { SimpleLineChart } from "../../shared/charts/SimpleLineChart";
 import { SimpleStackedBars } from "../../shared/charts/SimpleStackedBars";
 import { SimpleDonut } from "../../shared/charts/SimpleDonut";
-import { listBlogs, type BlogListItem } from "../blogs/blogsApi";
+import { exportBlogAnalytics, getBlogAnalytics, listBlogs, type BlogAnalyticsResponse, type BlogListItem } from "../blogs/blogsApi";
 import { useNavigate } from "react-router-dom";
 
 function formatMoney(v: number) {
@@ -15,10 +15,14 @@ export function DashboardPage() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [data, setData] = useState<DashboardOverviewResponse | null>(null);
   const [blogLoading, setBlogLoading] = useState(false);
   const [blogError, setBlogError] = useState<string | null>(null);
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
+  const [blogAnalyticsLoading, setBlogAnalyticsLoading] = useState(false);
+  const [blogAnalyticsError, setBlogAnalyticsError] = useState<string | null>(null);
+  const [blogAnalytics, setBlogAnalytics] = useState<BlogAnalyticsResponse | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -44,9 +48,61 @@ export function DashboardPage() {
     }
   }
 
+  async function refreshBlogAnalytics() {
+    setBlogAnalyticsLoading(true);
+    setBlogAnalyticsError(null);
+    try {
+      const res = await getBlogAnalytics({ from: from || undefined, to: to || undefined, top: 10 });
+      setBlogAnalytics(res);
+    } catch (err) {
+      setBlogAnalytics(null);
+      setBlogAnalyticsError(err instanceof Error ? err.message : "Không tải được thống kê blog");
+    } finally {
+      setBlogAnalyticsLoading(false);
+    }
+  }
+
+  async function refreshAll() {
+    await Promise.allSettled([refresh(), refreshBlogs(), refreshBlogAnalytics()]);
+  }
+
+  async function downloadDashboardOverview() {
+    setExporting(true);
+    try {
+      const blob = await exportDashboardOverview({ from: from || undefined, to: to || undefined });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `dashboard-overview-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Không xuất được Excel.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function downloadBlogAnalytics() {
+    try {
+      const blob = await exportBlogAnalytics({ from: from || undefined, to: to || undefined });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `blog-analytics-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Không xuất được Excel.");
+    }
+  }
+
   useEffect(() => {
-    refresh();
-    refreshBlogs();
+    refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,11 +143,20 @@ export function DashboardPage() {
           </div>
           <button 
             className="btn btn--primary btn--sm" 
-            onClick={refresh} 
+            onClick={refreshAll} 
             disabled={loading}
             style={{ padding: "8px 16px" }}
           >
             {loading ? "Đang tải..." : "Lọc kết quả"}
+          </button>
+          <button 
+            className="btn btn--success btn--sm" 
+            onClick={downloadDashboardOverview} 
+            disabled={exporting}
+            style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            {exporting ? "Đang xuất..." : "Xuất Excel"}
           </button>
         </div>
       </div>
@@ -191,9 +256,47 @@ export function DashboardPage() {
                   Quản lý bài viết hiển thị ở landing page và theo dõi trạng thái xuất bản.
                 </div>
               </div>
-              <button className="btn btn--primary btn--sm" onClick={() => navigate("/blogs")}>
-                Mở trang quản lý Blog
-              </button>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button className="btn btn--primary btn--sm" onClick={() => navigate("/blogs")}>
+                  Mở trang quản lý Blog
+                </button>
+                <button className="btn btn--sm" onClick={downloadDashboardOverview} disabled={exporting}>
+                  {exporting ? "Đang xuất..." : "Xuất Excel"}
+                </button>
+              </div>
+            </div>
+
+            {blogAnalyticsError ? (
+              <div className="badge badge--danger" style={{ textTransform: "none" }}>
+                {blogAnalyticsError}
+              </div>
+            ) : null}
+
+            <div className="grid-4">
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Tổng lượt xem</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)" }}>
+                  {blogAnalytics ? blogAnalytics.totalViews.toLocaleString() : (blogAnalyticsLoading ? "..." : "0")}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Unique viewers</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)" }}>
+                  {blogAnalytics ? blogAnalytics.uniqueViewers.toLocaleString() : (blogAnalyticsLoading ? "..." : "0")}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>App / Landing</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)" }}>
+                  {blogAnalytics ? `${blogAnalytics.appViews.toLocaleString()} / ${blogAnalytics.landingPageViews.toLocaleString()}` : (blogAnalyticsLoading ? "..." : "-")}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Bài nổi bật</div>
+                <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--secondary)", lineHeight: 1.3 }}>
+                  {blogAnalytics?.topBlog?.title ?? (blogAnalyticsLoading ? "Đang tải..." : "Chưa có dữ liệu")}
+                </div>
+              </div>
             </div>
 
             <div className="grid-4">
@@ -220,6 +323,38 @@ export function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {blogAnalytics?.items?.length ? (
+              <div style={{ overflowX: "auto" }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Blog</th>
+                      <th>View</th>
+                      <th>Unique</th>
+                      <th>App</th>
+                      <th>Landing</th>
+                      <th>Lần xem cuối</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blogAnalytics.items.slice(0, 5).map((row) => (
+                      <tr key={row.blogpostid}>
+                        <td>
+                          <div style={{ fontWeight: 700 }}>{row.title}</div>
+                          <div style={{ color: "var(--text-muted)", fontSize: "12px" }}>{row.slug}</div>
+                        </td>
+                        <td>{row.viewCount.toLocaleString()}</td>
+                        <td>{row.uniqueViewers.toLocaleString()}</td>
+                        <td>{row.appViews.toLocaleString()}</td>
+                        <td>{row.landingPageViews.toLocaleString()}</td>
+                        <td>{row.lastViewedAt ? new Date(row.lastViewedAt).toLocaleString("vi-VN") : "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
 
             <div style={{ overflowX: "auto" }}>
               {blogError ? (
@@ -302,7 +437,7 @@ export function DashboardPage() {
           <div style={{ fontSize: "36px", marginBottom: "16px" }}>📊</div>
           <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)" }}>Chưa tải được dữ liệu</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>Vui lòng bấm nút Tải lại hoặc chọn bộ lọc ngày khác.</p>
-          <button className="btn btn--primary btn--sm mt-12" onClick={refresh}>Tải lại dữ liệu</button>
+          <button className="btn btn--primary btn--sm mt-12" onClick={refreshAll}>Tải lại dữ liệu</button>
         </div>
       )}
     </div>
