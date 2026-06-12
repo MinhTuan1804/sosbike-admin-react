@@ -3,6 +3,7 @@ import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
 import { Modal } from "../../shared/components/Modal";
+import { Cloud, Coins, Palette, Sliders, AlertTriangle } from "lucide-react";
 
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
@@ -170,7 +171,7 @@ export function ConfigPage() {
       {/* Connection and Sync Status Alert */}
       <div className="card" style={{ padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--neutral-bg)", gap: "16px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "24px" }}>☁️</span>
+          <Cloud size={24} style={{ color: "var(--primary)" }} />
           <div>
             <div style={{ fontWeight: "700", fontSize: "13px" }}>Trạng thái đồng bộ cơ sở dữ liệu</div>
             <div style={{ fontSize: "11px", color: "var(--text-light)" }}>Đồng bộ lần cuối: {dbUpdatedAt ?? "Chưa rõ"}</div>
@@ -203,8 +204,9 @@ export function ConfigPage() {
           
           {/* 1. Platform Settings */}
           <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
-              💳 Cấu hình Phí & Chiết khấu
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Coins size={18} style={{ color: "var(--primary)" }} />
+              <span>Cấu hình Phí & Chiết khấu</span>
             </h3>
             
             <div style={{ display: "grid", gap: "16px" }}>
@@ -248,8 +250,9 @@ export function ConfigPage() {
 
           {/* 2. UI App Settings */}
           <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
-              🎨 Cấu hình Giao diện Khách hàng
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Palette size={18} style={{ color: "var(--primary)" }} />
+              <span>Cấu hình Giao diện Khách hàng</span>
             </h3>
 
             <div style={{ display: "grid", gap: "16px" }}>
@@ -297,8 +300,9 @@ export function ConfigPage() {
           
           {/* 3. Feature Flags Switch Toggles (Premium Micro-interactions) */}
           <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
-              ⚙️ Công tắc chức năng hệ thống (Feature Flags)
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Sliders size={18} style={{ color: "var(--primary)" }} />
+              <span>Công tắc chức năng hệ thống (Feature Flags)</span>
             </h3>
 
             <div style={{ display: "grid", gap: "14px" }}>
@@ -432,7 +436,9 @@ export function ConfigPage() {
           <button className="btn btn--sm" onClick={onApplyJson}>Áp dụng thay đổi JSON</button>
           <button className="btn btn--sm" onClick={onFormatJson}>Tự động Định dạng</button>
           {jsonError && (
-            <span style={{ color: "var(--danger)", fontSize: "12px", alignSelf: "center", fontWeight: "600" }}>⚠️ {jsonError}</span>
+            <span style={{ color: "var(--danger)", fontSize: "12px", alignSelf: "center", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <AlertTriangle size={14} /> {jsonError}
+            </span>
           )}
         </div>
       </div>
@@ -497,7 +503,7 @@ export function ConfigPage() {
         }
       >
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "28px" }}>⚠️</span>
+          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>

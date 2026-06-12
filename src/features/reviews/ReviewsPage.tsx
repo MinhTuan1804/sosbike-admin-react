@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Star, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { listReviews, setReviewVisibility, type ReviewListItem } from "./reviewsApi";
 import { Modal } from "../../shared/components/Modal";
 
@@ -53,9 +54,15 @@ export function ReviewsPage() {
 
   function renderStars(stars: number) {
     return (
-      <span style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "bold", display: "flex", gap: "2px" }}>
-        {"★".repeat(stars)}
-        {"☆".repeat(Math.max(0, 5 - stars))}
+      <span style={{ color: "#f59e0b", display: "flex", gap: "2px" }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            size={14}
+            fill={i < stars ? "#f59e0b" : "none"}
+            stroke={i < stars ? "#f59e0b" : "currentColor"}
+          />
+        ))}
       </span>
     );
   }
@@ -159,10 +166,11 @@ export function ReviewsPage() {
             <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end" }}>
               <button
                 className={`btn btn--sm ${r.isHidden ? "btn--primary" : "btn--danger"}`}
-                style={{ width: "100%", justifyContent: "center" }}
+                style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
                 onClick={() => onToggleHidden(r)}
               >
-                {r.isHidden ? "🔓 Khôi phục hiển thị" : "🔒 Ẩn đánh giá khỏi App"}
+                {r.isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                <span>{r.isHidden ? "Khôi phục hiển thị" : "Ẩn đánh giá khỏi App"}</span>
               </button>
             </div>
           </div>
@@ -195,7 +203,7 @@ export function ReviewsPage() {
         }
       >
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "28px" }}>💬</span>
+          <MessageSquare size={28} style={{ color: "var(--primary)" }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>

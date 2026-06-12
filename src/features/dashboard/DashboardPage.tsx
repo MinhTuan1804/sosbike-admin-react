@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { BarChart3, Download, ChevronRight } from "lucide-react";
 import { getDashboardOverview, exportDashboardOverview, type DashboardOverviewResponse } from "./dashboardApi";
 import { SimpleLineChart } from "../../shared/charts/SimpleLineChart";
 import { SimpleStackedBars } from "../../shared/charts/SimpleStackedBars";
@@ -155,7 +156,7 @@ export function DashboardPage() {
             disabled={exporting}
             style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: "6px" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <Download size={14} />
             {exporting ? "Đang xuất..." : "Xuất Excel"}
           </button>
         </div>
@@ -232,16 +233,16 @@ export function DashboardPage() {
               <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
                 <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "space-between", fontSize: "10px", color: "var(--text-light)", fontWeight: "bold" }}>
                   <span>NHẬN ĐƠN</span>
-                  <span>➔</span>
+                  <ChevronRight size={10} />
                   <span>ĐẾN NƠI</span>
-                  <span>➔</span>
+                  <ChevronRight size={10} />
                   <span>XONG</span>
                 </div>
                 <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", color: "var(--text-main)", marginTop: "4px" }}>
                   <span>{Math.round(data.kpis.avgAcceptMins)}m</span>
-                  <span style={{ color: "var(--border-color-hover)" }}>➔</span>
+                  <ChevronRight size={12} style={{ color: "var(--border-color-hover)" }} />
                   <span>{Math.round(data.kpis.avgArriveMins)}m</span>
-                  <span style={{ color: "var(--border-color-hover)" }}>➔</span>
+                  <ChevronRight size={12} style={{ color: "var(--border-color-hover)" }} />
                   <span>{Math.round(data.kpis.avgCompleteMins)}m</span>
                 </div>
               </div>
@@ -434,7 +435,7 @@ export function DashboardPage() {
         </>
       ) : (
         <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 24px", textAlign: "center" }}>
-          <div style={{ fontSize: "36px", marginBottom: "16px" }}>📊</div>
+          <BarChart3 size={36} style={{ color: "var(--primary)", marginBottom: "16px" }} />
           <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)" }}>Chưa tải được dữ liệu</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>Vui lòng bấm nút Tải lại hoặc chọn bộ lọc ngày khác.</p>
           <button className="btn btn--primary btn--sm mt-12" onClick={refreshAll}>Tải lại dữ liệu</button>

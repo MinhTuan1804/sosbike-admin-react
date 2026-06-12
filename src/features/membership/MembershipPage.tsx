@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Ticket, Star, Info, AlertTriangle } from "lucide-react";
 import {
   BenefitListItem,
   PlanDetail,
@@ -313,7 +314,10 @@ export function MembershipPage() {
           }}
           onClick={() => setTab("plans")}
         >
-          🎟️ Gói dịch vụ hội viên
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Ticket size={16} />
+            <span>Gói dịch vụ hội viên</span>
+          </div>
         </button>
         <button
           style={{
@@ -329,7 +333,10 @@ export function MembershipPage() {
           }}
           onClick={() => setTab("benefits")}
         >
-          🌟 Danh mục quyền lợi
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Star size={16} />
+            <span>Danh mục quyền lợi</span>
+          </div>
         </button>
       </div>
 
@@ -417,8 +424,9 @@ export function MembershipPage() {
           <div>
             <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Chi tiết & Phân quyền lợi</h2>
             {!selectedPlan ? (
-              <div className="card" style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>
-                👉 Hãy chọn một gói dịch vụ từ danh sách bên trái để quản lý cấu hình các quyền lợi đi kèm.
+              <div className="card" style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+                <Info size={32} style={{ color: "var(--primary)" }} />
+                <span>Hãy chọn một gói dịch vụ từ danh sách bên trái để quản lý cấu hình các quyền lợi đi kèm.</span>
               </div>
             ) : (
               <div style={{ display: "grid", gap: "20px" }}>
@@ -769,7 +777,7 @@ export function MembershipPage() {
         }
       >
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "28px" }}>⚠️</span>
+          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>

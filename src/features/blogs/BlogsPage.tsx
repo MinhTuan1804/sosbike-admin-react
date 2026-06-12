@@ -11,6 +11,7 @@ import {
   getBlogAnalytics,
   BlogAnalyticsResponse
 } from "./blogsApi";
+import { Trophy, Eye, Users, Globe, Smartphone } from "lucide-react";
 
 export function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
@@ -129,7 +130,7 @@ export function BlogsPage() {
       {analytics && analytics.items && analytics.items.length > 0 && (
         <div style={{ display: "grid", gap: "12px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "5px 0 0 0", color: "var(--text-color, #2c1111)", display: "flex", alignItems: "center", gap: "6px" }}>
-            🏆 Top bài viết xem nhiều nhất
+            <Trophy size={18} style={{ color: "#f59e0b" }} /> Top bài viết xem nhiều nhất
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
             {analytics.items.map((item, idx) => {
@@ -222,18 +223,26 @@ export function BlogsPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "rgba(0,0,0,0.02)", padding: "8px", borderRadius: "var(--radius-md)", marginBottom: "10px", border: "1px solid var(--border-color)" }}>
                     <div>
                       <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Lượt xem</div>
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)" }}>👁️ {(item.viewCount ?? 0).toLocaleString()}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <Eye size={14} style={{ color: "var(--primary)" }} /> {(item.viewCount ?? 0).toLocaleString()}
+                      </div>
                     </div>
                     <div>
                       <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Độc nhất</div>
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)" }}>👥 {(item.uniqueViewers ?? 0).toLocaleString()}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <Users size={14} style={{ color: "var(--primary)" }} /> {(item.uniqueViewers ?? 0).toLocaleString()}
+                      </div>
                     </div>
                   </div>
 
                   <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
-                      <span>💻 Landing: {item.landingPageViews} ({lpPercentage}%)</span>
-                      <span>📱 App: {item.appViews} ({appPercentage}%)</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px", alignItems: "center" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                        <Globe size={11} /> Landing: {item.landingPageViews} ({lpPercentage}%)
+                      </span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                        <Smartphone size={11} /> App: {item.appViews} ({appPercentage}%)
+                      </span>
                     </div>
                     <div style={{ height: "4px", background: "var(--border-color)", borderRadius: "2px", display: "flex", overflow: "hidden" }}>
                       <div style={{ width: `${lpPercentage}%`, background: "#8B1A1A" }}></div>

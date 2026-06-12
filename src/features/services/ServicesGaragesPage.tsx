@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Wrench, Store, AlertTriangle } from "lucide-react";
 import {
   createGarage,
   createService,
@@ -226,7 +227,10 @@ export function ServicesGaragesPage() {
           }}
           onClick={() => setTab("services")}
         >
-          🔧 Quản lý dịch vụ cứu hộ
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Wrench size={16} />
+            <span>Quản lý dịch vụ cứu hộ</span>
+          </div>
         </button>
         <button
           style={{
@@ -242,7 +246,10 @@ export function ServicesGaragesPage() {
           }}
           onClick={() => setTab("garages")}
         >
-          🏪 Danh sách Garage đối tác
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Store size={16} />
+            <span>Danh sách Garage đối tác</span>
+          </div>
         </button>
       </div>
 
@@ -522,7 +529,7 @@ export function ServicesGaragesPage() {
         }
       >
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "28px" }}>⚠️</span>
+          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>

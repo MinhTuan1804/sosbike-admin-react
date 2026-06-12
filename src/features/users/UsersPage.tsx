@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
+import { CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
@@ -412,8 +413,18 @@ export function UsersPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "18px", fontWeight: "700", color: "var(--secondary)" }}>{mechanicDetail.fullName}</span>
-                      <span className={`badge ${mechanicDetail.mechanic?.isVerified ? "badge--success" : "badge--warning"}`} style={{ fontSize: "10px", padding: "2px 8px" }}>
-                        {mechanicDetail.mechanic?.isVerified ? "✓ ĐÃ XÁC MINH" : "⚠ CHỜ XÁC MINH"}
+                      <span className={`badge ${mechanicDetail.mechanic?.isVerified ? "badge--success" : "badge--warning"}`} style={{ fontSize: "10px", padding: "2px 8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        {mechanicDetail.mechanic?.isVerified ? (
+                          <>
+                            <CheckCircle2 size={10} />
+                            <span>ĐÃ XÁC MINH</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle size={10} />
+                            <span>CHỜ XÁC MINH</span>
+                          </>
+                        )}
                       </span>
                     </div>
                     <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px" }}>
@@ -448,8 +459,8 @@ export function UsersPage() {
                             className="doc-thumbnail"
                           >
                             <img src={mechanicDetail.mechanic.cccdFrontUrl} alt="CCCD Mặt trước" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                              🔍 Click để phóng to
+                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
+                              <Eye size={14} /> Click để phóng to
                             </div>
                           </div>
                         ) : (
@@ -468,8 +479,8 @@ export function UsersPage() {
                             className="doc-thumbnail"
                           >
                             <img src={mechanicDetail.mechanic.cccdBackUrl} alt="CCCD Mặt sau" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                              🔍 Click để phóng to
+                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
+                              <Eye size={14} /> Click để phóng to
                             </div>
                           </div>
                         ) : (
@@ -516,8 +527,8 @@ export function UsersPage() {
                             className="doc-thumbnail"
                           >
                             <img src={mechanicDetail.mechanic.vehicleRegistrationUrl} alt="Cà vẹt xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              🔍 Xem
+                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                              <Eye size={12} /> Xem
                             </div>
                           </div>
                         ) : (
@@ -536,8 +547,8 @@ export function UsersPage() {
                             className="doc-thumbnail"
                           >
                             <img src={mechanicDetail.mechanic.driverLicenseUrl} alt="Bằng lái xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              🔍 Xem
+                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                              <Eye size={12} /> Xem
                             </div>
                           </div>
                         ) : (
@@ -556,8 +567,8 @@ export function UsersPage() {
                             className="doc-thumbnail"
                           >
                             <img src={mechanicDetail.mechanic.vehicleInsuranceUrl} alt="Bảo hiểm xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              🔍 Xem
+                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                              <Eye size={12} /> Xem
                             </div>
                           </div>
                         ) : (
@@ -607,8 +618,8 @@ export function UsersPage() {
                         className="doc-thumbnail"
                       >
                         <img src={mechanicDetail.mechanic.certificateUrl} alt="Chứng chỉ" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                        <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                          🔍 Xem chứng chỉ
+                        <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                          <Eye size={12} /> Xem chứng chỉ
                         </div>
                       </div>
                     ) : (

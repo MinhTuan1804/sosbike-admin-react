@@ -8,6 +8,7 @@ import {
   rejectWithdraw
 } from "./financeApi";
 import { Modal } from "../../shared/components/Modal";
+import { Wallet, History, ArrowDownToLine } from "lucide-react";
 
 type Tab = "wallets" | "transactions" | "withdraw";
 
@@ -145,7 +146,10 @@ export function FinancePage() {
           }}
           onClick={() => setTab("wallets")}
         >
-          💳 Tài khoản ví ({walletsQuery.data?.total ?? "-"})
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Wallet size={16} />
+            <span>Tài khoản ví ({walletsQuery.data?.total ?? "-"})</span>
+          </div>
         </button>
         <button
           style={{
@@ -161,7 +165,10 @@ export function FinancePage() {
           }}
           onClick={() => setTab("transactions")}
         >
-          🔄 Lịch sử giao dịch ({txQuery.data?.total ?? "-"})
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <History size={16} />
+            <span>Lịch sử giao dịch ({txQuery.data?.total ?? "-"})</span>
+          </div>
         </button>
         <button
           style={{
@@ -177,7 +184,10 @@ export function FinancePage() {
           }}
           onClick={() => setTab("withdraw")}
         >
-          📥 Duyệt rút tiền ({wrQuery.data?.total ?? "-"})
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <ArrowDownToLine size={16} />
+            <span>Duyệt rút tiền ({wrQuery.data?.total ?? "-"})</span>
+          </div>
         </button>
       </div>
 
