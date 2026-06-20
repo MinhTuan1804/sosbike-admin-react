@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Wrench, Store, CheckSquare, AlertTriangle } from "lucide-react";
 import {
   createGarage,
   createService,
@@ -153,7 +154,7 @@ export function ServicesGaragesPage() {
 
   async function saveServiceSubmit() {
     if (!serviceForm.serviceName.trim()) {
-      alert("T├¬n dß╗ïch vß╗Ñ kh├┤ng ─æ╞░ß╗úc trß╗æng");
+      alert("Tên dịch vụ không được trống");
       return;
     }
     try {
@@ -174,12 +175,12 @@ export function ServicesGaragesPage() {
       setServiceModalOpen(false);
       await refreshServices();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Thao t├íc lß╗ùi.");
+      alert(err instanceof Error ? err.message : "Thao tác lỗi.");
     }
   }
 
   async function onDeleteService(serviceId: number) {
-    triggerConfirm("Bß║ín c├│ thß╗▒c sß╗▒ muß╗æn x├│a mß╗üm dß╗ïch vß╗Ñ n├áy kh├┤ng?", async () => {
+    triggerConfirm("Bạn có thực sự muốn xóa mềm dịch vụ này không?", async () => {
       await deleteService(serviceId);
       await refreshServices();
     });
@@ -210,11 +211,11 @@ export function ServicesGaragesPage() {
 
   async function saveGarageSubmit() {
     if (!garageForm.garageName.trim() || !garageForm.address.trim()) {
-      alert("Vui l├▓ng nhß║¡p t├¬n v├á ─æß╗ïa chß╗ë cß╗ºa garage.");
+      alert("Vui lòng nhập tên và địa chỉ của garage.");
       return;
     }
     if (!garageForm.mechanicId) {
-      alert("Vui l├▓ng chß╗ìn thß╗ú quß║ún l├╜ garage.");
+      alert("Vui lòng chọn thợ quản lý garage.");
       return;
     }
 
@@ -235,12 +236,12 @@ export function ServicesGaragesPage() {
       setGarageModalOpen(false);
       await refreshGarages();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Thao t├íc lß╗ùi.");
+      alert(err instanceof Error ? err.message : "Thao tác lỗi.");
     }
   }
 
   async function onDeleteGarage(garageId: number) {
-    triggerConfirm("Bß║ín c├│ thß╗▒c sß╗▒ muß╗æn x├│a mß╗üm garage n├áy kh├┤ng?", async () => {
+    triggerConfirm("Bạn có thực sự muốn xóa mềm garage này không?", async () => {
       await deleteGarage(garageId);
       await refreshGarages();
     });
@@ -251,7 +252,7 @@ export function ServicesGaragesPage() {
       await approveMechanicService(item.mechanicServiceId);
       await refreshMechanicServices();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Duyß╗çt thß║Ñt bß║íi.");
+      alert(err instanceof Error ? err.message : "Duyệt thất bại.");
     }
   }
 
@@ -269,7 +270,7 @@ export function ServicesGaragesPage() {
       setRejectTarget(null);
       await refreshMechanicServices();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Tß╗½ chß╗æi thß║Ñt bß║íi.");
+      alert(err instanceof Error ? err.message : "Từ chối thất bại.");
     }
   }
 
@@ -287,11 +288,14 @@ export function ServicesGaragesPage() {
             padding: "12px 4px",
             fontSize: "14px",
             cursor: "pointer",
-            transition: "all var(--transition-fast)"
+            transition: "all var(--transition-fast)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px"
           }}
           onClick={() => setTab("services")}
         >
-          ≡ƒöº Quß║ún l├╜ dß╗ïch vß╗Ñ cß╗⌐u hß╗Ö
+          <Wrench size={16} /> Quản lý dịch vụ cứu hộ
         </button>
         <button
           style={{
@@ -303,11 +307,14 @@ export function ServicesGaragesPage() {
             padding: "12px 4px",
             fontSize: "14px",
             cursor: "pointer",
-            transition: "all var(--transition-fast)"
+            transition: "all var(--transition-fast)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px"
           }}
           onClick={() => setTab("garages")}
         >
-          ≡ƒÅ¬ Danh s├ích Garage ─æß╗æi t├íc
+          <Store size={16} /> Danh sách Garage đối tác
         </button>
         <button
           style={{
@@ -319,11 +326,14 @@ export function ServicesGaragesPage() {
             padding: "12px 4px",
             fontSize: "14px",
             cursor: "pointer",
-            transition: "all var(--transition-fast)"
+            transition: "all var(--transition-fast)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px"
           }}
           onClick={() => setTab("mechanic-services")}
         >
-          Γ£à Duyß╗çt dß╗ïch vß╗Ñ thß╗ú
+          <CheckSquare size={16} /> Duyệt dịch vụ thợ
         </button>
       </div>
 
@@ -331,20 +341,20 @@ export function ServicesGaragesPage() {
       {tab === "services" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Danh mß╗Ñc dß╗ïch vß╗Ñ cß╗⌐u hß╗Ö</h2>
-            <button className="btn btn--primary btn--sm" onClick={openCreateServiceModal}>+ Th├¬m dß╗ïch vß╗Ñ</button>
+            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Danh mục dịch vụ cứu hộ</h2>
+            <button className="btn btn--primary btn--sm" onClick={openCreateServiceModal}>+ Thêm dịch vụ</button>
           </div>
 
           <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
             <input
               className="input"
               style={{ flex: 1 }}
-              placeholder="T├¼m theo t├¬n dß╗ïch vß╗Ñ..."
+              placeholder="Tìm theo tên dịch vụ..."
               value={serviceQuery}
               onChange={(e) => setServiceQuery(e.target.value)}
             />
             <button className="btn" onClick={refreshServices} disabled={servicesLoading}>
-              {servicesLoading ? "..." : "Tß║úi lß║íi"}
+              {servicesLoading ? "..." : "Tải lại"}
             </button>
           </div>
 
@@ -352,12 +362,12 @@ export function ServicesGaragesPage() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>M├ú ID</th>
-                  <th>T├¬n dß╗ïch vß╗Ñ</th>
-                  <th>Tiß╗ün c├┤ng ─æß╗ü xuß║Ñt</th>
-                  <th>M├┤ tß║ú chi tiß║┐t</th>
-                  <th>Trß║íng th├íi hoß║ít ─æß╗Öng</th>
-                  <th>Thao t├íc</th>
+                  <th>Mã ID</th>
+                  <th>Tên dịch vụ</th>
+                  <th>Tiền công đề xuất</th>
+                  <th>Mô tả chi tiết</th>
+                  <th>Trạng thái hoạt động</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -369,13 +379,13 @@ export function ServicesGaragesPage() {
                     <td style={{ color: "var(--text-muted)", fontSize: "13px" }}>{s.description ?? "-"}</td>
                     <td>
                       <span className={`badge ${s.isDeleted ? "badge--danger" : "badge--success"}`}>
-                        {s.isDeleted ? "Tß║ím ng╞░ng" : "─Éang hoß║ít ─æß╗Öng"}
+                        {s.isDeleted ? "Tạm ngưng" : "Đang hoạt động"}
                       </span>
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: "6px" }}>
-                        <button className="btn btn--sm" onClick={() => openEditServiceModal(s)}>Sß╗¡a</button>
-                        <button className="btn btn--sm btn--danger" onClick={() => onDeleteService(s.serviceId)}>X├│a</button>
+                        <button className="btn btn--sm" onClick={() => openEditServiceModal(s)}>Sửa</button>
+                        <button className="btn btn--sm btn--danger" onClick={() => onDeleteService(s.serviceId)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
@@ -390,20 +400,20 @@ export function ServicesGaragesPage() {
       {tab === "garages" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Th├┤ng tin c├íc Garage th├ánh vi├¬n</h2>
-            <button className="btn btn--primary btn--sm" onClick={openCreateGarageModal}>+ ─É─âng k├╜ Garage</button>
+            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Thông tin các Garage thành viên</h2>
+            <button className="btn btn--primary btn--sm" onClick={openCreateGarageModal}>+ Đăng ký Garage</button>
           </div>
 
           <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
             <input
               className="input"
               style={{ flex: 1 }}
-              placeholder="T├¼m theo t├¬n garage, ─æß╗ïa chß╗ë hoß║╖c thß╗ú ─æß║íi diß╗çn..."
+              placeholder="Tìm theo tên garage, địa chỉ hoặc thợ đại diện..."
               value={garageQuery}
               onChange={(e) => setGarageQuery(e.target.value)}
             />
             <button className="btn" onClick={refreshGarages} disabled={garagesLoading}>
-              {garagesLoading ? "..." : "Tß║úi lß║íi"}
+              {garagesLoading ? "..." : "Tải lại"}
             </button>
           </div>
 
@@ -411,12 +421,12 @@ export function ServicesGaragesPage() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>M├ú ID</th>
-                  <th>T├¬n Garage</th>
-                  <th>─Éß╗ïa chß╗ë li├¬n hß╗ç</th>
-                  <th>Thß╗ú ─æß║íi diß╗çn (Sß╗æ ─æiß╗çn thoß║íi)</th>
-                  <th>Trß║íng th├íi</th>
-                  <th>Thao t├íc</th>
+                  <th>Mã ID</th>
+                  <th>Tên Garage</th>
+                  <th>Địa chỉ liên hệ</th>
+                  <th>Thợ đại diện (Số điện thoại)</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -431,13 +441,13 @@ export function ServicesGaragesPage() {
                     </td>
                     <td>
                       <span className={`badge ${g.isDeleted ? "badge--danger" : "badge--success"}`}>
-                        {g.isDeleted ? "Tß║ím ng╞░ng" : "─Éang mß╗ƒ cß╗¡a"}
+                        {g.isDeleted ? "Tạm ngưng" : "Đang mở cửa"}
                       </span>
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: "6px" }}>
-                        <button className="btn btn--sm" onClick={() => openEditGarageModal(g)}>Sß╗¡a</button>
-                        <button className="btn btn--sm btn--danger" onClick={() => onDeleteGarage(g.garageId)}>X├│a</button>
+                        <button className="btn btn--sm" onClick={() => openEditGarageModal(g)}>Sửa</button>
+                        <button className="btn btn--sm btn--danger" onClick={() => onDeleteGarage(g.garageId)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
@@ -451,7 +461,7 @@ export function ServicesGaragesPage() {
       {tab === "mechanic-services" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Duyß╗çt dß╗ïch vß╗Ñ thß╗ú ─æ─âng k├╜</h2>
+            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Duyệt dịch vụ thợ đăng ký</h2>
           </div>
 
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
@@ -461,20 +471,20 @@ export function ServicesGaragesPage() {
               value={mechanicServiceStatus}
               onChange={(e) => setMechanicServiceStatus(e.target.value)}
             >
-              <option value="PENDING">Chß╗¥ duyß╗çt</option>
-              <option value="APPROVED">─É├ú duyß╗çt</option>
-              <option value="REJECTED">Tß╗½ chß╗æi</option>
-              <option value="">Tß║Ñt cß║ú</option>
+              <option value="PENDING">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Từ chối</option>
+              <option value="">Tất cả</option>
             </select>
             <input
               className="input"
               style={{ flex: 1, minWidth: "200px" }}
-              placeholder="T├¼m theo t├¬n dß╗ïch vß╗Ñ, thß╗ú, S─ÉT..."
+              placeholder="Tìm theo tên dịch vụ, thợ, SĐT..."
               value={mechanicServiceQuery}
               onChange={(e) => setMechanicServiceQuery(e.target.value)}
             />
             <button className="btn" onClick={refreshMechanicServices} disabled={mechanicServicesLoading}>
-              {mechanicServicesLoading ? "..." : "Tß║úi lß║íi"}
+              {mechanicServicesLoading ? "..." : "Tải lại"}
             </button>
           </div>
 
@@ -483,13 +493,13 @@ export function ServicesGaragesPage() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Thß╗ú</th>
-                  <th>T├¬n dß╗ïch vß╗Ñ</th>
-                  <th>Ph├¡ c├┤ng</th>
-                  <th>M├┤ tß║ú</th>
-                  <th>Trß║íng th├íi</th>
-                  <th>Gß╗¡i l├║c</th>
-                  <th>Thao t├íc</th>
+                  <th>Thợ</th>
+                  <th>Tên dịch vụ</th>
+                  <th>Phí công</th>
+                  <th>Mô tả</th>
+                  <th>Trạng thái</th>
+                  <th>Gửi lúc</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -497,7 +507,7 @@ export function ServicesGaragesPage() {
                   <tr key={s.mechanicServiceId}>
                     <td><code>{s.mechanicServiceId}</code></td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{s.mechanicName || "ΓÇö"}</div>
+                      <div style={{ fontWeight: 600 }}>{s.mechanicName || "—"}</div>
                       <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{s.mechanicPhone}</div>
                     </td>
                     <td style={{ fontWeight: 600 }}>{s.serviceName}</td>
@@ -507,23 +517,23 @@ export function ServicesGaragesPage() {
                       <span className={`badge ${
                         s.status === "APPROVED" ? "badge--success" : s.status === "REJECTED" ? "badge--danger" : "badge--warning"
                       }`}>
-                        {s.status === "PENDING" ? "Chß╗¥ duyß╗çt" : s.status === "APPROVED" ? "─É├ú duyß╗çt" : "Tß╗½ chß╗æi"}
+                        {s.status === "PENDING" ? "Chờ duyệt" : s.status === "APPROVED" ? "Đã duyệt" : "Từ chối"}
                       </span>
                       {s.rejectionReason && (
                         <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>{s.rejectionReason}</div>
                       )}
                     </td>
                     <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                      {s.requestedAt ? new Date(s.requestedAt).toLocaleString("vi-VN") : "ΓÇö"}
+                      {s.requestedAt ? new Date(s.requestedAt).toLocaleString("vi-VN") : "—"}
                     </td>
                     <td>
                       {s.status === "PENDING" ? (
                         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          <button className="btn btn--sm btn--primary" onClick={() => onApproveMechanicService(s)}>Duyß╗çt</button>
-                          <button className="btn btn--sm btn--danger" onClick={() => openRejectMechanicService(s)}>Tß╗½ chß╗æi</button>
+                          <button className="btn btn--sm btn--primary" onClick={() => onApproveMechanicService(s)}>Duyệt</button>
+                          <button className="btn btn--sm btn--danger" onClick={() => openRejectMechanicService(s)}>Từ chối</button>
                         </div>
                       ) : (
-                        <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>ΓÇö</span>
+                        <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>—</span>
                       )}
                     </td>
                   </tr>
@@ -531,7 +541,7 @@ export function ServicesGaragesPage() {
                 {mechanicServices.length === 0 && !mechanicServicesLoading && (
                   <tr>
                     <td colSpan={8} style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px" }}>
-                      Kh├┤ng c├│ dß╗ïch vß╗Ñ n├áo.
+                      Không có dịch vụ nào.
                     </td>
                   </tr>
                 )}
@@ -547,44 +557,44 @@ export function ServicesGaragesPage() {
       <Modal
         isOpen={serviceModalOpen}
         onClose={() => setServiceModalOpen(false)}
-        title={editingService ? "Cß║¡p nhß║¡t dß╗ïch vß╗Ñ cß╗⌐u hß╗Ö" : "Tß║ío dß╗ïch vß╗Ñ cß╗⌐u hß╗Ö mß╗¢i"}
+        title={editingService ? "Cập nhật dịch vụ cứu hộ" : "Tạo dịch vụ cứu hộ mới"}
         footer={
           <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn" onClick={() => setServiceModalOpen(false)}>Hß╗ºy</button>
-            <button className="btn btn--primary" onClick={saveServiceSubmit}>L╞░u th├┤ng tin</button>
+            <button className="btn" onClick={() => setServiceModalOpen(false)}>Hủy</button>
+            <button className="btn btn--primary" onClick={saveServiceSubmit}>Lưu thông tin</button>
           </div>
         }
       >
         <div style={{ display: "grid", gap: "12px" }}>
           <div className="form-group">
-            <label>T├¬n gß╗ìi dß╗ïch vß╗Ñ cß╗⌐u hß╗Ö</label>
+            <label>Tên gọi dịch vụ cứu hộ</label>
             <input
               className="input"
               value={serviceForm.serviceName}
               onChange={(e) => setServiceForm({ ...serviceForm, serviceName: e.target.value })}
-              placeholder="V├¡ dß╗Ñ: Cß╗⌐u hß╗Ö x─âm lß╗æp, V├í s─âm xe sß╗æ, Sß╗¡a phanh ─æ─⌐a..."
+              placeholder="Ví dụ: Cứu hộ xăm lốp, Vá săm xe số, Sửa phanh đĩa..."
             />
           </div>
 
           <div className="form-group">
-            <label>Tiß╗ün c├┤ng ─æß╗ü xuß║Ñt (Suggested Labor Fee - VND)</label>
+            <label>Tiền công đề xuất (Suggested Labor Fee - VND)</label>
             <input
               className="input"
               type="number"
               value={serviceForm.suggestedLaborFee}
               onChange={(e) => setServiceForm({ ...serviceForm, suggestedLaborFee: Number(e.target.value) })}
-              placeholder="V├¡ dß╗Ñ: 80000"
+              placeholder="Ví dụ: 80000"
             />
           </div>
 
           <div className="form-group">
-            <label>M├┤ tß║ú dß╗ïch vß╗Ñ</label>
+            <label>Mô tả dịch vụ</label>
             <textarea
               className="textarea"
               rows={3}
               value={serviceForm.description}
               onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-              placeholder="M├┤ tß║ú kß╗╣ thuß║¡t hoß║╖c quy chuß║⌐n thß╗▒c hiß╗çn..."
+              placeholder="Mô tả kỹ thuật hoặc quy chuẩn thực hiện..."
             />
           </div>
 
@@ -595,7 +605,7 @@ export function ServicesGaragesPage() {
                 checked={serviceForm.isDeleted}
                 onChange={(e) => setServiceForm({ ...serviceForm, isDeleted: e.target.checked })}
               />
-              <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--danger)" }}>Ngß╗½ng cung cß║Ñp dß╗ïch vß╗Ñ n├áy</span>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--danger)" }}>Ngừng cung cấp dịch vụ này</span>
             </label>
           )}
         </div>
@@ -605,39 +615,39 @@ export function ServicesGaragesPage() {
       <Modal
         isOpen={garageModalOpen}
         onClose={() => setGarageModalOpen(false)}
-        title={editingGarage ? "Cß║¡p nhß║¡t th├┤ng tin Garage" : "─É─âng k├╜ th├ánh lß║¡p Garage mß╗¢i"}
+        title={editingGarage ? "Cập nhật thông tin Garage" : "Đăng ký thành lập Garage mới"}
         footer={
           <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn" onClick={() => setGarageModalOpen(false)}>Hß╗ºy</button>
-            <button className="btn btn--primary" onClick={saveGarageSubmit}>L╞░u th├┤ng tin</button>
+            <button className="btn" onClick={() => setGarageModalOpen(false)}>Hủy</button>
+            <button className="btn btn--primary" onClick={saveGarageSubmit}>Lưu thông tin</button>
           </div>
         }
       >
         <div style={{ display: "grid", gap: "12px" }}>
           
           <div className="form-group">
-            <label>T├¬n gß╗ìi Garage</label>
+            <label>Tên gọi Garage</label>
             <input
               className="input"
               value={garageForm.garageName}
               onChange={(e) => setGarageForm({ ...garageForm, garageName: e.target.value })}
-              placeholder="V├¡ dß╗Ñ: Sß╗¡a Xe M├íy Th├ánh C├┤ng, Garage SOS H├á Nß╗Öi..."
+              placeholder="Ví dụ: Sửa Xe Máy Thành Công, Garage SOS Hà Nội..."
             />
           </div>
 
           <div className="form-group">
-            <label>─Éß╗ïa chß╗ë hoß║ít ─æß╗Öng</label>
+            <label>Địa chỉ hoạt động</label>
             <input
               className="input"
               value={garageForm.address}
               onChange={(e) => setGarageForm({ ...garageForm, address: e.target.value })}
-              placeholder="V├¡ dß╗Ñ: Sß╗æ 230 Cß║ºu Giß║Ñy, Quß║¡n Cß║ºu Giß║Ñy, H├á Nß╗Öi"
+              placeholder="Ví dụ: Số 230 Cầu Giấy, Quận Cầu Giấy, Hà Nội"
             />
           </div>
 
           {!editingGarage ? (
             <div className="form-group">
-              <label>Thß╗ú chß╗ïu tr├ích nhiß╗çm quß║ún l├╜ (─Éß║íi diß╗çn)</label>
+              <label>Thợ chịu trách nhiệm quản lý (Đại diện)</label>
               <select
                 className="select"
                 value={garageForm.mechanicId}
@@ -649,13 +659,13 @@ export function ServicesGaragesPage() {
                   </option>
                 ))}
                 {mechanics.length === 0 && (
-                  <option value="">Kh├┤ng c├│ thß╗ú n├áo sß║╡n s├áng (Vui l├▓ng bß║Ñm Tß║úi thß╗ú)</option>
+                  <option value="">Không có thợ nào sẵn sàng (Vui lòng bấm Tải thợ)</option>
                 )}
               </select>
             </div>
           ) : (
             <div style={{ background: "var(--neutral-bg)", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Thß╗ú ─æß║íi diß╗çn cß╗æ ─æß╗ïnh (Kh├┤ng thß╗â ─æß╗òi online):</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Thợ đại diện cố định (Không thể đổi online):</div>
               <div style={{ fontWeight: 600, fontSize: "14px", marginTop: "4px" }}>
                 {editingGarage.mechanicFullName} ({editingGarage.mechanicPhoneNumber})
               </div>
@@ -669,7 +679,7 @@ export function ServicesGaragesPage() {
                 checked={garageForm.isDeleted}
                 onChange={(e) => setGarageForm({ ...garageForm, isDeleted: e.target.checked })}
               />
-              <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--danger)" }}>Tß║ím ng╞░ng hoß║ít ─æß╗Öng cß╗¡a h├áng</span>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--danger)" }}>Tạm ngưng hoạt động cửa hàng</span>
             </label>
           )}
         </div>
@@ -679,10 +689,10 @@ export function ServicesGaragesPage() {
       <Modal
         isOpen={confirmModalOpen}
         onClose={() => setConfirmModalOpen(false)}
-        title="X├íc nhß║¡n thao t├íc"
+        title="Xác nhận thao tác"
         footer={
           <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hß╗ºy</button>
+            <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy</button>
             <button
               className="btn btn--danger"
               onClick={() => {
@@ -690,13 +700,13 @@ export function ServicesGaragesPage() {
                 setConfirmModalOpen(false);
               }}
             >
-              ─Éß╗ông ├╜ x├│a
+              Đồng ý xóa
             </button>
           </div>
         }
       >
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span style={{ fontSize: "28px" }}>ΓÜá∩╕Å</span>
+          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>
@@ -706,26 +716,26 @@ export function ServicesGaragesPage() {
       <Modal
         isOpen={rejectModalOpen}
         onClose={() => setRejectModalOpen(false)}
-        title="Tß╗½ chß╗æi dß╗ïch vß╗Ñ thß╗ú"
+        title="Từ chối dịch vụ thợ"
         footer={
           <div style={{ display: "flex", gap: "10px" }}>
-            <button className="btn" onClick={() => setRejectModalOpen(false)}>Hß╗ºy</button>
-            <button className="btn btn--danger" onClick={submitRejectMechanicService}>X├íc nhß║¡n tß╗½ chß╗æi</button>
+            <button className="btn" onClick={() => setRejectModalOpen(false)}>Hủy</button>
+            <button className="btn btn--danger" onClick={submitRejectMechanicService}>Xác nhận từ chối</button>
           </div>
         }
       >
         <div style={{ display: "grid", gap: "12px" }}>
           <p style={{ margin: 0, fontSize: "14px" }}>
-            Tß╗½ chß╗æi dß╗ïch vß╗Ñ <strong>{rejectTarget?.serviceName}</strong> cß╗ºa thß╗ú {rejectTarget?.mechanicName}?
+            Từ chối dịch vụ <strong>{rejectTarget?.serviceName}</strong> của thợ {rejectTarget?.mechanicName}?
           </p>
           <div className="form-group">
-            <label>L├╜ do (t├╣y chß╗ìn)</label>
+            <label>Lý do (tùy chọn)</label>
             <textarea
               className="textarea"
               rows={3}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="V├¡ dß╗Ñ: Tr├╣ng dß╗ïch vß╗Ñ hß╗ç thß╗æng, m├┤ tß║ú kh├┤ng r├╡..."
+              placeholder="Ví dụ: Trùng dịch vụ hệ thống, mô tả không rõ..."
             />
           </div>
         </div>
