@@ -11,7 +11,8 @@ const UserListItemSchema = z.object({
   isDeleted: z.boolean(),
   createdAt: z.string().nullable().optional(),
   lastLoginAt: z.string().nullable().optional(),
-  isVerified: z.boolean().nullable().optional()
+  isVerified: z.boolean().nullable().optional(),
+  verifiedAt: z.string().nullable().optional()
 });
 
 const PagedSchema = z.object({

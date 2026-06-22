@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listUsers, getUser, verifyMechanic } from "./usersApi";
@@ -48,11 +48,12 @@ export function VerifyMechanicsPage() {
   const filteredMechanics = useMemo(() => {
     if (!mechanicsQuery.data) return [];
     return mechanicsQuery.data.items.filter((m) => {
+      const isApproved = m.isVerified === true || Boolean(m.verifiedAt);
       if (filterStatus === "pending") {
-        return m.isVerified !== true;
+        return !isApproved;
       }
       if (filterStatus === "approved") {
-        return m.isVerified === true;
+        return isApproved;
       }
       return true;
     });
@@ -65,7 +66,7 @@ export function VerifyMechanicsPage() {
           Duyệt hồ sơ thợ cứu hộ
         </h1>
         <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-          Xem xét tài liệu xác thực (CCCD, GPLX, Cà vẹt xe, bảo hiểm) và phê duyệt quyền hoạt động của thợ.
+          Xem xét tài liệu xác thực (CCCD, GPLX, cà vẹt xe, bảo hiểm) và phê duyệt quyền hoạt động của thợ.
         </p>
       </div>
 
@@ -125,33 +126,33 @@ export function VerifyMechanicsPage() {
       )}
 
       {/* Filter and search bar */}
-      <div style={{ display: "flex", gap: "12px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)", alignItems: "center" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)", alignItems: "stretch" }}>
         <input
           className="input"
-          style={{ flex: 1 }}
+          style={{ flex: "1 1 360px", minWidth: "260px" }}
           placeholder="Tìm thợ theo tên, số điện thoại..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
         
-        <div style={{ display: "flex", background: "var(--neutral-bg)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "var(--neutral-bg)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
           <button 
             className={`btn btn--sm ${filterStatus === "pending" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "pending" ? "" : "transparent", border: "none", color: filterStatus === "pending" ? "" : "var(--secondary)", minWidth: "100px" }}
+            style={{ background: filterStatus === "pending" ? "" : "transparent", border: "none", color: filterStatus === "pending" ? "" : "var(--secondary)",  }}
             onClick={() => setFilterStatus("pending")}
           >
-            Chờ duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified !== true).length ?? 0})
+            Chờ duyệt ({mechanicsQuery.data?.items.filter(m => !(m.isVerified === true || Boolean(m.verifiedAt))).length ?? 0})
           </button>
           <button 
             className={`btn btn--sm ${filterStatus === "approved" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "approved" ? "" : "transparent", border: "none", color: filterStatus === "approved" ? "" : "var(--secondary)", minWidth: "100px" }}
+            style={{ background: filterStatus === "approved" ? "" : "transparent", border: "none", color: filterStatus === "approved" ? "" : "var(--secondary)",  }}
             onClick={() => setFilterStatus("approved")}
           >
-            Đã duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified === true).length ?? 0})
+            Đã duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified === true || Boolean(m.verifiedAt)).length ?? 0})
           </button>
           <button 
             className={`btn btn--sm ${filterStatus === "all" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "all" ? "" : "transparent", border: "none", color: filterStatus === "all" ? "" : "var(--secondary)", minWidth: "80px" }}
+            style={{ background: filterStatus === "all" ? "" : "transparent", border: "none", color: filterStatus === "all" ? "" : "var(--secondary)",  }}
             onClick={() => setFilterStatus("all")}
           >
             Tất cả thợ
@@ -203,8 +204,8 @@ export function VerifyMechanicsPage() {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${m.isVerified ? "badge--success" : "badge--warning"}`}>
-                      {m.isVerified ? "Đã xác minh" : "Chờ duyệt hồ sơ"}
+                    <span className={`badge ${(m.isVerified === true || Boolean(m.verifiedAt)) ? "badge--success" : "badge--warning"}`}>
+                      {(m.isVerified === true || Boolean(m.verifiedAt)) ? "Đã xác minh" : "Chờ duyệt hồ sơ"}
                     </span>
                   </td>
                   <td>
@@ -294,14 +295,14 @@ export function VerifyMechanicsPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: "1 1 360px", minWidth: "260px" }}>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "18px", fontWeight: "700", color: "var(--secondary)" }}>{mechanicDetail.fullName}</span>
                       <span className={`badge ${mechanicDetail.mechanic?.isVerified ? "badge--success" : "badge--warning"}`} style={{ fontSize: "10px", padding: "2px 8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                         {mechanicDetail.mechanic?.isVerified ? (
                           <>
                             <CheckCircle2 size={10} />
-                            <span>ĐÃ XÁC MINH</span>
+                            <span>Đã xác minh</span>
                           </>
                         ) : (
                           <>
