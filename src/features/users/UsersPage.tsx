@@ -47,10 +47,12 @@ export function UsersPage() {
     }
   }
 
-  const queryKey = useMemo(() => ["admin-users", { q, userType }], [q, userType]);
+  const [page, setPage] = useState(1);
+
+  const queryKey = useMemo(() => ["admin-users", { q, userType, page }], [q, userType, page]);
   const usersQuery = useQuery({
     queryKey,
-    queryFn: () => listUsers({ q: q || undefined, userType: userType || undefined, page: 1, pageSize: 50 })
+    queryFn: () => listUsers({ q: q || undefined, userType: userType || undefined, page, pageSize: 20 })
   });
 
   async function onCreate(e: FormEvent) {
@@ -197,13 +199,13 @@ export function UsersPage() {
               style={{ flex: 1 }}
               placeholder="Tìm kiếm theo tên, số điện thoại..."
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => { setQ(e.target.value); setPage(1); }}
             />
             <select
               className="select"
               style={{ width: "160px" }}
               value={userType}
-              onChange={(e) => setUserType(e.target.value)}
+              onChange={(e) => { setUserType(e.target.value); setPage(1); }}
             >
               <option value="">Tất cả vai trò</option>
               <option value="ADMIN">ADMIN</option>
@@ -221,7 +223,8 @@ export function UsersPage() {
               <strong>Lỗi:</strong> {String(usersQuery.error)}
             </div>
           ) : usersQuery.data ? (
-            <div className="table-container" style={{ marginTop: 0 }}>
+            <>
+              <div className="table-container" style={{ marginTop: 0 }}>
               <table className="table">
                 <thead>
                   <tr>
@@ -296,6 +299,31 @@ export function UsersPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <div className="flex-between" style={{ marginTop: "12px" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                Tổng cộng: {usersQuery.data.total} người dùng
+              </span>
+              <div className="flex-gap">
+                <button
+                  className="btn btn--sm"
+                  disabled={page <= 1 || usersQuery.isFetching}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Trước
+                </button>
+                <span style={{ fontSize: "12px", fontWeight: "600" }}>Trang {page}</span>
+                <button
+                  className="btn btn--sm"
+                  disabled={page * 20 >= usersQuery.data.total || usersQuery.isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Sau
+                </button>
+              </div>
+            </div>
+          </>
           ) : (
             <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải người dùng...</div>
           )}
