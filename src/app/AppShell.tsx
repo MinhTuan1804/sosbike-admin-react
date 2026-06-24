@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "./shell.css";
 import { clearAccessToken } from "../features/auth/authStorage";
 import {
@@ -12,8 +12,10 @@ import {
   User,
   ClipboardCheck,
   Settings,
-  Sparkles,
-  LucideIcon
+  Zap,
+  LogOut,
+  LucideIcon,
+  ChevronRight
 } from "lucide-react";
 
 type NavItem = {
@@ -29,58 +31,84 @@ type NavGroup = {
 
 const navGroups: NavGroup[] = [
   {
-    title: "Core",
+    title: "Tổng quan",
     items: [
-      { to: "/dashboard", label: "Overview", icon: LayoutDashboard }
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }
     ]
   },
   {
-    title: "Operations",
+    title: "Vận hành",
     items: [
-      { to: "/orders", label: "Đơn cứu hộ", icon: Flame },
-      { to: "/services", label: "Dịch vụ & Garage", icon: Wrench },
-      { to: "/reviews", label: "Đánh giá & Review", icon: MessageSquare },
-      { to: "/blogs", label: "Blog", icon: FileText }
+      { to: "/orders",   label: "Đơn cứu hộ",       icon: Flame },
+      { to: "/services", label: "Dịch vụ & Garage",  icon: Wrench },
+      { to: "/reviews",  label: "Đánh giá & Review", icon: MessageSquare },
+      { to: "/blogs",    label: "Blog",               icon: FileText }
     ]
   },
   {
-    title: "Finance & Wallet",
+    title: "Tài chính",
     items: [
-      { to: "/finance", label: "Tài chính & Ví", icon: Wallet }
-    ]
-  },
-  {
-    title: "Business Model",
-    items: [
+      { to: "/finance",    label: "Tài chính & Ví",  icon: Wallet },
       { to: "/membership", label: "Gói & Quyền lợi", icon: Ticket }
     ]
   },
   {
-    title: "Management",
+    title: "Quản lý",
     items: [
-      { to: "/users", label: "Tài khoản", icon: User },
-      { to: "/verify-mechanics", label: "Duyệt hồ sơ thợ", icon: ClipboardCheck },
-      { to: "/config", label: "Cấu hình hệ thống", icon: Settings }
+      { to: "/users",            label: "Tài khoản",         icon: User },
+      { to: "/verify-mechanics", label: "Duyệt hồ sơ thợ",  icon: ClipboardCheck },
+      { to: "/config",           label: "Cấu hình hệ thống", icon: Settings }
     ]
   }
 ];
 
+// Map route → breadcrumb label
+const routeLabels: Record<string, string> = {
+  "/dashboard":        "Dashboard",
+  "/orders":           "Đơn cứu hộ",
+  "/services":         "Dịch vụ & Garage",
+  "/reviews":          "Đánh giá & Review",
+  "/blogs":            "Blog",
+  "/finance":          "Tài chính & Ví",
+  "/membership":       "Gói & Quyền lợi",
+  "/users":            "Tài khoản",
+  "/verify-mechanics": "Duyệt hồ sơ thợ",
+  "/config":           "Cấu hình hệ thống"
+};
+
 export function AppShell() {
+  const location = useLocation();
+  const currentLabel = routeLabels[location.pathname] ?? "Admin";
+
+  function handleLogout() {
+    clearAccessToken();
+    window.location.href = "/login";
+  }
+
   return (
     <div className="shell">
+      {/* ===== SIDEBAR ===== */}
       <aside className="sidebar">
-        <div>
+        {/* Scrollable nav area */}
+        <div className="sidebar__inner">
+          {/* Brand */}
           <div className="brand">
-            <div className="brand__title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Sparkles size={16} style={{ color: "var(--primary)" }} />
-              <span>SOSBIKE</span>
+            <div className="brand__logo">
+              <div className="brand__icon" aria-hidden="true">
+                <Zap size={18} strokeWidth={2.5} />
+              </div>
+              <div>
+                <div className="brand__title">SOSBIKE</div>
+                <div className="brand__sub">Enterprise Admin</div>
+              </div>
             </div>
-            <div className="brand__sub">Enterprise Admin</div>
           </div>
-          <nav className="nav">
+
+          {/* Nav groups */}
+          <nav className="nav" aria-label="Main navigation">
             {navGroups.map((group) => (
-              <div key={group.title}>
-                <div className="nav__group-title">{group.title}</div>
+              <div className="nav__group" key={group.title}>
+                <div className="nav__group-title" aria-hidden="true">{group.title}</div>
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -90,8 +118,11 @@ export function AppShell() {
                       className={({ isActive }) =>
                         isActive ? "nav__item nav__item--active" : "nav__item"
                       }
+                      aria-label={item.label}
                     >
-                      <Icon size={16} />
+                      <span className="nav__item-icon" aria-hidden="true">
+                        <Icon size={16} strokeWidth={2} />
+                      </span>
                       <span>{item.label}</span>
                     </NavLink>
                   );
@@ -100,33 +131,55 @@ export function AppShell() {
             ))}
           </nav>
         </div>
-        
-        <div style={{ padding: "12px", borderTop: "1px solid var(--border-color)", marginTop: "16px" }}>
+
+        {/* Footer: user info + logout */}
+        <div className="sidebar__footer">
+          <div className="sidebar__user">
+            <div className="sidebar__avatar" aria-hidden="true">AD</div>
+            <div className="sidebar__user-info">
+              <div className="sidebar__user-name">Admin</div>
+              <div className="sidebar__user-role">Super Admin</div>
+            </div>
+          </div>
           <button
-            className="btn btn--danger"
-            style={{ width: "100%", justifyContent: "center" }}
-            onClick={() => {
-              clearAccessToken();
-              window.location.href = "/login";
+            className="btn btn--ghost"
+            style={{
+              width: "100%",
+              justifyContent: "flex-start",
+              color: "var(--sidebar-nav-color)",
+              gap: "10px",
+              fontSize: "13px",
+              height: "36px",
+              padding: "0 10px"
             }}
+            onClick={handleLogout}
+            aria-label="Đăng xuất khỏi hệ thống"
           >
-            Đăng xuất
+            <LogOut size={15} strokeWidth={2} />
+            <span>Đăng xuất</span>
           </button>
         </div>
       </aside>
-      
+
+      {/* ===== MAIN ===== */}
       <main className="main">
-        <header className="topbar">
-          <div className="topbar__title">SOSBIKE Control Panel</div>
-          <div className="topbar__meta">
-            <div className="flex-gap">
-              <span className="badge badge--success" style={{ textTransform: "none", fontSize: "10px" }}>
-                ● API Online
-              </span>
-              <code>{import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}</code>
+        {/* Topbar */}
+        <header className="topbar" role="banner">
+          <div className="topbar__left">
+            <div className="topbar__breadcrumb">
+              <span>SOSBIKE</span>
+              <ChevronRight size={14} aria-hidden="true" style={{ color: "var(--text-light)" }} />
+              <strong>{currentLabel}</strong>
+            </div>
+          </div>
+          <div className="topbar__right">
+            <div className="topbar__status" aria-label="Trạng thái API: Online" title={import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}>
+              API Online
             </div>
           </div>
         </header>
+
+        {/* Content */}
         <div className="content">
           <Outlet />
         </div>

@@ -119,19 +119,25 @@ export function BlogsPage() {
 
   return (
     <div style={{ display: "grid", gap: "20px" }}>
-      <div className="flex-between">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800 }}>Quản lý Blog</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>Tạo, sửa, xuất bản và ẩn bài viết hiển thị trên landing page.</p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Blog</h1>
+          <p>Tạo, sửa, xuất bản và ẩn bài viết hiển thị trên landing page.</p>
         </div>
-        <button className="btn btn--primary" onClick={openCreate}>+ Thêm bài viết</button>
+        <div className="page-header__actions">
+          <button className="btn btn--primary" onClick={openCreate}>+ Tạo bài mới</button>
+        </div>
       </div>
 
+      {/* Analytics Section — Top Posts */}
       {analytics && analytics.items && analytics.items.length > 0 && (
         <div style={{ display: "grid", gap: "12px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 700, margin: "5px 0 0 0", color: "var(--text-color, #2c1111)", display: "flex", alignItems: "center", gap: "6px" }}>
-            <Trophy size={18} style={{ color: "#f59e0b" }} /> Top bài viết xem nhiều nhất
-          </h2>
+          <div className="section-header">
+            <h2 style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Trophy size={18} style={{ color: "#f59e0b" }} /> Top bài viết xem nhiều nhất
+            </h2>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
             {analytics.items.map((item, idx) => {
               const totalViews = item.viewCount || 1;
@@ -141,17 +147,13 @@ export function BlogsPage() {
               return (
                 <div
                   key={item.blogpostid}
+                  className="card"
                   style={{
-                    background: "var(--card-bg)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "var(--radius-lg)",
-                    padding: "16px",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
                     position: "relative",
                     overflow: "hidden",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.02)",
                     transition: "transform 0.2s, box-shadow 0.2s",
                     cursor: "default"
                   }}
@@ -161,7 +163,7 @@ export function BlogsPage() {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.02)";
+                    e.currentTarget.style.boxShadow = "";
                   }}
                 >
                   <div
@@ -256,7 +258,8 @@ export function BlogsPage() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+      {/* Filter Bar */}
+      <div className="filter-bar">
         <input
           className="input"
           style={{ flex: 1 }}
@@ -267,6 +270,7 @@ export function BlogsPage() {
         <button className="btn" onClick={refresh} disabled={loading}>{loading ? "..." : "Tải lại"}</button>
       </div>
 
+      {/* Blogs Table */}
       <div className="table-container">
         <table className="table">
           <thead>
@@ -296,7 +300,7 @@ export function BlogsPage() {
                 </td>
                 <td>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
                 <td>
-                  <div style={{ display: "flex", gap: "6px" }}>
+                  <div className="flex-gap gap-8">
                     <button className="btn btn--sm" onClick={() => openEdit(blog)}>Sửa</button>
                     <button className="btn btn--sm btn--danger" onClick={() => onDelete(blog.blogpostid)}>Xóa</button>
                   </div>
@@ -305,8 +309,8 @@ export function BlogsPage() {
             ))}
             {blogs.length === 0 && !loading ? (
               <tr>
-                <td colSpan={8} style={{ color: "var(--text-muted)", textAlign: "center", padding: "20px" }}>
-                  Chưa có bài viết nào.
+                <td colSpan={8}>
+                  <div className="empty-state">Chưa có bài viết nào.</div>
                 </td>
               </tr>
             ) : null}
@@ -314,13 +318,14 @@ export function BlogsPage() {
         </table>
       </div>
 
+      {/* Blog Create/Edit Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editing ? "Cập nhật bài viết" : "Tạo bài viết mới"}
         size="lg"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setModalOpen(false)}>Hủy</button>
             <button className="btn btn--primary" onClick={save}>Lưu</button>
           </div>
@@ -358,12 +363,13 @@ export function BlogsPage() {
         </div>
       </Modal>
 
+      {/* Confirm Delete Modal */}
       <Modal
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Xác nhận thao tác"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setConfirmOpen(false)}>Hủy</button>
             <button
               className="btn btn--danger"

@@ -1,5 +1,5 @@
-﻿import { useState, useMemo } from "react";
-import { CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { useState, useMemo } from "react";
+import { CheckCircle2, AlertCircle, Eye, ClipboardCheck, Search, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listUsers, getUser, verifyMechanic } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
@@ -61,50 +61,36 @@ export function VerifyMechanicsPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <div>
-        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>
-          Duyệt hồ sơ thợ cứu hộ
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-          Xem xét tài liệu xác thực (CCCD, GPLX, cà vẹt xe, bảo hiểm) và phê duyệt quyền hoạt động của thợ.
-        </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+              <ClipboardCheck size={22} style={{ color: "var(--primary)" }} />
+              Duyệt hồ sơ thợ cứu hộ
+            </span>
+          </h1>
+          <p>Xem xét tài liệu xác thực (CCCD, GPLX, cà vẹt xe, bảo hiểm) và phê duyệt quyền hoạt động của thợ.</p>
+        </div>
       </div>
 
       {/* CSS injection for doc thumbnails and lightbox */}
       <style>{`
-        .doc-thumbnail:hover .doc-thumbnail-overlay {
-          opacity: 1 !important;
-        }
+        .doc-thumbnail:hover .doc-thumbnail-overlay { opacity: 1 !important; }
         .lightbox-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.85);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          cursor: zoom-out;
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.85);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 9999; cursor: zoom-out;
           animation: fadeIn 0.2s ease-out;
         }
         .lightbox-content {
-          max-width: 90%;
-          max-height: 90%;
-          border-radius: 8px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          cursor: default;
-          animation: zoomIn 0.2s ease-out;
+          max-width: 90%; max-height: 90%;
+          border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          cursor: default; animation: zoomIn 0.2s ease-out;
         }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes zoomIn {
-          from { transform: scale(0.95); }
-          to { transform: scale(1); }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); } to { transform: scale(1); } }
       `}</style>
 
       {/* Lightbox Image Preview */}
@@ -125,41 +111,37 @@ export function VerifyMechanicsPage() {
         </div>
       )}
 
-      {/* Filter and search bar */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)", alignItems: "stretch" }}>
-        <input
-          className="input"
-          style={{ flex: "1 1 360px", minWidth: "260px" }}
-          placeholder="Tìm thợ theo tên, số điện thoại..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+      {/* Filter Bar */}
+      <div className="filter-bar">
+        <div className="input-icon-wrap" style={{ flex: 1, minWidth: "260px" }}>
+          <span className="input-icon-wrap__icon"><Search size={14} /></span>
+          <input
+            className="input"
+            placeholder="Tìm thợ theo tên, số điện thoại..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            id="mechanics-search"
+            aria-label="Tìm kiếm thợ cứu hộ"
+          />
+        </div>
         
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", background: "var(--neutral-bg)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
-          <button 
-            className={`btn btn--sm ${filterStatus === "pending" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "pending" ? "" : "transparent", border: "none", color: filterStatus === "pending" ? "" : "var(--secondary)",  }}
-            onClick={() => setFilterStatus("pending")}
-          >
-            Chờ duyệt ({mechanicsQuery.data?.items.filter(m => !(m.isVerified === true || Boolean(m.verifiedAt))).length ?? 0})
-          </button>
-          <button 
-            className={`btn btn--sm ${filterStatus === "approved" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "approved" ? "" : "transparent", border: "none", color: filterStatus === "approved" ? "" : "var(--secondary)",  }}
-            onClick={() => setFilterStatus("approved")}
-          >
-            Đã duyệt ({mechanicsQuery.data?.items.filter(m => m.isVerified === true || Boolean(m.verifiedAt)).length ?? 0})
-          </button>
-          <button 
-            className={`btn btn--sm ${filterStatus === "all" ? "btn--primary" : ""}`}
-            style={{ background: filterStatus === "all" ? "" : "transparent", border: "none", color: filterStatus === "all" ? "" : "var(--secondary)",  }}
-            onClick={() => setFilterStatus("all")}
-          >
-            Tất cả thợ
-          </button>
+        <div style={{ display: "flex", gap: "4px", background: "var(--neutral-bg)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+          {(["pending", "approved", "all"] as const).map((status) => (
+            <button
+              key={status}
+              className={`btn btn--sm ${filterStatus === status ? "btn--primary" : "btn--ghost"}`}
+              onClick={() => setFilterStatus(status)}
+              aria-pressed={filterStatus === status}
+            >
+              {status === "pending"  && `Chờ duyệt (${mechanicsQuery.data?.items.filter(m => !(m.isVerified === true || Boolean(m.verifiedAt))).length ?? 0})`}
+              {status === "approved" && `Đã duyệt (${mechanicsQuery.data?.items.filter(m => m.isVerified === true || Boolean(m.verifiedAt)).length ?? 0})`}
+              {status === "all"      && `Tất cả thợ`}
+            </button>
+          ))}
         </div>
 
-        <button className="btn" onClick={() => mechanicsQuery.refetch()} disabled={mechanicsQuery.isFetching}>
+        <button className="btn" onClick={() => mechanicsQuery.refetch()} disabled={mechanicsQuery.isFetching} aria-label="Tải lại danh sách">
+          <RefreshCw size={14} />
           {mechanicsQuery.isFetching ? "..." : "Tải lại"}
         </button>
       </div>

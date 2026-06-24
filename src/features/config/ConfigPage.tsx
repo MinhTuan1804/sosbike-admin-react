@@ -3,7 +3,7 @@ import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
 import { Modal } from "../../shared/components/Modal";
-import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff } from "lucide-react";
+import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff, RefreshCw, Save } from "lucide-react";
 
 function formatDateTime(isoString: string | null | undefined) {
   if (!isoString) return "Chưa rõ";
@@ -169,42 +169,49 @@ export function ConfigPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <div className="flex-between">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Cấu hình hệ thống</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Quản lý phí sàn, tỷ lệ hoa hồng thợ, giao diện app và các công tắc kiểm soát hoạt động.
-          </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Cấu hình hệ thống</h1>
+          <p>Quản lý phí sàn, tỷ lệ hoa hồng thợ, giao diện app và các công tắc kiểm soát hoạt động.</p>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button className="btn" onClick={loadFromDb} disabled={loading}>
+        <div className="page-header__actions">
+          <button className="btn btn--ghost" onClick={loadFromDb} disabled={loading}>
+            <RefreshCw size={14} />
             {loading ? "Đang tải..." : "Reload cấu hình"}
           </button>
           <button className="btn btn--primary" onClick={onSaveToDb} disabled={loading || hasValidationError}>
+            <Save size={14} />
             Lưu cài đặt vào DB
           </button>
         </div>
       </div>
 
       {/* Connection and Sync Status Alert */}
-      <div className="card" style={{ padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--neutral-bg)", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Cloud size={24} style={{ color: "var(--primary)" }} />
-          <div>
-            <div style={{ fontWeight: "700", fontSize: "13px" }}>Trạng thái đồng bộ cơ sở dữ liệu</div>
-            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>Đồng bộ lần cuối: {formatDateTime(dbUpdatedAt)}</div>
+      <div className="card" style={{ padding: "16px" }}>
+        <div className="flex-between">
+          <div className="flex-gap" style={{ alignItems: "center" }}>
+            <Cloud size={24} style={{ color: "var(--primary)" }} />
+            <div>
+              <div style={{ fontWeight: "700", fontSize: "13px" }}>Trạng thái đồng bộ cơ sở dữ liệu</div>
+              <div style={{ fontSize: "11px", color: "var(--text-light)" }}>
+                Đồng bộ lần cuối: {formatDateTime(dbUpdatedAt)}
+                {savedAt && <span style={{ marginLeft: "8px", color: "var(--success)" }}>• Đã lưu lúc {savedAt}</span>}
+              </div>
+            </div>
           </div>
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button className="btn btn--sm" onClick={onResetDefault}>Reset Default</button>
-          <button className="btn btn--sm" onClick={onLoadLocal}>Tải bản backup local</button>
+          <div className="flex-gap gap-8">
+            <button className="btn btn--sm" onClick={onResetDefault}>Reset Default</button>
+            <button className="btn btn--sm" onClick={onLoadLocal}>Tải bản backup local</button>
+          </div>
         </div>
       </div>
 
       {/* Error and Alert Message Banners */}
       {error && (
-        <div style={{ color: "var(--danger)", background: "var(--danger-bg)", border: "1px solid var(--danger)", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px" }}>
-          <b>Lỗi đồng bộ:</b> {error}
+        <div style={{ color: "var(--danger)", background: "var(--danger-bg)", border: "1px solid var(--danger)", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertTriangle size={16} />
+          <span><b>Lỗi đồng bộ:</b> {error}</span>
         </div>
       )}
 
@@ -221,11 +228,13 @@ export function ConfigPage() {
         <div style={{ display: "grid", gap: "24px" }}>
           
           {/* 1. Platform Settings */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Coins size={18} style={{ color: "var(--primary)" }} />
-              <span>Cấu hình Phí & Chiết khấu</span>
-            </h3>
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Coins size={18} style={{ color: "var(--primary)" }} />
+                Cấu hình Phí &amp; Chiết khấu
+              </h2>
+            </div>
             
             <div style={{ display: "grid", gap: "16px" }}>
               <div className="form-group">
@@ -267,11 +276,13 @@ export function ConfigPage() {
           </div>
 
           {/* 2. UI App Settings */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Palette size={18} style={{ color: "var(--primary)" }} />
-              <span>Cấu hình Giao diện Khách hàng</span>
-            </h3>
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Palette size={18} style={{ color: "var(--primary)" }} />
+                Cấu hình Giao diện Khách hàng
+              </h2>
+            </div>
 
             <div style={{ display: "grid", gap: "16px" }}>
               <div className="form-group">
@@ -411,11 +422,13 @@ export function ConfigPage() {
           </div>
 
           {/* 3. Third-Party Integrations */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Key size={18} style={{ color: "var(--primary)" }} />
-              <span>Tích hợp Bên thứ ba</span>
-            </h3>
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Key size={18} style={{ color: "var(--primary)" }} />
+                Tích hợp Bên thứ ba
+              </h2>
+            </div>
 
             <div style={{ display: "grid", gap: "16px" }}>
               <div className="form-group">
@@ -460,11 +473,13 @@ export function ConfigPage() {
           </div>
 
           {/* 4. Landing Page Settings */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Globe size={18} style={{ color: "var(--primary)" }} />
-              <span>Cấu hình Landing Page</span>
-            </h3>
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Globe size={18} style={{ color: "var(--primary)" }} />
+                Cấu hình Landing Page
+              </h2>
+            </div>
 
             <div style={{ display: "grid", gap: "16px" }}>
               <div className="form-group">
@@ -629,12 +644,14 @@ export function ConfigPage() {
         {/* Right Column: Flags & Previews */}
         <div style={{ display: "grid", gap: "24px" }}>
           
-          {/* 3. Feature Flags Switch Toggles (Premium Micro-interactions) */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Sliders size={18} style={{ color: "var(--primary)" }} />
-              <span>Công tắc chức năng hệ thống (Feature Flags)</span>
-            </h3>
+          {/* Feature Flags Switch Toggles */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Sliders size={18} style={{ color: "var(--primary)" }} />
+                Công tắc chức năng hệ thống (Feature Flags)
+              </h2>
+            </div>
 
             <div style={{ display: "grid", gap: "14px" }}>
               
@@ -721,9 +738,9 @@ export function ConfigPage() {
             </div>
           </div>
 
-          {/* 4. Mock Screen Background Preview */}
-          <div className="card" style={{ padding: "20px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", color: "var(--secondary)" }}>Mockup Giao diện ứng dụng</h3>
+          {/* Mock Screen Background Preview */}
+          <div className="card">
+            <h3 className="card__title" style={{ marginBottom: "12px" }}>Mockup Giao diện ứng dụng</h3>
             
             <div style={{ width: "100%", height: "180px", position: "relative", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", background: "#1e293b", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {draftConfig.ui.homeBackgroundUrl ? (
@@ -746,8 +763,10 @@ export function ConfigPage() {
       </div>
 
       {/* Advanced: Raw JSON Panel */}
-      <div className="card" style={{ padding: "20px" }}>
-        <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "12px", color: "var(--secondary)" }}>Cấu hình nâng cao (Raw JSON Editor)</h3>
+      <div className="card">
+        <div className="section-header" style={{ marginBottom: "12px" }}>
+          <h2>Cấu hình nâng cao (Raw JSON Editor)</h2>
+        </div>
         <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>
           Chỉ chỉnh sửa nội dung bên dưới khi bạn hiểu rõ cấu trúc dữ liệu cấu hình. Bấm Apply JSON trước khi Lưu cài đặt.
         </p>
@@ -763,7 +782,7 @@ export function ConfigPage() {
           }}
         />
 
-        <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+        <div className="flex-gap" style={{ marginTop: "12px" }}>
           <button className="btn btn--sm" onClick={onApplyJson}>Áp dụng thay đổi JSON</button>
           <button className="btn btn--sm" onClick={onFormatJson}>Tự động Định dạng</button>
           {jsonError && (
@@ -775,25 +794,26 @@ export function ConfigPage() {
       </div>
 
       {/* Version History Log Timeline */}
-      <div className="card" style={{ padding: "20px" }}>
+      <div className="card">
         <div className="flex-between" style={{ marginBottom: "16px" }}>
-          <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--secondary)" }}>Lịch sử chỉnh sửa cài đặt</h3>
-          <button className="btn btn--sm" onClick={loadVersions} disabled={versionsLoading}>
+          <div className="section-header" style={{ margin: 0 }}>
+            <h2>Lịch sử chỉnh sửa cài đặt</h2>
+          </div>
+          <button className="btn btn--sm btn--ghost" onClick={loadVersions} disabled={versionsLoading}>
+            <RefreshCw size={13} />
             {versionsLoading ? "Đang tải..." : "Tải lại lịch sử"}
           </button>
         </div>
 
         {versions.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "24px", color: "var(--text-light)" }}>Chưa ghi nhận lịch sử chỉnh sửa cấu hình nào.</div>
+          <div className="empty-state">Chưa ghi nhận lịch sử chỉnh sửa cấu hình nào.</div>
         ) : (
           <div style={{ display: "grid", gap: "12px" }}>
             {versions.map((ver) => (
               <div
                 key={ver.versionId}
+                className="flex-between"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
                   padding: "12px 16px",
                   borderRadius: "var(--radius-md)",
                   border: "1px solid var(--border-color)",
@@ -819,7 +839,7 @@ export function ConfigPage() {
         onClose={() => setConfirmModalOpen(false)}
         title="Xác nhận Rollback cấu hình"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy bỏ</button>
             <button
               className="btn btn--primary"
@@ -833,8 +853,8 @@ export function ConfigPage() {
           </div>
         }
       >
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
+        <div className="flex-gap" style={{ alignItems: "center" }}>
+          <AlertTriangle size={28} style={{ color: "var(--warning)", flexShrink: 0 }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Star, Eye, EyeOff, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, MessageSquare } from "lucide-react";
 import { listReviews, setReviewVisibility, type ReviewListItem } from "./reviewsApi";
 import { Modal } from "../../shared/components/Modal";
 
@@ -45,7 +45,7 @@ export function ReviewsPage() {
     const msg = next
       ? "Bạn có chắc chắn muốn ẨN đánh giá này không? Đánh giá bị ẩn sẽ không hiển thị trên ứng dụng khách hàng."
       : "Bạn muốn HIỂN THỊ lại đánh giá này trên ứng dụng?";
-    
+
     triggerConfirm(msg, async () => {
       await setReviewVisibility(r.reviewId, next);
       await refresh();
@@ -54,14 +54,9 @@ export function ReviewsPage() {
 
   function renderStars(stars: number) {
     return (
-      <span style={{ color: "#f59e0b", display: "flex", gap: "2px" }}>
+      <span style={{ color: "#f59e0b", letterSpacing: "2px", fontSize: "15px" }}>
         {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            size={14}
-            fill={i < stars ? "#f59e0b" : "none"}
-            stroke={i < stars ? "#f59e0b" : "currentColor"}
-          />
+          <span key={i} style={{ color: i < stars ? "#f59e0b" : "#d1d5db" }}>★</span>
         ))}
       </span>
     );
@@ -69,20 +64,21 @@ export function ReviewsPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <div className="flex-between">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Đánh giá & Phản hồi</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Giám sát chất lượng cứu hộ thông qua đánh giá sao và ý kiến đóng góp từ khách hàng.
-          </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Đánh giá &amp; Review</h1>
+          <p>Giám sát chất lượng cứu hộ thông qua đánh giá sao và ý kiến đóng góp từ khách hàng.</p>
         </div>
-        <button className="btn btn--primary" onClick={refresh} disabled={loading}>
-          {loading ? "Đang tải..." : "Tải lại danh sách"}
-        </button>
+        <div className="page-header__actions">
+          <button className="btn btn--primary" onClick={refresh} disabled={loading}>
+            {loading ? "Đang tải..." : "Tải lại danh sách"}
+          </button>
+        </div>
       </div>
 
-      {/* Filter Card */}
-      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)" }}>
+      {/* Filter Bar */}
+      <div className="filter-bar">
         <input
           className="input"
           placeholder="Tìm theo nội dung đánh giá, SĐT khách, tên thợ..."
@@ -98,11 +94,11 @@ export function ReviewsPage() {
             </option>
           ))}
         </select>
-        
+
         <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", userSelect: "none" }}>
-          <input 
-            type="checkbox" 
-            checked={includeHidden} 
+          <input
+            type="checkbox"
+            checked={includeHidden}
             onChange={(e) => setIncludeHidden(e.target.checked)}
             style={{ width: "16px", height: "16px" }}
           />
@@ -110,7 +106,7 @@ export function ReviewsPage() {
         </label>
       </div>
 
-      {/* Grid of reviews cards (Testimonial Style for UX optimization) */}
+      {/* Review Cards Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "20px" }}>
         {items.map((r) => (
           <div
@@ -176,8 +172,8 @@ export function ReviewsPage() {
           </div>
         ))}
         {items.length === 0 && (
-          <div className="card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
-            Không có đánh giá nào phù hợp với bộ lọc tìm kiếm.
+          <div style={{ gridColumn: "1 / -1" }}>
+            <div className="empty-state">Không có đánh giá nào phù hợp với bộ lọc tìm kiếm.</div>
           </div>
         )}
       </div>
@@ -188,7 +184,7 @@ export function ReviewsPage() {
         onClose={() => setConfirmModalOpen(false)}
         title="Xác nhận thao tác đánh giá"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy bỏ</button>
             <button
               className="btn btn--primary"

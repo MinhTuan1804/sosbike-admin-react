@@ -8,7 +8,7 @@ import {
   rejectWithdraw
 } from "./financeApi";
 import { Modal } from "../../shared/components/Modal";
-import { Wallet, History, ArrowDownToLine } from "lucide-react";
+import { Wallet, History, ArrowDownToLine, RefreshCw } from "lucide-react";
 
 type Tab = "wallets" | "transactions" | "withdraw";
 
@@ -121,16 +121,15 @@ export function FinancePage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <div className="flex-between">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Tài chính & Ví</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px" }}>
-            Quản lý số dư người dùng, xem lịch sử giao dịch và phê duyệt các yêu cầu rút tiền.
-          </p>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Tài chính &amp; Ví</h1>
+          <p>Quản lý số dư người dùng, xem lịch sử giao dịch và phê duyệt các yêu cầu rút tiền.</p>
         </div>
       </div>
 
-      {/* Modern Tabs Design */}
+      {/* Tab Navigation */}
       <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "24px", marginBottom: "8px" }}>
         <button
           style={{
@@ -194,7 +193,11 @@ export function FinancePage() {
       {/* Tab 1: Wallets list */}
       {tab === "wallets" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="section-header">
+            <h2>Danh sách tài khoản ví</h2>
+          </div>
+
+          <div className="filter-bar">
             <input
               className="input"
               style={{ flex: 1, minWidth: "220px" }}
@@ -213,7 +216,8 @@ export function FinancePage() {
               <option value="MECHANIC">MECHANIC</option>
               <option value="ADMIN">ADMIN</option>
             </select>
-            <button className="btn" onClick={() => walletsQuery.refetch()} disabled={walletsQuery.isFetching}>
+            <button className="btn btn--ghost" onClick={() => walletsQuery.refetch()} disabled={walletsQuery.isFetching}>
+              <RefreshCw size={14} />
               {walletsQuery.isFetching ? "Đang tải..." : "Tải lại"}
             </button>
           </div>
@@ -248,8 +252,10 @@ export function FinancePage() {
                             {w.userType}
                           </span>
                         </td>
-                        <td style={{ fontWeight: 700, color: "var(--secondary)", fontSize: "15px" }}>
-                          {w.balance != null ? formatMoney(w.balance) : "0 đ"}
+                        <td>
+                          <span className="tabular-nums" style={{ fontWeight: 700, color: "var(--secondary)", fontSize: "15px" }}>
+                            {w.balance != null ? formatMoney(w.balance) : "0 đ"}
+                          </span>
                         </td>
                         <td>
                           <span className={`badge ${w.status === "ACTIVE" ? "badge--success" : "badge--warning"}`}>
@@ -271,15 +277,17 @@ export function FinancePage() {
                             <span style={{ color: "var(--text-light)" }}>Chưa liên kết</span>
                           )}
                         </td>
-                        <td style={{ fontWeight: 600 }}>
-                          {w.dailyWithdrawLimit != null ? formatMoney(w.dailyWithdrawLimit) : "-"}
+                        <td>
+                          <span className="tabular-nums" style={{ fontWeight: 600 }}>
+                            {w.dailyWithdrawLimit != null ? formatMoney(w.dailyWithdrawLimit) : "-"}
+                          </span>
                         </td>
                       </tr>
                     ))}
                     {walletsQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-light)" }}>
-                          Không có tài khoản ví nào phù hợp.
+                        <td colSpan={6}>
+                          <div className="empty-state">Không có tài khoản ví nào phù hợp.</div>
                         </td>
                       </tr>
                     )}
@@ -288,17 +296,19 @@ export function FinancePage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex-between" style={{ marginTop: "12px" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: {walletsQuery.data.total} tài khoản</span>
+              <div className="pagination">
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{walletsQuery.data.total}</b> tài khoản</span>
                 <div className="flex-gap">
                   <button className="btn btn--sm" disabled={walletsPage <= 1} onClick={() => setWalletsPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }}>Trang {walletsPage}</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {walletsPage}</span>
                   <button className="btn btn--sm" disabled={walletsPage * 20 >= walletsQuery.data.total} onClick={() => setWalletsPage(p => p + 1)}>Sau</button>
                 </div>
               </div>
             </>
           ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải danh sách ví...</div>
+            <div className="card">
+              <div className="skeleton" style={{ height: "200px" }} />
+            </div>
           )}
         </div>
       )}
@@ -306,7 +316,11 @@ export function FinancePage() {
       {/* Tab 2: Transactions list */}
       {tab === "transactions" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="section-header">
+            <h2>Lịch sử giao dịch</h2>
+          </div>
+
+          <div className="filter-bar">
             <input
               className="input"
               style={{ flex: 1, minWidth: "200px" }}
@@ -331,7 +345,8 @@ export function FinancePage() {
               value={txType}
               onChange={(e) => { setTxType(e.target.value); setTxPage(1); }}
             />
-            <button className="btn" onClick={() => txQuery.refetch()} disabled={txQuery.isFetching}>
+            <button className="btn btn--ghost" onClick={() => txQuery.refetch()} disabled={txQuery.isFetching}>
+              <RefreshCw size={14} />
               {txQuery.isFetching ? "Đang tải..." : "Tải lại"}
             </button>
           </div>
@@ -376,24 +391,26 @@ export function FinancePage() {
                             {t.flowType === "IN" ? "Nạp / Thu" : "Rút / Chi"}
                           </span>
                         </td>
-                        <td style={{
-                          fontWeight: 700,
-                          fontSize: "14px",
-                          color: t.flowType === "IN" ? "var(--success)" : "var(--danger)"
-                        }}>
-                          {t.flowType === "IN" ? "+" : "-"} {formatMoney(t.amount)}
+                        <td>
+                          <span className="tabular-nums" style={{
+                            fontWeight: 700,
+                            fontSize: "14px",
+                            color: t.flowType === "IN" ? "var(--success)" : "var(--danger)"
+                          }}>
+                            {t.flowType === "IN" ? "+" : "-"} {formatMoney(t.amount)}
+                          </span>
                         </td>
                         <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                          <div>Trước: {formatMoney(t.balanceBefore)}</div>
-                          <div>Sau: {formatMoney(t.balanceAfter)}</div>
+                          <div className="tabular-nums">Trước: {formatMoney(t.balanceBefore)}</div>
+                          <div className="tabular-nums">Sau: {formatMoney(t.balanceAfter)}</div>
                         </td>
                         <td>{formatDate(t.createdAt)}</td>
                       </tr>
                     ))}
                     {txQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-light)" }}>
-                          Không có giao dịch nào khớp với bộ lọc.
+                        <td colSpan={6}>
+                          <div className="empty-state">Không có giao dịch nào khớp với bộ lọc.</div>
                         </td>
                       </tr>
                     )}
@@ -402,17 +419,19 @@ export function FinancePage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex-between" style={{ marginTop: "12px" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: {txQuery.data.total} giao dịch</span>
+              <div className="pagination">
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{txQuery.data.total}</b> giao dịch</span>
                 <div className="flex-gap">
                   <button className="btn btn--sm" disabled={txPage <= 1} onClick={() => setTxPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }}>Trang {txPage}</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {txPage}</span>
                   <button className="btn btn--sm" disabled={txPage * 20 >= txQuery.data.total} onClick={() => setTxPage(p => p + 1)}>Sau</button>
                 </div>
               </div>
             </>
           ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải lịch sử giao dịch...</div>
+            <div className="card">
+              <div className="skeleton" style={{ height: "200px" }} />
+            </div>
           )}
         </div>
       )}
@@ -420,10 +439,14 @@ export function FinancePage() {
       {/* Tab 3: Withdraw approvals */}
       {tab === "withdraw" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="section-header">
+            <h2>Yêu cầu rút tiền</h2>
+          </div>
+
+          <div className="filter-bar">
             <select
               className="select"
-              style={{ width: "200px" }}
+              style={{ width: "220px" }}
               value={wrStatus}
               onChange={(e) => { setWrStatus(e.target.value); setWrPage(1); }}
             >
@@ -433,7 +456,8 @@ export function FinancePage() {
               <option value="REJECTED">REJECTED (Từ chối)</option>
               <option value="">Tất cả yêu cầu</option>
             </select>
-            <button className="btn" onClick={() => wrQuery.refetch()} disabled={wrQuery.isFetching}>
+            <button className="btn btn--ghost" onClick={() => wrQuery.refetch()} disabled={wrQuery.isFetching}>
+              <RefreshCw size={14} />
               {wrQuery.isFetching ? "Đang tải..." : "Tải lại"}
             </button>
           </div>
@@ -463,8 +487,10 @@ export function FinancePage() {
                           <div style={{ fontWeight: 600 }}>{r.fullName}</div>
                           <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{r.phoneNumber}</div>
                         </td>
-                        <td style={{ fontWeight: 800, fontSize: "15px", color: "var(--secondary)" }}>
-                          {formatMoney(r.amount)}
+                        <td>
+                          <span className="tabular-nums" style={{ fontWeight: 800, fontSize: "15px", color: "var(--secondary)" }}>
+                            {formatMoney(r.amount)}
+                          </span>
                         </td>
                         <td>
                           <span className={`badge ${
@@ -500,7 +526,7 @@ export function FinancePage() {
                         <td>{formatDate(r.requestedAt)}</td>
                         <td>
                           {r.status === "PENDING" ? (
-                            <div style={{ display: "flex", gap: "8px" }}>
+                            <div className="flex-gap gap-8">
                               <button
                                 className="btn btn--primary btn--sm"
                                 onClick={() => {
@@ -530,8 +556,8 @@ export function FinancePage() {
                     ))}
                     {wrQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: "center", padding: "32px", color: "var(--text-light)" }}>
-                          Không có yêu cầu rút tiền nào.
+                        <td colSpan={6}>
+                          <div className="empty-state">Không có yêu cầu rút tiền nào.</div>
                         </td>
                       </tr>
                     )}
@@ -540,17 +566,19 @@ export function FinancePage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex-between" style={{ marginTop: "12px" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: {wrQuery.data.total} yêu cầu</span>
+              <div className="pagination">
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{wrQuery.data.total}</b> yêu cầu</span>
                 <div className="flex-gap">
                   <button className="btn btn--sm" disabled={wrPage <= 1} onClick={() => setWrPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }}>Trang {wrPage}</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {wrPage}</span>
                   <button className="btn btn--sm" disabled={wrPage * 20 >= wrQuery.data.total} onClick={() => setWrPage(p => p + 1)}>Sau</button>
                 </div>
               </div>
             </>
           ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải danh sách rút tiền...</div>
+            <div className="card">
+              <div className="skeleton" style={{ height: "200px" }} />
+            </div>
           )}
         </div>
       )}
@@ -561,7 +589,7 @@ export function FinancePage() {
         onClose={() => setCurrentRequest(null)}
         title={actionType === "approve" ? "Xác nhận duyệt chi tiền" : "Từ chối yêu cầu rút tiền"}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => setCurrentRequest(null)} disabled={submittingAction}>Hủy</button>
             <button
               className={`btn ${actionType === "approve" ? "btn--primary" : "btn--danger"}`}
@@ -575,25 +603,26 @@ export function FinancePage() {
       >
         {currentRequest && (
           <div style={{ display: "grid", gap: "16px" }}>
-            <div style={{ background: "var(--neutral-bg)", padding: "12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Người nhận thụ hưởng:</div>
-              <div style={{ fontSize: "15px", fontWeight: "700", marginTop: "2px" }}>{currentRequest.fullName} ({currentRequest.phoneNumber})</div>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
-                <div>
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Ngân hàng</span>
-                  <div style={{ fontSize: "13px", fontWeight: "600" }}>{currentRequest.bankName}</div>
+            <div className="card" style={{ background: "var(--neutral-bg)", padding: "12px" }}>
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span className="detail-item__label">Người nhận thụ hưởng</span>
+                  <span className="detail-item__value">{currentRequest.fullName} ({currentRequest.phoneNumber})</span>
                 </div>
-                <div>
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Số tài khoản</span>
-                  <div style={{ fontSize: "13px", fontWeight: "600" }}>{currentRequest.accountNumber}</div>
+                <div className="detail-item">
+                  <span className="detail-item__label">Ngân hàng</span>
+                  <span className="detail-item__value">{currentRequest.bankName}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-item__label">Số tài khoản</span>
+                  <span className="detail-item__value tabular-nums">{currentRequest.accountNumber}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex-between" style={{ padding: "0 4px" }}>
               <span style={{ fontWeight: "600" }}>Số tiền giao dịch:</span>
-              <span style={{ fontSize: "18px", fontWeight: "800", color: "var(--primary)" }}>{formatMoney(currentRequest.amount)}</span>
+              <span className="tabular-nums" style={{ fontSize: "18px", fontWeight: "800", color: "var(--primary)" }}>{formatMoney(currentRequest.amount)}</span>
             </div>
 
             {actionType === "approve" && (

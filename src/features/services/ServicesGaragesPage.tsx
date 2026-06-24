@@ -276,7 +276,15 @@ export function ServicesGaragesPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      {/* Modern Tabs switch */}
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Dịch vụ &amp; Garage</h1>
+          <p>Quản lý danh mục dịch vụ cứu hộ, garage đối tác và duyệt dịch vụ do thợ đăng ký.</p>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
       <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "24px", marginBottom: "8px" }}>
         <button
           style={{
@@ -337,15 +345,17 @@ export function ServicesGaragesPage() {
         </button>
       </div>
 
-      {/* Services Tab Workspace */}
+      {/* Services Tab */}
       {tab === "services" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Danh mục dịch vụ cứu hộ</h2>
-            <button className="btn btn--primary btn--sm" onClick={openCreateServiceModal}>+ Thêm dịch vụ</button>
+          <div className="section-header">
+            <div className="flex-between">
+              <h2>Danh mục dịch vụ cứu hộ</h2>
+              <button className="btn btn--primary btn--sm" onClick={openCreateServiceModal}>+ Thêm dịch vụ</button>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="filter-bar">
             <input
               className="input"
               style={{ flex: 1 }}
@@ -383,28 +393,37 @@ export function ServicesGaragesPage() {
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: "6px" }}>
+                      <div className="flex-gap gap-8">
                         <button className="btn btn--sm" onClick={() => openEditServiceModal(s)}>Sửa</button>
                         <button className="btn btn--sm btn--danger" onClick={() => onDeleteService(s.serviceId)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {services.length === 0 && !servicesLoading && (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="empty-state">Chưa có dịch vụ nào.</div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Garages Tab Workspace */}
+      {/* Garages Tab */}
       {tab === "garages" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Thông tin các Garage thành viên</h2>
-            <button className="btn btn--primary btn--sm" onClick={openCreateGarageModal}>+ Đăng ký Garage</button>
+          <div className="section-header">
+            <div className="flex-between">
+              <h2>Thông tin các Garage thành viên</h2>
+              <button className="btn btn--primary btn--sm" onClick={openCreateGarageModal}>+ Đăng ký Garage</button>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="filter-bar">
             <input
               className="input"
               style={{ flex: 1 }}
@@ -445,28 +464,36 @@ export function ServicesGaragesPage() {
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: "6px" }}>
+                      <div className="flex-gap gap-8">
                         <button className="btn btn--sm" onClick={() => openEditGarageModal(g)}>Sửa</button>
                         <button className="btn btn--sm btn--danger" onClick={() => onDeleteGarage(g.garageId)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {garages.length === 0 && !garagesLoading && (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="empty-state">Chưa có garage nào.</div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
+      {/* Mechanic Services Tab */}
       {tab === "mechanic-services" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Duyệt dịch vụ thợ đăng ký</h2>
+          <div className="section-header">
+            <h2>Duyệt dịch vụ thợ đăng ký</h2>
           </div>
 
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="filter-bar">
             <select
-              className="input"
+              className="select"
               style={{ minWidth: "160px" }}
               value={mechanicServiceStatus}
               onChange={(e) => setMechanicServiceStatus(e.target.value)}
@@ -528,7 +555,7 @@ export function ServicesGaragesPage() {
                     </td>
                     <td>
                       {s.status === "PENDING" ? (
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        <div className="flex-gap gap-8" style={{ flexWrap: "wrap" }}>
                           <button className="btn btn--sm btn--primary" onClick={() => onApproveMechanicService(s)}>Duyệt</button>
                           <button className="btn btn--sm btn--danger" onClick={() => openRejectMechanicService(s)}>Từ chối</button>
                         </div>
@@ -540,8 +567,8 @@ export function ServicesGaragesPage() {
                 ))}
                 {mechanicServices.length === 0 && !mechanicServicesLoading && (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px" }}>
-                      Không có dịch vụ nào.
+                    <td colSpan={8}>
+                      <div className="empty-state">Không có dịch vụ nào.</div>
                     </td>
                   </tr>
                 )}
@@ -552,14 +579,14 @@ export function ServicesGaragesPage() {
       )}
 
       {/* Reusable Modals */}
-      
+
       {/* 1. Service Modal Form */}
       <Modal
         isOpen={serviceModalOpen}
         onClose={() => setServiceModalOpen(false)}
         title={editingService ? "Cập nhật dịch vụ cứu hộ" : "Tạo dịch vụ cứu hộ mới"}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setServiceModalOpen(false)}>Hủy</button>
             <button className="btn btn--primary" onClick={saveServiceSubmit}>Lưu thông tin</button>
           </div>
@@ -617,14 +644,13 @@ export function ServicesGaragesPage() {
         onClose={() => setGarageModalOpen(false)}
         title={editingGarage ? "Cập nhật thông tin Garage" : "Đăng ký thành lập Garage mới"}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setGarageModalOpen(false)}>Hủy</button>
             <button className="btn btn--primary" onClick={saveGarageSubmit}>Lưu thông tin</button>
           </div>
         }
       >
         <div style={{ display: "grid", gap: "12px" }}>
-          
           <div className="form-group">
             <label>Tên gọi Garage</label>
             <input
@@ -691,7 +717,7 @@ export function ServicesGaragesPage() {
         onClose={() => setConfirmModalOpen(false)}
         title="Xác nhận thao tác"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy</button>
             <button
               className="btn btn--danger"
@@ -713,12 +739,13 @@ export function ServicesGaragesPage() {
         </div>
       </Modal>
 
+      {/* 4. Reject Mechanic Service Modal */}
       <Modal
         isOpen={rejectModalOpen}
         onClose={() => setRejectModalOpen(false)}
         title="Từ chối dịch vụ thợ"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap gap-8">
             <button className="btn" onClick={() => setRejectModalOpen(false)}>Hủy</button>
             <button className="btn btn--danger" onClick={submitRejectMechanicService}>Xác nhận từ chối</button>
           </div>

@@ -111,56 +111,52 @@ export function DashboardPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      {/* Header and Filter Row */}
-      <div className="flex-between" style={{ flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>Dashboard</h1>
-          <div style={{ color: "var(--text-muted)", marginTop: "4px", fontSize: "13px", fontWeight: 500 }}>
-            Khoảng thời gian: <span className="badge badge--info" style={{ textTransform: "none", fontSize: "11px" }}>{data?.range.from ?? "-"}</span> đến <span className="badge badge--info" style={{ textTransform: "none", fontSize: "11px" }}>{data?.range.to ?? "-"}</span>
-          </div>
+      {/* Page Header */}
+      <div className="page-header" style={{ flexWrap: "wrap" }}>
+        <div className="page-header__info">
+          <h1>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+              <BarChart3 size={22} style={{ color: "var(--primary)" }} />
+              Dashboard
+            </span>
+          </h1>
+          <p>
+            Khoảng thời gian:
+            <span className="badge badge--info" style={{ textTransform: "none", fontSize: "11px", margin: "0 4px" }}>{data?.range.from ?? "—"}</span>
+            đến
+            <span className="badge badge--info" style={{ textTransform: "none", fontSize: "11px", margin: "0 4px" }}>{data?.range.to ?? "—"}</span>
+          </p>
         </div>
-        
-        {/* Filters */}
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", background: "var(--card-bg)", padding: "8px 16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="flex-gap" style={{ minHeight: "44px" }}>
-            <label htmlFor="filter-from" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", cursor: "pointer" }}>Từ</label>
-            <input 
-              id="filter-from"
-              type="date" 
-              className="input" 
-              style={{ padding: "8px 12px", width: "140px", fontSize: "13px", minHeight: "44px" }}
-              value={from} 
-              onChange={(e) => setFrom(e.target.value)} 
-            />
-          </div>
-          <div className="flex-gap" style={{ minHeight: "44px" }}>
-            <label htmlFor="filter-to" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", cursor: "pointer" }}>Đến</label>
-            <input 
-              id="filter-to"
-              type="date" 
-              className="input" 
-              style={{ padding: "8px 12px", width: "140px", fontSize: "13px", minHeight: "44px" }}
-              value={to} 
-              onChange={(e) => setTo(e.target.value)} 
-            />
-          </div>
-          <button 
-            className="btn btn--primary btn--sm" 
-            onClick={refreshAll} 
+        <div className="page-header__actions">
+          <button
+            className="btn btn--primary"
+            onClick={refreshAll}
             disabled={loading}
-            style={{ padding: "8px 16px", minHeight: "44px", fontSize: "13px" }}
+            id="dashboard-refresh-btn"
           >
             {loading ? "Đang tải..." : "Lọc kết quả"}
           </button>
-          <button 
-            className="btn btn--success btn--sm" 
-            onClick={downloadDashboardOverview} 
+          <button
+            className="btn btn--success"
+            onClick={downloadDashboardOverview}
             disabled={exporting}
-            style={{ padding: "8px 16px", minHeight: "44px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
+            id="dashboard-export-btn"
           >
             <Download size={14} />
             {exporting ? "Đang xuất..." : "Xuất Excel"}
           </button>
+        </div>
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="filter-bar">
+        <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px", marginBottom: 0 }}>
+          <label htmlFor="filter-from" style={{ whiteSpace: "nowrap" }}>Từ</label>
+          <input id="filter-from" type="date" className="input" style={{ width: "160px" }} value={from} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px", marginBottom: 0 }}>
+          <label htmlFor="filter-to" style={{ whiteSpace: "nowrap" }}>Đến</label>
+          <input id="filter-to" type="date" className="input" style={{ width: "160px" }} value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
       </div>
 

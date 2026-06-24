@@ -298,6 +298,14 @@ export function MembershipPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header__info">
+          <h1>Gói &amp; Quyền lợi</h1>
+          <p>Quản lý các gói hội viên, cấu hình quyền lợi đi kèm và phân công cho từng nhóm đối tượng.</p>
+        </div>
+      </div>
+
       {/* Tab Switcher */}
       <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "24px", marginBottom: "8px" }}>
         <button
@@ -345,13 +353,15 @@ export function MembershipPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
           
           {/* Plans list */}
-          <div>
-            <div className="flex-between">
-              <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Gói hội viên</h2>
-              <button className="btn btn--primary btn--sm" onClick={openCreatePlanModal}>+ Tạo gói mới</button>
+          <div style={{ display: "grid", gap: "16px" }}>
+            <div className="section-header">
+              <h2>Gói hội viên</h2>
+              <div className="page-header__actions">
+                <button className="btn btn--primary btn--sm" onClick={openCreatePlanModal}>+ Tạo gói mới</button>
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: "8px", margin: "16px 0", flexWrap: "wrap" }}>
+            <div className="filter-bar">
               <input
                 className="input"
                 style={{ flex: 1, minWidth: "150px" }}
@@ -394,7 +404,7 @@ export function MembershipPage() {
                         <span className="badge badge--info" style={{ fontSize: "10px" }}>{p.targetAudience}</span>
                       </td>
                       <td>
-                        <div style={{ fontWeight: "700" }}>{formatMoney(p.price)}</div>
+                        <div style={{ fontWeight: "700" }} className="tabular-nums">{formatMoney(p.price)}</div>
                         <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{p.durationDays} ngày</div>
                       </td>
                       <td>
@@ -403,7 +413,7 @@ export function MembershipPage() {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: "flex", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
+                        <div className="flex-gap gap-8" onClick={(e) => e.stopPropagation()}>
                           <button className="btn btn--sm" onClick={() => openEditPlanModal(p)}>Sửa</button>
                           <button className="btn btn--sm btn--danger" onClick={() => onDeletePlan(p.planId)}>Xóa</button>
                         </div>
@@ -412,7 +422,9 @@ export function MembershipPage() {
                   ))}
                   {plans.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>Không có gói nào.</td>
+                      <td colSpan={5}>
+                        <div className="empty-state">Không có gói nào.</div>
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -421,10 +433,12 @@ export function MembershipPage() {
           </div>
 
           {/* Plan Details Panel */}
-          <div>
-            <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "16px" }}>Chi tiết & Phân quyền lợi</h2>
+          <div style={{ display: "grid", gap: "16px" }}>
+            <div className="section-header">
+              <h2>Chi tiết &amp; Phân quyền lợi</h2>
+            </div>
             {!selectedPlan ? (
-              <div className="card" style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+              <div className="empty-state card">
                 <Info size={32} style={{ color: "var(--primary)" }} />
                 <span>Hãy chọn một gói dịch vụ từ danh sách bên trái để quản lý cấu hình các quyền lợi đi kèm.</span>
               </div>
@@ -432,12 +446,12 @@ export function MembershipPage() {
               <div style={{ display: "grid", gap: "20px" }}>
                 
                 {/* Active Details Card */}
-                <div className="card" style={{ background: "var(--neutral-bg)", padding: "16px" }}>
-                  <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>GÓI ĐANG XEM</div>
+                <div className="card" style={{ background: "var(--neutral-bg)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "600", letterSpacing: "0.05em" }}>GÓI ĐANG XEM</div>
                   <div style={{ fontSize: "18px", fontWeight: "800", color: "var(--secondary)", marginTop: "4px" }}>{selectedPlan.planName}</div>
-                  <div style={{ display: "flex", gap: "16px", marginTop: "8px", fontSize: "13px" }}>
+                  <div className="flex-gap mt-16" style={{ fontSize: "13px" }}>
                     <span>Audience: <b>{selectedPlan.targetAudience}</b></span>
-                    <span>Giá: <b>{formatMoney(selectedPlan.price)}</b></span>
+                    <span>Giá: <b className="tabular-nums">{formatMoney(selectedPlan.price)}</b></span>
                     <span>Hiệu lực: <b>{selectedPlan.durationDays} ngày</b></span>
                   </div>
                   {selectedPlan.platformFeeRate != null && (
@@ -448,9 +462,9 @@ export function MembershipPage() {
                 </div>
 
                 {/* Assigned Benefits List */}
-                <div className="card" style={{ padding: "20px" }}>
-                  <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px" }}>Quyền lợi đi kèm gói này</h3>
-                  <ul style={{ listStyleType: "none", display: "grid", gap: "8px" }}>
+                <div className="card">
+                  <h3 className="card__title">Quyền lợi đi kèm gói này</h3>
+                  <ul style={{ listStyleType: "none", display: "grid", gap: "8px", marginTop: "12px" }}>
                     {selectedPlan.benefits && selectedPlan.benefits.map((b) => (
                       <li
                         key={b.planBenefitId}
@@ -480,14 +494,15 @@ export function MembershipPage() {
                 </div>
 
                 {/* Assignment Management Table */}
-                <div className="card" style={{ padding: "20px" }}>
-                  <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Quản lý gán quyền lợi</h3>
-                  <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                <div className="card">
+                  <h3 className="card__title">Quản lý gán quyền lợi</h3>
+                  <div className="filter-bar" style={{ marginTop: "12px", marginBottom: "12px" }}>
                     <input
                       className="input"
                       placeholder="Tìm quyền lợi..."
                       value={benefitQuery}
                       onChange={(e) => setBenefitQuery(e.target.value)}
+                      style={{ flex: 1 }}
                     />
                     <button className="btn btn--sm" onClick={refreshBenefits} disabled={isLoadingBenefits}>Tải</button>
                   </div>
@@ -540,12 +555,14 @@ export function MembershipPage() {
       {/* Benefits Workspace */}
       {tab === "benefits" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div className="flex-between">
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Danh mục quyền lợi hệ thống</h2>
-            <button className="btn btn--primary btn--sm" onClick={openCreateBenefitModal}>+ Tạo quyền lợi mới</button>
+          <div className="section-header">
+            <h2>Danh mục quyền lợi hệ thống</h2>
+            <div className="page-header__actions">
+              <button className="btn btn--primary btn--sm" onClick={openCreateBenefitModal}>+ Tạo quyền lợi mới</button>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "8px", background: "var(--card-bg)", padding: "16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}>
+          <div className="filter-bar">
             <input
               className="input"
               style={{ flex: 1 }}
@@ -571,17 +588,26 @@ export function MembershipPage() {
               <tbody>
                 {benefits.map((b) => (
                   <tr key={b.benefitId}>
-                    <td style={{ fontWeight: "700", color: "var(--primary)" }}>{b.benefitCode}</td>
+                    <td>
+                      <span className="badge badge--primary" style={{ fontFamily: "monospace", fontSize: "11px" }}>{b.benefitCode}</span>
+                    </td>
                     <td style={{ fontWeight: 600 }}>{b.benefitName}</td>
                     <td style={{ color: "var(--text-muted)", fontSize: "13px" }}>{b.description ?? "-"}</td>
                     <td>
-                      <div style={{ display: "flex", gap: "6px" }}>
+                      <div className="flex-gap gap-8">
                         <button className="btn btn--sm" onClick={() => openEditBenefitModal(b)}>Sửa</button>
                         <button className="btn btn--sm btn--danger" onClick={() => onDeleteBenefit(b.benefitId)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {benefits.length === 0 && (
+                  <tr>
+                    <td colSpan={4}>
+                      <div className="empty-state">Không có quyền lợi nào.</div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -596,7 +622,7 @@ export function MembershipPage() {
         onClose={() => setPlanModalOpen(false)}
         title={editingPlan ? "Cập nhật gói dịch vụ" : "Tạo gói dịch vụ mới"}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => setPlanModalOpen(false)}>Hủy</button>
             <button className="btn btn--primary" onClick={savePlanSubmit}>Lưu cấu hình</button>
           </div>
@@ -676,7 +702,7 @@ export function MembershipPage() {
         onClose={() => setBenefitModalOpen(false)}
         title={editingBenefit ? "Cập nhật quyền lợi" : "Tạo quyền lợi hệ thống"}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => setBenefitModalOpen(false)}>Hủy</button>
             <button className="btn btn--primary" onClick={saveBenefitSubmit}>Lưu quyền lợi</button>
           </div>
@@ -723,7 +749,7 @@ export function MembershipPage() {
         onClose={() => { setAssignModalOpen(false); setAssignTarget(null); }}
         title={`Thiết lập quyền lợi: ${assignTarget?.benefitCode}`}
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => { setAssignModalOpen(false); setAssignTarget(null); }}>Hủy</button>
             <button className="btn btn--primary" onClick={saveAssignmentSubmit}>Lưu thiết lập</button>
           </div>
@@ -762,7 +788,7 @@ export function MembershipPage() {
         onClose={() => setConfirmModalOpen(false)}
         title="Xác nhận thao tác"
         footer={
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div className="flex-gap">
             <button className="btn" onClick={() => setConfirmModalOpen(false)}>Hủy bỏ</button>
             <button
               className="btn btn--danger"
@@ -776,8 +802,8 @@ export function MembershipPage() {
           </div>
         }
       >
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <AlertTriangle size={28} style={{ color: "var(--warning)" }} />
+        <div className="flex-gap" style={{ alignItems: "center" }}>
+          <AlertTriangle size={28} style={{ color: "var(--warning)", flexShrink: 0 }} />
           <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-main)" }}>
             {confirmAction?.message}
           </div>
