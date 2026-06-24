@@ -16,12 +16,7 @@ export function SimpleDonut({ values, size = 160 }: Props) {
       display: "flex",
       gap: "24px",
       alignItems: "center",
-      justifyContent: "space-between",
-      background: "var(--card-bg)",
-      border: "1px solid var(--border-color)",
-      borderRadius: "var(--radius-lg)",
-      padding: "20px",
-      boxShadow: "var(--shadow-sm)"
+      justifyContent: "space-between"
     }}>
       <div style={{ position: "relative", width: size, height: size }}>
         <svg width={size} height={size}>

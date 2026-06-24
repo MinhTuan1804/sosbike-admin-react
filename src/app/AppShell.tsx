@@ -162,7 +162,7 @@ export function AppShell() {
       </aside>
 
       {/* ===== MAIN ===== */}
-      <main className="main">
+      <main className="main" style={{ minWidth: 0, overflow: "hidden" }}>
         {/* Topbar */}
         <header className="topbar" role="banner">
           <div className="topbar__left">
@@ -180,7 +180,7 @@ export function AppShell() {
         </header>
 
         {/* Content */}
-        <div className="content">
+        <div className="content" style={{ overflowX: "hidden" }}>
           <Outlet />
         </div>
       </main>

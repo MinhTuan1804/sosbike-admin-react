@@ -321,6 +321,7 @@ body {
   grid-template-rows: var(--topbar-height) 1fr;
   overflow: hidden;
   background: var(--neutral-bg);
+  min-width: 0;
 }
 
 /* ===== TOPBAR ===== */
@@ -395,6 +396,7 @@ body {
 .content {
   padding: 28px;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   overscroll-behavior: contain;
 }
@@ -854,6 +856,7 @@ input:checked + .slider::before { transform: translateX(20px); }
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
 
 .flex-between {
   display: flex; align-items: center;
@@ -976,14 +979,17 @@ input:checked + .slider::before { transform: translateX(20px); }
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1200px) {
-  :root { --sidebar-width: 220px; }
+@media (max-width: 1400px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 1200px) {
+  :root { --sidebar-width: 220px; }
+}
+
 @media (max-width: 1024px) {
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .detail-grid { grid-template-columns: 1fr; }
 }
 
@@ -992,13 +998,13 @@ input:checked + .slider::before { transform: translateX(20px); }
   .sidebar { display: none; }
   .content { padding: 16px; }
   .topbar { padding: 0 16px; }
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr; gap: 12px; }
+  .grid-4 { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .filter-bar { padding: 10px 12px; gap: 8px; }
 }
 
 @media (max-width: 480px) {
-  .stat-grid { grid-template-columns: 1fr; }
   .content { padding: 12px; }
 }

@@ -6,7 +6,7 @@ type Props = {
 };
 
 export function SimpleLineChart({ labels, values, height = 160, stroke = "#2563eb" }: Props) {
-  const width = Math.max(500, labels.length * 40);
+  const width = Math.max(320, labels.length * 30);
   const paddingLeft = 45;
   const paddingRight = 20;
   const paddingTop = 25;
@@ -36,7 +36,7 @@ export function SimpleLineChart({ labels, values, height = 160, stroke = "#2563e
   });
 
   return (
-    <div style={{ overflowX: "auto", background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)", padding: "16px" }}>
+    <div style={{ overflowX: "auto" }}>
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block", minWidth: `${width}px` }}>
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">

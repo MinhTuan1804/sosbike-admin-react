@@ -15,7 +15,7 @@ export function SimpleStackedBars({
   bLabel = "B",
   height = 160
 }: Props) {
-  const width = Math.max(500, labels.length * 36);
+  const width = Math.max(320, labels.length * 28);
   const paddingLeft = 45;
   const paddingRight = 20;
   const paddingTop = 25;
@@ -36,14 +36,7 @@ export function SimpleStackedBars({
   });
 
   return (
-    <div style={{
-      overflowX: "auto",
-      background: "var(--card-bg)",
-      border: "1px solid var(--border-color)",
-      borderRadius: "var(--radius-lg)",
-      padding: "16px",
-      boxShadow: "var(--shadow-sm)"
-    }}>
+    <div style={{ overflowX: "auto" }}>
       <div style={{ display: "flex", gap: "16px", marginBottom: "14px", fontSize: "12px", paddingLeft: `${paddingLeft}px` }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontWeight: "500" }}>
           <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--primary)" }} />
