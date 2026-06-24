@@ -43,6 +43,11 @@ const featureFlagsSchema = z
     customerRegisterEnabled: true,
     mechanicRegisterEnabled: true
   });
+const hexColorSchema = (defaultValue: string) => z
+  .string()
+  .trim()
+  .regex(/^#([0-9a-fA-F]{3}){1,2}$/, "Màu sắc không hợp lệ. Phải là mã HEX (VD: #DA251D)")
+  .default(defaultValue);
 
 const thirdPartySchema = z
   .object({
@@ -57,13 +62,19 @@ const landingPageSchema = z
     hotline: z.string().trim().default("0982815244"),
     facebookUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222"),
     appStoreUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222"),
-    googlePlayUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222")
+    googlePlayUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222"),
+    backgroundImageUrl: urlOrEmptySchema.default(""),
+    primaryColor: hexColorSchema("#DA251D"),
+    secondaryColor: hexColorSchema("#3B82F6")
   })
   .default({
     hotline: "0982815244",
     facebookUrl: "https://www.facebook.com/profile.php?id=61572062824222",
     appStoreUrl: "https://www.facebook.com/profile.php?id=61572062824222",
-    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222"
+    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    backgroundImageUrl: "",
+    primaryColor: "#DA251D",
+    secondaryColor: "#3B82F6"
   });
 
 export const AppConfigSchema = z
@@ -74,7 +85,10 @@ export const AppConfigSchema = z
     }),
     ui: z.object({
       homeBackgroundUrl: urlOrEmptySchema,
-      brandName: brandNameSchema
+      brandName: brandNameSchema,
+      appBackgroundColor: hexColorSchema("#FFFFFF"),
+      appNavbarBottomColor: hexColorSchema("#D02121"),
+      appNavbarHeaderColor: hexColorSchema("#D02121")
     }),
     featureFlags: featureFlagsSchema,
     thirdParty: thirdPartySchema,
@@ -100,7 +114,13 @@ export type AppConfig = z.infer<typeof AppConfigSchema>;
 
 export const defaultConfig: AppConfig = AppConfigSchema.parse({
   platform: { defaultPlatformFeeRate: 10, mechanicCommissionDefault: 15 },
-  ui: { homeBackgroundUrl: "", brandName: "SOSBIKE" },
+  ui: {
+    homeBackgroundUrl: "",
+    brandName: "SOSBIKE",
+    appBackgroundColor: "#FFFFFF",
+    appNavbarBottomColor: "#D02121",
+    appNavbarHeaderColor: "#D02121"
+  },
   featureFlags: {
     maintenanceMode: false,
     sosEnabled: true,
@@ -114,6 +134,9 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     hotline: "0982815244",
     facebookUrl: "https://www.facebook.com/profile.php?id=61572062824222",
     appStoreUrl: "https://www.facebook.com/profile.php?id=61572062824222",
-    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222"
+    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    backgroundImageUrl: "",
+    primaryColor: "#DA251D",
+    secondaryColor: "#3B82F6"
   }
 });

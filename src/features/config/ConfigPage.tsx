@@ -5,6 +5,23 @@ import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigV
 import { Modal } from "../../shared/components/Modal";
 import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff } from "lucide-react";
 
+function formatDateTime(isoString: string | null | undefined) {
+  if (!isoString) return "Chưa rõ";
+  try {
+    let dateStr = isoString.trim();
+    // Nếu chuỗi ISO không có chỉ định múi giờ, thêm 'Z' để trình duyệt hiểu là UTC và tự chuyển sang giờ địa phương (ICT)
+    if (!dateStr.endsWith("Z") && !dateStr.includes("+") && dateStr.includes("T")) {
+      dateStr += "Z";
+    }
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return isoString;
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  } catch {
+    return isoString;
+  }
+}
+
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
   const [draftConfig, setDraftConfig] = useState<AppConfig>(localInitial);
@@ -175,7 +192,7 @@ export function ConfigPage() {
           <Cloud size={24} style={{ color: "var(--primary)" }} />
           <div>
             <div style={{ fontWeight: "700", fontSize: "13px" }}>Trạng thái đồng bộ cơ sở dữ liệu</div>
-            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>Đồng bộ lần cuối: {dbUpdatedAt ?? "Chưa rõ"}</div>
+            <div style={{ fontSize: "11px", color: "var(--text-light)" }}>Đồng bộ lần cuối: {formatDateTime(dbUpdatedAt)}</div>
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -291,6 +308,104 @@ export function ConfigPage() {
                 {fieldError("ui.homeBackgroundUrl") && (
                   <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("ui.homeBackgroundUrl")}</span>
                 )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px" }}>
+                <div className="form-group">
+                  <label>Màu nền App</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: "12px", padding: "6px" }}
+                      value={draftConfig.ui.appBackgroundColor ?? "#FFFFFF"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appBackgroundColor: e.target.value }
+                        })
+                      }
+                    />
+                    <input
+                      type="color"
+                      style={{ width: "38px", height: "38px", padding: "1px", border: "1px solid var(--border-color)", borderRadius: "6px", cursor: "pointer", background: "none", flexShrink: 0 }}
+                      value={draftConfig.ui.appBackgroundColor?.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? draftConfig.ui.appBackgroundColor : "#FFFFFF"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appBackgroundColor: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  {fieldError("ui.appBackgroundColor") && (
+                    <span style={{ color: "var(--danger)", fontSize: "10px" }}>{fieldError("ui.appBackgroundColor")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Màu Bottom Navbar</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: "12px", padding: "6px" }}
+                      value={draftConfig.ui.appNavbarBottomColor ?? "#D02121"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appNavbarBottomColor: e.target.value }
+                        })
+                      }
+                    />
+                    <input
+                      type="color"
+                      style={{ width: "38px", height: "38px", padding: "1px", border: "1px solid var(--border-color)", borderRadius: "6px", cursor: "pointer", background: "none", flexShrink: 0 }}
+                      value={draftConfig.ui.appNavbarBottomColor?.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? draftConfig.ui.appNavbarBottomColor : "#D02121"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appNavbarBottomColor: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  {fieldError("ui.appNavbarBottomColor") && (
+                    <span style={{ color: "var(--danger)", fontSize: "10px" }}>{fieldError("ui.appNavbarBottomColor")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Màu Header Appbar</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: "12px", padding: "6px" }}
+                      value={draftConfig.ui.appNavbarHeaderColor ?? "#D02121"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appNavbarHeaderColor: e.target.value }
+                        })
+                      }
+                    />
+                    <input
+                      type="color"
+                      style={{ width: "38px", height: "38px", padding: "1px", border: "1px solid var(--border-color)", borderRadius: "6px", cursor: "pointer", background: "none", flexShrink: 0 }}
+                      value={draftConfig.ui.appNavbarHeaderColor?.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? draftConfig.ui.appNavbarHeaderColor : "#D02121"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          ui: { ...draftConfig.ui, appNavbarHeaderColor: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  {fieldError("ui.appNavbarHeaderColor") && (
+                    <span style={{ color: "var(--danger)", fontSize: "10px" }}>{fieldError("ui.appNavbarHeaderColor")}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -422,6 +537,90 @@ export function ConfigPage() {
                 {fieldError("landingPage.googlePlayUrl") && (
                   <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.googlePlayUrl")}</span>
                 )}
+              </div>
+
+              <div className="form-group">
+                <label>Đường dẫn hình nền Landing Page (Background URL)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.landingPage?.backgroundImageUrl ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      landingPage: { ...draftConfig.landingPage, backgroundImageUrl: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("landingPage.backgroundImageUrl") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.backgroundImageUrl")}</span>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+                <div className="form-group">
+                  <label>Màu chủ đạo (Primary Color)</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: "12px", padding: "6px" }}
+                      value={draftConfig.landingPage?.primaryColor ?? "#DA251D"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          landingPage: { ...draftConfig.landingPage, primaryColor: e.target.value }
+                        })
+                      }
+                    />
+                    <input
+                      type="color"
+                      style={{ width: "38px", height: "38px", padding: "1px", border: "1px solid var(--border-color)", borderRadius: "6px", cursor: "pointer", background: "none", flexShrink: 0 }}
+                      value={draftConfig.landingPage?.primaryColor?.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? draftConfig.landingPage.primaryColor : "#DA251D"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          landingPage: { ...draftConfig.landingPage, primaryColor: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  {fieldError("landingPage.primaryColor") && (
+                    <span style={{ color: "var(--danger)", fontSize: "10px" }}>{fieldError("landingPage.primaryColor")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Màu phụ (Secondary Color)</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ fontSize: "12px", padding: "6px" }}
+                      value={draftConfig.landingPage?.secondaryColor ?? "#3B82F6"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          landingPage: { ...draftConfig.landingPage, secondaryColor: e.target.value }
+                        })
+                      }
+                    />
+                    <input
+                      type="color"
+                      style={{ width: "38px", height: "38px", padding: "1px", border: "1px solid var(--border-color)", borderRadius: "6px", cursor: "pointer", background: "none", flexShrink: 0 }}
+                      value={draftConfig.landingPage?.secondaryColor?.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? draftConfig.landingPage.secondaryColor : "#3B82F6"}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          landingPage: { ...draftConfig.landingPage, secondaryColor: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  {fieldError("landingPage.secondaryColor") && (
+                    <span style={{ color: "var(--danger)", fontSize: "10px" }}>{fieldError("landingPage.secondaryColor")}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -604,7 +803,7 @@ export function ConfigPage() {
                 <div>
                   <div style={{ fontWeight: "700", fontSize: "13px" }}>ID phiên bản: <code>{ver.versionId}</code></div>
                   <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
-                    Người cập nhật: <b>{ver.createdBy ?? "Hệ thống"}</b> • Thời gian: {ver.createdAt ?? "Chưa rõ"}
+                    Người cập nhật: <b>{ver.createdBy ?? "Hệ thống"}</b> • Thời gian: {formatDateTime(ver.createdAt)}
                   </div>
                 </div>
                 <button className="btn btn--sm btn--primary" onClick={() => onRollback(ver.versionId)}>Rollback lại bản này</button>
