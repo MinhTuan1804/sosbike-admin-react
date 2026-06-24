@@ -3,7 +3,7 @@ import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
 import { Modal } from "../../shared/components/Modal";
-import { Cloud, Coins, Palette, Sliders, AlertTriangle } from "lucide-react";
+import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key } from "lucide-react";
 
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
@@ -289,6 +289,116 @@ export function ConfigPage() {
                 />
                 {fieldError("ui.homeBackgroundUrl") && (
                   <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("ui.homeBackgroundUrl")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Third-Party Integrations */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Key size={18} style={{ color: "var(--primary)" }} />
+              <span>Tích hợp Bên thứ ba</span>
+            </h3>
+
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div className="form-group">
+                <label>Goong Map API Key</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.thirdParty?.goongApiKey ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      thirdParty: { ...draftConfig.thirdParty, goongApiKey: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("thirdParty.goongApiKey") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.goongApiKey")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Landing Page Settings */}
+          <div className="card" style={{ padding: "20px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: "700", marginBottom: "16px", color: "var(--secondary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Globe size={18} style={{ color: "var(--primary)" }} />
+              <span>Cấu hình Landing Page</span>
+            </h3>
+
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div className="form-group">
+                <label>Hotline hiển thị</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.landingPage?.hotline ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      landingPage: { ...draftConfig.landingPage, hotline: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("landingPage.hotline") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.hotline")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Facebook Fanpage URL</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.landingPage?.facebookUrl ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      landingPage: { ...draftConfig.landingPage, facebookUrl: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("landingPage.facebookUrl") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.facebookUrl")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Link tải ứng dụng App Store (iOS)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.landingPage?.appStoreUrl ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      landingPage: { ...draftConfig.landingPage, appStoreUrl: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("landingPage.appStoreUrl") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.appStoreUrl")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Link tải ứng dụng Google Play (Android)</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={draftConfig.landingPage?.googlePlayUrl ?? ""}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      landingPage: { ...draftConfig.landingPage, googlePlayUrl: e.target.value }
+                    })
+                  }
+                />
+                {fieldError("landingPage.googlePlayUrl") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("landingPage.googlePlayUrl")}</span>
                 )}
               </div>
             </div>

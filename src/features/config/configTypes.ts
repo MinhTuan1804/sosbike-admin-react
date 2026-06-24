@@ -44,6 +44,28 @@ const featureFlagsSchema = z
     mechanicRegisterEnabled: true
   });
 
+const thirdPartySchema = z
+  .object({
+    goongApiKey: z.string().trim().default("J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq")
+  })
+  .default({
+    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq"
+  });
+
+const landingPageSchema = z
+  .object({
+    hotline: z.string().trim().default("0982815244"),
+    facebookUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222"),
+    appStoreUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222"),
+    googlePlayUrl: urlOrEmptySchema.default("https://www.facebook.com/profile.php?id=61572062824222")
+  })
+  .default({
+    hotline: "0982815244",
+    facebookUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    appStoreUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222"
+  });
+
 export const AppConfigSchema = z
   .object({
     platform: z.object({
@@ -54,7 +76,9 @@ export const AppConfigSchema = z
       homeBackgroundUrl: urlOrEmptySchema,
       brandName: brandNameSchema
     }),
-    featureFlags: featureFlagsSchema
+    featureFlags: featureFlagsSchema,
+    thirdParty: thirdPartySchema,
+    landingPage: landingPageSchema
   })
   .superRefine((value, ctx) => {
     const total = value.platform.defaultPlatformFeeRate + value.platform.mechanicCommissionDefault;
@@ -82,5 +106,14 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     sosEnabled: true,
     customerRegisterEnabled: true,
     mechanicRegisterEnabled: true
+  },
+  thirdParty: {
+    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq"
+  },
+  landingPage: {
+    hotline: "0982815244",
+    facebookUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    appStoreUrl: "https://www.facebook.com/profile.php?id=61572062824222",
+    googlePlayUrl: "https://www.facebook.com/profile.php?id=61572062824222"
   }
 });
