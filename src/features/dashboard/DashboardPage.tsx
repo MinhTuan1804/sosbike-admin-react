@@ -428,11 +428,11 @@ export function DashboardPage() {
 
           {/* Charts Row 1 */}
           <div className="grid-2" style={{ marginTop: "8px" }}>
-            <div>
+            <div className="card">
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)", marginBottom: "12px" }}>Biểu đồ Doanh thu (Gross)</h2>
               <SimpleLineChart labels={data.series.labels} values={data.series.revenue.total} />
             </div>
-            <div>
+            <div className="card">
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)", marginBottom: "12px" }}>Tăng trưởng Người dùng (Khách/Thợ)</h2>
               <SimpleStackedBars
                 labels={data.series.labels}
@@ -446,7 +446,7 @@ export function DashboardPage() {
 
           {/* Charts Row 2 */}
           <div className="grid-2">
-            <div>
+            <div className="card">
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)", marginBottom: "12px" }}>Tỷ lệ Trạng thái Đơn cứu hộ</h2>
               <SimpleDonut
                 values={[
@@ -456,7 +456,7 @@ export function DashboardPage() {
                 ]}
               />
             </div>
-            <div>
+            <div className="card">
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "var(--secondary)", marginBottom: "12px" }}>Tần suất Đơn cứu hộ theo ngày</h2>
               <SimpleLineChart labels={data.series.labels} values={data.series.orders.total} stroke="var(--secondary)" />
             </div>
