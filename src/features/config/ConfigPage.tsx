@@ -3,7 +3,7 @@ import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
 import { Modal } from "../../shared/components/Modal";
-import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key } from "lucide-react";
+import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff } from "lucide-react";
 
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
@@ -17,6 +17,7 @@ export function ConfigPage() {
   const [jsonDirty, setJsonDirty] = useState(false);
   const [versions, setVersions] = useState<ConfigVersionResponse[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
+  const [showGoongKey, setShowGoongKey] = useState(false);
 
   // Dialog State
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -304,17 +305,38 @@ export function ConfigPage() {
             <div style={{ display: "grid", gap: "16px" }}>
               <div className="form-group">
                 <label>Goong Map API Key</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={draftConfig.thirdParty?.goongApiKey ?? ""}
-                  onChange={(e) =>
-                    setDraftConfig({
-                      ...draftConfig,
-                      thirdParty: { ...draftConfig.thirdParty, goongApiKey: e.target.value }
-                    })
-                  }
-                />
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <input
+                    type={showGoongKey ? "text" : "password"}
+                    className="input"
+                    style={{ paddingRight: "40px" }}
+                    value={draftConfig.thirdParty?.goongApiKey ?? ""}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        thirdParty: { ...draftConfig.thirdParty, goongApiKey: e.target.value }
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGoongKey(!showGoongKey)}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--text-muted)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "4px"
+                    }}
+                  >
+                    {showGoongKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 {fieldError("thirdParty.goongApiKey") && (
                   <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.goongApiKey")}</span>
                 )}
