@@ -122,22 +122,24 @@ export function DashboardPage() {
         
         {/* Filters */}
         <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", background: "var(--card-bg)", padding: "8px 16px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="flex-gap">
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)" }}>Từ</span>
+          <div className="flex-gap" style={{ minHeight: "44px" }}>
+            <label htmlFor="filter-from" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", cursor: "pointer" }}>Từ</label>
             <input 
+              id="filter-from"
               type="date" 
               className="input" 
-              style={{ padding: "6px 12px", width: "140px", fontSize: "12px" }}
+              style={{ padding: "8px 12px", width: "140px", fontSize: "13px", minHeight: "44px" }}
               value={from} 
               onChange={(e) => setFrom(e.target.value)} 
             />
           </div>
-          <div className="flex-gap">
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)" }}>Đến</span>
+          <div className="flex-gap" style={{ minHeight: "44px" }}>
+            <label htmlFor="filter-to" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", cursor: "pointer" }}>Đến</label>
             <input 
+              id="filter-to"
               type="date" 
               className="input" 
-              style={{ padding: "6px 12px", width: "140px", fontSize: "12px" }}
+              style={{ padding: "8px 12px", width: "140px", fontSize: "13px", minHeight: "44px" }}
               value={to} 
               onChange={(e) => setTo(e.target.value)} 
             />
@@ -146,7 +148,7 @@ export function DashboardPage() {
             className="btn btn--primary btn--sm" 
             onClick={refreshAll} 
             disabled={loading}
-            style={{ padding: "8px 16px" }}
+            style={{ padding: "8px 16px", minHeight: "44px", fontSize: "13px" }}
           >
             {loading ? "Đang tải..." : "Lọc kết quả"}
           </button>
@@ -154,7 +156,7 @@ export function DashboardPage() {
             className="btn btn--success btn--sm" 
             onClick={downloadDashboardOverview} 
             disabled={exporting}
-            style={{ padding: "8px 16px", display: "flex", alignItems: "center", gap: "6px" }}
+            style={{ padding: "8px 16px", minHeight: "44px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
           >
             <Download size={14} />
             {exporting ? "Đang xuất..." : "Xuất Excel"}
@@ -162,7 +164,38 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {data ? (
+      {loading && !data ? (
+        <div style={{ display: "grid", gap: "24px" }}>
+          {/* Skeleton KPI Grid */}
+          <div className="grid-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="card" style={{ position: "relative", overflow: "hidden", height: "148px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "var(--border-color)" }} />
+                <div className="skeleton" style={{ height: "12px", width: "120px" }} />
+                <div className="skeleton" style={{ height: "28px", width: "150px", margin: "8px 0" }} />
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div className="skeleton" style={{ height: "10px", width: "100%" }} />
+                  <div className="skeleton" style={{ height: "10px", width: "80%" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Skeleton Blog & Analytics Card */}
+          <div className="card" style={{ display: "grid", gap: "16px", height: "320px" }}>
+            <div className="skeleton" style={{ height: "20px", width: "200px" }} />
+            <div className="skeleton" style={{ height: "12px", width: "300px" }} />
+            <div className="grid-4" style={{ marginTop: "12px" }}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="card" style={{ height: "60px", boxShadow: "none", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", justifyContent: "center", gap: "8px" }}>
+                  <div className="skeleton" style={{ height: "10px", width: "80px" }} />
+                  <div className="skeleton" style={{ height: "16px", width: "100px" }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : data ? (
         <>
           {/* KPI Dashboard Grid */}
           <div className="grid-4">
@@ -170,17 +203,17 @@ export function DashboardPage() {
             <div className="card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "var(--primary)" }} />
               <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tổng Doanh Thu (Gross)</div>
-              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                 {formatMoney(revenueTotal)}
               </div>
               <div style={{ display: "grid", gap: "4px", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Hội viên:</span>
-                  <span style={{ fontWeight: "600" }}>{formatMoney(data.kpis.totalSubscriptionPayments)}</span>
+                  <span style={{ fontWeight: "600", fontVariantNumeric: "tabular-nums" }}>{formatMoney(data.kpis.totalSubscriptionPayments)}</span>
                 </div>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Đơn cứu hộ:</span>
-                  <span style={{ fontWeight: "600" }}>{formatMoney(data.kpis.totalRescuePayments)}</span>
+                  <span style={{ fontWeight: "600", fontVariantNumeric: "tabular-nums" }}>{formatMoney(data.kpis.totalRescuePayments)}</span>
                 </div>
               </div>
             </div>
@@ -189,17 +222,17 @@ export function DashboardPage() {
             <div className="card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#f59e0b" }} />
               <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Người dùng mới</div>
-              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                 {(data.kpis.totalNewCustomers + data.kpis.totalNewMechanics).toLocaleString()}
               </div>
               <div style={{ display: "grid", gap: "4px", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Khách hàng:</span>
-                  <span style={{ fontWeight: "600" }}>{data.kpis.totalNewCustomers.toLocaleString()}</span>
+                  <span style={{ fontWeight: "600", fontVariantNumeric: "tabular-nums" }}>{data.kpis.totalNewCustomers.toLocaleString()}</span>
                 </div>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Thợ sửa xe:</span>
-                  <span style={{ fontWeight: "600" }}>{data.kpis.totalNewMechanics.toLocaleString()}</span>
+                  <span style={{ fontWeight: "600", fontVariantNumeric: "tabular-nums" }}>{data.kpis.totalNewMechanics.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -208,17 +241,17 @@ export function DashboardPage() {
             <div className="card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "var(--success)" }} />
               <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Đơn cứu hộ</div>
-              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                 {data.kpis.totalOrders.toLocaleString()}
               </div>
               <div style={{ display: "grid", gap: "4px", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Hoàn thành:</span>
-                  <span style={{ color: "var(--success)", fontWeight: "700" }}>{data.kpis.totalOrdersCompleted.toLocaleString()}</span>
+                  <span style={{ color: "var(--success)", fontWeight: "700", fontVariantNumeric: "tabular-nums" }}>{data.kpis.totalOrdersCompleted.toLocaleString()}</span>
                 </div>
                 <div className="flex-between" style={{ fontSize: "12px" }}>
                   <span style={{ color: "var(--text-muted)" }}>Hủy bỏ:</span>
-                  <span style={{ color: "var(--danger)", fontWeight: "700" }}>{data.kpis.totalOrdersCancelled.toLocaleString()}</span>
+                  <span style={{ color: "var(--danger)", fontWeight: "700", fontVariantNumeric: "tabular-nums" }}>{data.kpis.totalOrdersCancelled.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -227,7 +260,7 @@ export function DashboardPage() {
             <div className="card" style={{ position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "var(--info)" }} />
               <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Thời gian TB (Phút)</div>
-              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                 {Math.round(data.kpis.avgCompleteMins)}m
               </div>
               <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
@@ -238,7 +271,7 @@ export function DashboardPage() {
                   <ChevronRight size={10} />
                   <span>XONG</span>
                 </div>
-                <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", color: "var(--text-main)", marginTop: "4px" }}>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", color: "var(--text-main)", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>
                   <span>{Math.round(data.kpis.avgAcceptMins)}m</span>
                   <ChevronRight size={12} style={{ color: "var(--border-color-hover)" }} />
                   <span>{Math.round(data.kpis.avgArriveMins)}m</span>
@@ -276,19 +309,19 @@ export function DashboardPage() {
             <div className="grid-4">
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Tổng lượt xem</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)" }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", fontVariantNumeric: "tabular-nums" }}>
                   {blogAnalytics ? blogAnalytics.totalViews.toLocaleString() : (blogAnalyticsLoading ? "..." : "0")}
                 </div>
               </div>
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Unique viewers</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)" }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--primary)", fontVariantNumeric: "tabular-nums" }}>
                   {blogAnalytics ? blogAnalytics.uniqueViewers.toLocaleString() : (blogAnalyticsLoading ? "..." : "0")}
                 </div>
               </div>
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>App / Landing</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)" }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)", fontVariantNumeric: "tabular-nums" }}>
                   {blogAnalytics ? `${blogAnalytics.appViews.toLocaleString()} / ${blogAnalytics.landingPageViews.toLocaleString()}` : (blogAnalyticsLoading ? "..." : "-")}
                 </div>
               </div>
@@ -303,17 +336,17 @@ export function DashboardPage() {
             <div className="grid-4">
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Tổng bài viết</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)" }}>{blogs.length.toLocaleString()}</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", fontVariantNumeric: "tabular-nums" }}>{blogs.length.toLocaleString()}</div>
               </div>
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Đã đăng</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)" }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--success)", fontVariantNumeric: "tabular-nums" }}>
                   {blogs.filter((b) => b.ispublished && !b.isdeleted).length.toLocaleString()}
                 </div>
               </div>
               <div className="card" style={{ boxShadow: "none", border: "1px solid var(--border-color)" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600 }}>Nháp</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--warning)" }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--warning)", fontVariantNumeric: "tabular-nums" }}>
                   {blogs.filter((b) => !b.ispublished && !b.isdeleted).length.toLocaleString()}
                 </div>
               </div>
@@ -345,11 +378,11 @@ export function DashboardPage() {
                           <div style={{ fontWeight: 700 }}>{row.title}</div>
                           <div style={{ color: "var(--text-muted)", fontSize: "12px" }}>{row.slug}</div>
                         </td>
-                        <td>{row.viewCount.toLocaleString()}</td>
-                        <td>{row.uniqueViewers.toLocaleString()}</td>
-                        <td>{row.appViews.toLocaleString()}</td>
-                        <td>{row.landingPageViews.toLocaleString()}</td>
-                        <td>{row.lastViewedAt ? new Date(row.lastViewedAt).toLocaleString("vi-VN") : "-"}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{row.viewCount.toLocaleString()}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{row.uniqueViewers.toLocaleString()}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{row.appViews.toLocaleString()}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{row.landingPageViews.toLocaleString()}</td>
+                        <td style={{ fontVariantNumeric: "tabular-nums" }}>{row.lastViewedAt ? new Date(row.lastViewedAt).toLocaleString("vi-VN") : "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,7 +415,7 @@ export function DashboardPage() {
                           {blog.isdeleted ? "Đã xóa" : blog.ispublished ? "Đã đăng" : "Nháp"}
                         </span>
                       </td>
-                      <td>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
                     </tr>
                   ))}
                   {blogs.length === 0 && !blogLoading ? (

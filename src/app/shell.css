@@ -576,3 +576,25 @@ input:checked + .slider:before {
     padding: 16px;
   }
 }
+
+/* Skeleton animation */
+.skeleton {
+  background: var(--border-color);
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  width: 100%;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
