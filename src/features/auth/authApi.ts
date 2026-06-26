@@ -10,9 +10,9 @@ const LoginResponseSchema = z.object({
       userID: z.string(),
       fullName: z.string(),
       phoneNumber: z.string(),
-      userType: z.string()
+      userType: z.string(),
     })
-    .optional()
+    .optional(),
 });
 
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
@@ -21,4 +21,3 @@ export async function loginWithPassword(phoneNumber: string, password: string) {
   const resp = await http.post("/Auth/login", { phoneNumber, password });
   return LoginResponseSchema.parse(resp.data);
 }
-

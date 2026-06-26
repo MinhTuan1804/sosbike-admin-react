@@ -32,3 +32,7 @@ export async function listOrders(params: { q?: string; status?: string; page?: n
   return PagedSchema.parse(resp.data);
 }
 
+export async function getOrderDetails(orderId: string): Promise<any> {
+  const resp = await http.get(`/admin/orders/${orderId}`);
+  return resp.data;
+}

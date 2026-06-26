@@ -10,7 +10,9 @@ const UserListItemSchema = z.object({
   isLocked: z.boolean(),
   isDeleted: z.boolean(),
   createdAt: z.string().nullable().optional(),
-  lastLoginAt: z.string().nullable().optional()
+  lastLoginAt: z.string().nullable().optional(),
+  isVerified: z.boolean().nullable().optional(),
+  verifiedAt: z.string().nullable().optional()
 });
 
 const PagedSchema = z.object({
@@ -42,4 +44,14 @@ export async function createUser(payload: {
 export async function updateUserFlags(userId: string, flags: { isLocked?: boolean; isActive?: boolean }) {
   await http.patch(`/admin/users/${userId}/flags`, flags);
 }
+
+export async function getUser(userId: string) {
+  const resp = await http.get(`/admin/users/${userId}`);
+  return resp.data;
+}
+
+export async function verifyMechanic(userId: string, isVerified: boolean) {
+  await http.post(`/admin/users/${userId}/verify-mechanic`, { isVerified });
+}
+
 

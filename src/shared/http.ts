@@ -1,14 +1,19 @@
 import axios from "axios";
 import { getAccessToken } from "../features/auth/authStorage";
 
+const resolvedBaseUrl =
+  import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5200/api";
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
+  baseURL: resolvedBaseUrl
 });
 
 http.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
+  config.headers["ngrok-skip-browser-warning"] = "true";
+
   const token = getAccessToken();
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

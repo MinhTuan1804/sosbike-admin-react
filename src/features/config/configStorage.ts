@@ -16,3 +16,4 @@ export function saveConfig(config: AppConfig) {
   localStorage.setItem(KEY, JSON.stringify(config));
 }
 
+export const __CONFIG_STORAGE_KEY__ = KEY;
