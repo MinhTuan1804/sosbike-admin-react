@@ -89,3 +89,8 @@ export async function rejectWithdraw(requestId: string, note?: string) {
   await http.post(`/admin/finance/withdraw-requests/${requestId}/reject`, { note: note ?? null });
 }
 
+export async function giftMechanics(amount: number = 5000000) {
+  const resp = await http.post(`/admin/finance/gift-mechanics?amount=${amount}`);
+  return resp.data as { message: string };
+}
+

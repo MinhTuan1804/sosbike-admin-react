@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   approveWithdraw,
+  giftMechanics,
   listTransactions,
   listWallets,
   listWithdrawRequests,
@@ -119,6 +120,24 @@ export function FinancePage() {
     }
   }
 
+  const [gifting, setGifting] = useState(false);
+
+  async function handleGift() {
+    if (!window.confirm("Bạn có chắc chắn muốn TẶNG 5.000.000đ vào ví của TẤT CẢ thợ cứu hộ đang hoạt động không?")) {
+      return;
+    }
+    setGifting(true);
+    try {
+      const resp = await giftMechanics(5000000);
+      alert(resp.message || "Tặng tiền thành công!");
+      await walletsQuery.refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Thao tác thất bại.");
+    } finally {
+      setGifting(false);
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: "24px" }}>
       {/* Page Header */}
@@ -219,6 +238,14 @@ export function FinancePage() {
             <button className="btn btn--ghost" onClick={() => walletsQuery.refetch()} disabled={walletsQuery.isFetching}>
               <RefreshCw size={14} />
               {walletsQuery.isFetching ? "Đang tải..." : "Tải lại"}
+            </button>
+            <button
+              className="btn btn--primary"
+              style={{ backgroundColor: "#10B981", borderColor: "#10B981" }}
+              onClick={handleGift}
+              disabled={gifting || walletsQuery.isFetching}
+            >
+              {gifting ? "Đang xử lý..." : "Tặng 5Tr Cho Tất Cả Thợ"}
             </button>
           </div>
 
