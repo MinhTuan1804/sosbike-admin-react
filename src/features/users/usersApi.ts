@@ -54,4 +54,8 @@ export async function verifyMechanic(userId: string, isVerified: boolean) {
   await http.post(`/admin/users/${userId}/verify-mechanic`, { isVerified });
 }
 
+export async function hardDeleteUser(userId: string) {
+  await http.delete(`/admin/users/${userId}/hard`);
+}
+
 

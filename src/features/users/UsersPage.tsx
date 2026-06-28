@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, AlertCircle, Eye, Users, UserPlus, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, AlertCircle, Eye, Users, UserPlus, Search, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic } from "./usersApi";
+import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic, hardDeleteUser } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
 
 export function UsersPage() {
@@ -269,6 +269,27 @@ export function UsersPage() {
                         aria-label={u.isActive ? `Tạm ngưng ${u.fullName}` : `Kích hoạt ${u.fullName}`}
                       >
                         {u.isActive ? "Tạm ngưng" : "Kích hoạt"}
+                      </button>
+                      <button
+                        className="btn btn--sm btn--danger"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        onClick={async () => {
+                          const isConfirmed = window.confirm(
+                            `CẢNH BÁO NGUY HIỂM:\nBạn đang thực hiện xóa vĩnh viễn (xóa cứng) tài khoản "${u.fullName}" (${u.phoneNumber}).\n\nHành động này sẽ xóa hoàn toàn tài khoản này cùng toàn bộ các dữ liệu liên quan (ví tiền, xe cộ, đơn cứu hộ, lịch sử giao dịch...) ra khỏi cơ sở dữ liệu và KHÔNG THỂ HOÀN TÁC.\n\nBạn có chắc chắn muốn xóa vĩnh viễn tài khoản này không?`
+                          );
+                          if (isConfirmed) {
+                            try {
+                              await hardDeleteUser(u.userId);
+                              await usersQuery.refetch();
+                            } catch (err) {
+                              alert(err instanceof Error ? err.message : "Xóa vĩnh viễn tài khoản thất bại.");
+                            }
+                          }
+                        }}
+                        aria-label={`Xóa vĩnh viễn tài khoản ${u.fullName}`}
+                      >
+                        <Trash2 size={12} />
+                        Xóa cứng
                       </button>
                     </div>
                   </td>
