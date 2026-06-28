@@ -281,8 +281,9 @@ export function UsersPage() {
                             try {
                               await hardDeleteUser(u.userId);
                               await usersQuery.refetch();
-                            } catch (err) {
-                              alert(err instanceof Error ? err.message : "Xóa vĩnh viễn tài khoản thất bại.");
+                            } catch (err: any) {
+                              const serverError = err?.response?.data?.error || err?.message || "Xóa vĩnh viễn tài khoản thất bại.";
+                              alert(serverError);
                             }
                           }
                         }}
