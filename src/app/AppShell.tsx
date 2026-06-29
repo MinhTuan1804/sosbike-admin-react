@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "./shell.css";
 import { clearAccessToken } from "../features/auth/authStorage";
@@ -16,7 +17,12 @@ import {
   Zap,
   LogOut,
   LucideIcon,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  Sun,
+  Bell,
+  Search,
+  ChevronDown
 } from "lucide-react";
 
 type NavItem = {
@@ -82,6 +88,7 @@ const routeLabels: Record<string, string> = {
 export function AppShell() {
   const location = useLocation();
   const currentLabel = routeLabels[location.pathname] ?? "Admin";
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   function handleLogout() {
     clearAccessToken();
@@ -89,7 +96,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="shell">
+    <div className={isCollapsed ? "shell shell--collapsed" : "shell"}>
       {/* ===== SIDEBAR ===== */}
       <aside className="sidebar">
         {/* Scrollable nav area */}
@@ -98,7 +105,7 @@ export function AppShell() {
           <div className="brand">
             <div className="brand__logo">
               <div className="brand__icon" aria-hidden="true">
-                <Zap size={18} strokeWidth={2.5} />
+                <Zap size={16} strokeWidth={2.5} />
               </div>
               <div>
                 <div className="brand__title">SOSBIKE</div>
@@ -143,17 +150,18 @@ export function AppShell() {
               <div className="sidebar__user-name">Admin</div>
               <div className="sidebar__user-role">Super Admin</div>
             </div>
+            {!isCollapsed && <ChevronDown size={14} style={{ opacity: 0.5 }} />}
           </div>
           <button
             className="btn btn--ghost"
             style={{
               width: "100%",
-              justifyContent: "flex-start",
+              justifyContent: isCollapsed ? "center" : "flex-start",
               color: "var(--sidebar-nav-color)",
               gap: "10px",
               fontSize: "13px",
               height: "36px",
-              padding: "0 10px"
+              padding: isCollapsed ? "0" : "0 10px"
             }}
             onClick={handleLogout}
             aria-label="Đăng xuất khỏi hệ thống"
@@ -169,6 +177,14 @@ export function AppShell() {
         {/* Topbar */}
         <header className="topbar" role="banner">
           <div className="topbar__left">
+            <button 
+              className="topbar__toggle" 
+              onClick={() => setIsCollapsed(!isCollapsed)} 
+              aria-label="Thu gọn/Mở rộng sidebar"
+              title="Thu gọn/Mở rộng sidebar"
+            >
+              <Menu size={15} />
+            </button>
             <div className="topbar__breadcrumb">
               <span>SOSBIKE</span>
               <ChevronRight size={14} aria-hidden="true" style={{ color: "var(--text-light)" }} />
@@ -176,6 +192,25 @@ export function AppShell() {
             </div>
           </div>
           <div className="topbar__right">
+            {/* Search Input Mock */}
+            <div className="topbar__search-mock" title="Tìm kiếm (Chức năng mô phỏng)">
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <Search size={14} style={{ color: "var(--text-muted)" }} />
+                <span>Tìm kiếm...</span>
+              </div>
+              <kbd className="topbar__search-kbd">⌘K</kbd>
+            </div>
+
+            {/* Dark Mode Switcher Mock */}
+            <button className="topbar__icon-btn" aria-label="Đổi chủ đề" title="Đổi chủ đề (Chức năng mô phỏng)">
+              <Sun size={15} />
+            </button>
+
+            {/* Notification Bell Mock */}
+            <button className="topbar__icon-btn" aria-label="Thông báo" title="Thông báo (Chức năng mô phỏng)">
+              <Bell size={15} />
+            </button>
+
             <div className="topbar__status" aria-label="Trạng thái API: Online" title={import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}>
               API Online
             </div>

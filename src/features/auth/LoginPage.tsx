@@ -47,51 +47,53 @@ export function LoginPage() {
       <div className="card" style={{
         width: "100%",
         maxWidth: "400px",
-        padding: "32px",
-        boxShadow: "var(--shadow-lg)",
-        background: "var(--card-bg)"
+        padding: "36px 32px",
+        boxShadow: "var(--shadow-md)",
+        background: "var(--card-bg)",
+        border: "1px solid var(--border-color)",
+        borderRadius: "var(--radius-xl)"
       }}>
         {/* Brand Header */}
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <div style={{ 
             display: "inline-flex", 
             alignItems: "center", 
             justifyContent: "center", 
-            width: "48px", 
-            height: "48px", 
-            borderRadius: "12px", 
+            width: "40px", 
+            height: "40px", 
+            borderRadius: "50%", 
             background: "var(--primary-light)", 
             color: "var(--primary)",
-            marginBottom: "12px"
+            marginBottom: "16px"
           }}>
-            <Bike size={28} strokeWidth={2.5} />
+            <Bike size={20} strokeWidth={2.5} />
           </div>
-          <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--secondary)", letterSpacing: "-0.03em" }}>
-            SOSBIKE Admin
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--secondary)", letterSpacing: "-0.02em" }}>
+            SOSBIKE Enterprise
           </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "4px", fontWeight: 500 }}>
-            Hệ thống quản trị cứu hộ xe máy
+          <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "6px" }}>
+            Nhập tài khoản admin để quản trị hệ thống cứu hộ
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: "20px" }}>
+        <form onSubmit={onSubmit} style={{ display: "grid", gap: "16px" }}>
           {/* Phone Input */}
           <div style={{ display: "grid", gap: "6px" }}>
-            <label htmlFor="login-phone" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)" }}>
+            <label htmlFor="login-phone" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-main)" }}>
               Số điện thoại
             </label>
             <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-              <div style={{ position: "absolute", left: "14px", color: "var(--text-light)" }}>
-                <Phone size={18} />
+              <div style={{ position: "absolute", left: "12px", color: "var(--text-light)" }}>
+                <Phone size={15} />
               </div>
               <input
                 id="login-phone"
                 type="tel"
                 autoComplete="tel"
-                placeholder="Nhập số điện thoại"
+                placeholder="0982xxxxxx"
                 className="input"
-                style={{ paddingLeft: "42px", minHeight: "44px", fontSize: "14px" }}
+                style={{ paddingLeft: "36px", height: "40px", fontSize: "14px" }}
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 required
@@ -101,20 +103,20 @@ export function LoginPage() {
 
           {/* Password Input */}
           <div style={{ display: "grid", gap: "6px" }}>
-            <label htmlFor="login-password" style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)" }}>
+            <label htmlFor="login-password" style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-main)" }}>
               Mật khẩu
             </label>
             <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-              <div style={{ position: "absolute", left: "14px", color: "var(--text-light)" }}>
-                <Lock size={18} />
+              <div style={{ position: "absolute", left: "12px", color: "var(--text-light)" }}>
+                <Lock size={15} />
               </div>
               <input
                 id="login-password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
-                placeholder="Nhập mật khẩu"
+                placeholder="••••••"
                 className="input"
-                style={{ paddingLeft: "42px", paddingRight: "44px", minHeight: "44px", fontSize: "14px" }}
+                style={{ paddingLeft: "36px", paddingRight: "36px", height: "40px", fontSize: "14px" }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -124,7 +126,7 @@ export function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: "10px",
                   background: "none",
                   border: "none",
                   color: "var(--text-light)",
@@ -137,7 +139,7 @@ export function LoginPage() {
                 }}
                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
@@ -148,17 +150,17 @@ export function LoginPage() {
               display: "flex",
               alignItems: "flex-start",
               gap: "8px",
-              padding: "12px 14px",
+              padding: "10px 12px",
               background: "var(--danger-bg)",
-              border: "1px solid hsl(0, 84%, 90%)",
+              border: "1px solid var(--danger)",
               borderRadius: "var(--radius-md)",
               color: "var(--danger)",
               fontSize: "13px",
               lineHeight: "1.4"
             }}>
-              <ShieldAlert size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
+              <ShieldAlert size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
               <div>
-                <strong>Lỗi:</strong> {error}
+                {error}
               </div>
             </div>
           ) : null}
@@ -170,13 +172,13 @@ export function LoginPage() {
             disabled={loading}
             style={{
               width: "100%",
-              minHeight: "44px",
+              height: "40px",
               fontSize: "14px",
-              marginTop: "4px",
-              boxShadow: "0 2px 4px 0 rgb(59 130 246 / 0.1)"
+              marginTop: "8px",
+              fontWeight: 500
             }}
           >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập vào Dashboard"}
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
       </div>
