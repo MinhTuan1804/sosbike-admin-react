@@ -871,7 +871,7 @@ export function DashboardPage() {
                   style={{
                     fontSize: "16px",
                     fontWeight: 800,
-                    color: "var(--secondary)",
+                    color: "var(--text-main)",
                     lineHeight: 1.3,
                   }}
                 >
@@ -1110,101 +1110,107 @@ export function DashboardPage() {
           )}
 
           {activeTab === "overview" && (
-            <div className="grid-2" style={{ marginTop: "8px" }}>
-            <div className="card">
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "var(--secondary)",
-                  marginBottom: "12px",
-                }}
-              >
-                Biểu đồ Doanh thu (Gross)
-              </h2>
-              <SimpleLineChart
-                labels={data.series.labels}
-                values={data.series.revenue.total}
-              />
+            <div style={{ display: "grid", gap: "16px", marginTop: "12px" }}>
+              <div className="card">
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "var(--secondary)",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Biểu đồ Doanh thu (Gross)
+                </h2>
+                <SimpleLineChart
+                  labels={data.series.labels}
+                  values={data.series.revenue.total}
+                  height={240}
+                />
+              </div>
+              <div className="card">
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "var(--secondary)",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Tăng trưởng Người dùng (Khách/Thợ)
+                </h2>
+                <SimpleStackedBars
+                  labels={data.series.labels}
+                  a={data.series.users.customers}
+                  b={data.series.users.mechanics}
+                  aLabel="Khách hàng"
+                  bLabel="Thợ cứu hộ"
+                  height={240}
+                />
+              </div>
             </div>
-            <div className="card">
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "var(--secondary)",
-                  marginBottom: "12px",
-                }}
-              >
-                Tăng trưởng Người dùng (Khách/Thợ)
-              </h2>
-              <SimpleStackedBars
-                labels={data.series.labels}
-                a={data.series.users.customers}
-                b={data.series.users.mechanics}
-                aLabel="Khách hàng"
-                bLabel="Thợ cứu hộ"
-              />
-            </div>
-          </div>
           )}
 
           {activeTab === "analytics" && (
-            <div className="grid-2">
-            <div className="card">
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "var(--secondary)",
-                  marginBottom: "12px",
-                }}
-              >
-                Tỷ lệ Trạng thái Đơn cứu hộ
-              </h2>
-              <SimpleDonut
-                values={[
-                  {
-                    label: "Hoàn thành",
-                    value: data.kpis.totalOrdersCompleted,
-                    color: "var(--success)",
-                  },
-                  {
-                    label: "Đã hủy",
-                    value: data.kpis.totalOrdersCancelled,
-                    color: "var(--danger)",
-                  },
-                  {
-                    label: "Khác",
-                    value: Math.max(
-                      0,
-                      data.kpis.totalOrders -
-                        data.kpis.totalOrdersCompleted -
-                        data.kpis.totalOrdersCancelled,
-                    ),
-                    color: "var(--text-light)",
-                  },
-                ]}
-              />
+            <div style={{ display: "grid", gap: "16px" }}>
+              <div className="card">
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "var(--secondary)",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Tỷ lệ Trạng thái Đơn cứu hộ
+                </h2>
+                <div style={{ maxWidth: "640px", margin: "0 auto", width: "100%" }}>
+                  <SimpleDonut
+                    values={[
+                      {
+                        label: "Hoàn thành",
+                        value: data.kpis.totalOrdersCompleted,
+                        color: "var(--success)",
+                      },
+                      {
+                        label: "Đã hủy",
+                        value: data.kpis.totalOrdersCancelled,
+                        color: "var(--danger)",
+                      },
+                      {
+                        label: "Khác",
+                        value: Math.max(
+                          0,
+                          data.kpis.totalOrders -
+                            data.kpis.totalOrdersCompleted -
+                            data.kpis.totalOrdersCancelled,
+                        ),
+                        color: "var(--text-light)",
+                      },
+                    ]}
+                    size={200}
+                  />
+                </div>
+              </div>
+              <div className="card">
+                <h2
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "var(--secondary)",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Tần suất Đơn cứu hộ theo ngày
+                </h2>
+                <SimpleLineChart
+                  labels={data.series.labels}
+                  values={data.series.orders.total}
+                  stroke="var(--secondary)"
+                  height={240}
+                />
+              </div>
             </div>
-            <div className="card">
-              <h2
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 700,
-                  color: "var(--secondary)",
-                  marginBottom: "12px",
-                }}
-              >
-                Tần suất Đơn cứu hộ theo ngày
-              </h2>
-              <SimpleLineChart
-                labels={data.series.labels}
-                values={data.series.orders.total}
-                stroke="var(--secondary)"
-              />
-            </div>
-          </div>
           )}
         </>
       ) : (

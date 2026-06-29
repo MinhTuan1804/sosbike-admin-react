@@ -193,8 +193,8 @@ export function BlogsPage() {
                         fontSize: "9px",
                         fontWeight: "bold",
                         textTransform: "uppercase",
-                        color: "#8B1A1A",
-                        background: "rgba(139, 26, 26, 0.08)",
+                        color: "var(--primary)",
+                        background: "var(--primary-light)",
                         padding: "3px 6px",
                         borderRadius: "10px",
                         marginBottom: "8px"
@@ -214,7 +214,7 @@ export function BlogsPage() {
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        color: "var(--text-color, #2c1111)"
+                        color: "var(--text-main)"
                       }}
                       title={item.title}
                     >
@@ -222,16 +222,16 @@ export function BlogsPage() {
                     </h3>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "rgba(0,0,0,0.02)", padding: "8px", borderRadius: "var(--radius-md)", marginBottom: "10px", border: "1px solid var(--border-color)" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "var(--primary-light)", padding: "8px", borderRadius: "var(--radius-md)", marginBottom: "10px", border: "1px solid var(--border-color)" }}>
                     <div>
                       <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Lượt xem</div>
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "4px" }}>
                         <Eye size={14} style={{ color: "var(--primary)" }} /> {(item.viewCount ?? 0).toLocaleString()}
                       </div>
                     </div>
                     <div>
                       <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "1px" }}>Độc nhất</div>
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-color)", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "4px" }}>
                         <Users size={14} style={{ color: "var(--primary)" }} /> {(item.uniqueViewers ?? 0).toLocaleString()}
                       </div>
                     </div>
@@ -246,9 +246,9 @@ export function BlogsPage() {
                         <Smartphone size={11} /> App: {item.appViews} ({appPercentage}%)
                       </span>
                     </div>
-                    <div style={{ height: "4px", background: "var(--border-color)", borderRadius: "2px", display: "flex", overflow: "hidden" }}>
-                      <div style={{ width: `${lpPercentage}%`, background: "#8B1A1A" }}></div>
-                      <div style={{ width: `${appPercentage}%`, background: "#2C1111" }}></div>
+                    <div style={{ height: "4px", background: "var(--neutral-bg)", borderRadius: "2px", display: "flex", overflow: "hidden" }}>
+                      <div style={{ width: `${lpPercentage}%`, background: "var(--primary)" }}></div>
+                      <div style={{ width: `${appPercentage}%`, background: "var(--success)" }}></div>
                     </div>
                   </div>
                 </div>

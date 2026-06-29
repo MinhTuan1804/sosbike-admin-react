@@ -492,9 +492,16 @@ export function ServicesGaragesPage() {
           </div>
 
           <div className="filter-bar">
+            <input
+              className="input"
+              style={{ flex: 1, minWidth: "200px", width: "auto" }}
+              placeholder="Tìm theo tên dịch vụ, thợ, SĐT..."
+              value={mechanicServiceQuery}
+              onChange={(e) => setMechanicServiceQuery(e.target.value)}
+            />
             <select
               className="select"
-              style={{ minWidth: "160px" }}
+              style={{ minWidth: "160px", width: "auto" }}
               value={mechanicServiceStatus}
               onChange={(e) => setMechanicServiceStatus(e.target.value)}
             >
@@ -503,13 +510,6 @@ export function ServicesGaragesPage() {
               <option value="REJECTED">Từ chối</option>
               <option value="">Tất cả</option>
             </select>
-            <input
-              className="input"
-              style={{ flex: 1, minWidth: "200px" }}
-              placeholder="Tìm theo tên dịch vụ, thợ, SĐT..."
-              value={mechanicServiceQuery}
-              onChange={(e) => setMechanicServiceQuery(e.target.value)}
-            />
             <button className="btn" onClick={refreshMechanicServices} disabled={mechanicServicesLoading}>
               {mechanicServicesLoading ? "..." : "Tải lại"}
             </button>

@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from "react";
+
 type Props = {
   labels: string[];
   a: number[];
@@ -15,7 +17,22 @@ export function SimpleStackedBars({
   bLabel = "B",
   height = 160
 }: Props) {
-  const width = Math.max(320, labels.length * 28);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(600); // Default fallback width
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setWidth(entry.contentRect.width);
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const paddingLeft = 45;
   const paddingRight = 20;
   const paddingTop = 25;
@@ -36,7 +53,7 @@ export function SimpleStackedBars({
   });
 
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div ref={containerRef} style={{ width: "100%" }}>
       <div style={{ display: "flex", gap: "16px", marginBottom: "14px", fontSize: "12px", paddingLeft: `${paddingLeft}px` }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontWeight: "500" }}>
           <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--primary)" }} />
@@ -48,7 +65,7 @@ export function SimpleStackedBars({
         </span>
       </div>
 
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block", minWidth: `${width}px` }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
         {/* Grid lines and Y axis values */}
         {gridLines.map((gl, i) => (
           <g key={i}>
@@ -106,8 +123,13 @@ export function SimpleStackedBars({
           const bH = totalH - aH;
           const yBase = height - paddingBottom;
 
+          const tooltipWidth = 120;
+          const tooltipHeight = 44;
+          const rectX = Math.max(5, Math.min(width - tooltipWidth - 5, x + colWidth / 2 - tooltipWidth / 2));
+          const rectY = Math.max(2, yBase - totalH - tooltipHeight - 8);
+
           return (
-            <g key={i}>
+            <g key={i} className="chart-dot-group" style={{ cursor: "pointer" }}>
               {/* Bottom bar (a): Primary Blue */}
               {aH > 0 && (
                 <rect
@@ -133,17 +155,38 @@ export function SimpleStackedBars({
                 />
               )}
 
-              {/* Total sum label at top of bar */}
-              <text
-                x={x + colWidth / 2}
-                y={yBase - totalH - 6}
-                textAnchor="middle"
-                fill="var(--text-main)"
-                fontSize="9px"
-                fontWeight="700"
-              >
-                {totalVal}
-              </text>
+              {/* Tooltip Box */}
+              <g className="chart-tooltip" style={{ pointerEvents: "none" }}>
+                <rect
+                  x={rectX}
+                  y={rectY}
+                  width={tooltipWidth}
+                  height={tooltipHeight}
+                  rx="4"
+                  fill="var(--primary)"
+                  stroke="var(--border-color)"
+                  strokeWidth="1"
+                  style={{ opacity: 0.95 }}
+                />
+                <text
+                  x={rectX + 8}
+                  y={rectY + 16}
+                  fill="var(--primary-fg)"
+                  fontSize="10px"
+                  fontWeight="600"
+                >
+                  {aLabel}: {(a[i] ?? 0).toLocaleString()}
+                </text>
+                <text
+                  x={rectX + 8}
+                  y={rectY + 32}
+                  fill="var(--primary-fg)"
+                  fontSize="10px"
+                  fontWeight="600"
+                >
+                  {bLabel}: {(b[i] ?? 0).toLocaleString()}
+                </text>
+              </g>
 
               {/* Horizontal label */}
               {i % Math.ceil(labels.length / 10) === 0 ? (

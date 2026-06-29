@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from "react";
+
 type Props = {
   labels: string[];
   values: number[];
@@ -6,7 +8,23 @@ type Props = {
 };
 
 export function SimpleLineChart({ labels, values, height = 160, stroke = "#2563eb" }: Props) {
-  const width = Math.max(320, labels.length * 30);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(600); // Default fallback width
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Use the actual container contentRect width
+        if (entry.contentRect.width > 0) {
+          setWidth(entry.contentRect.width);
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const paddingLeft = 45;
   const paddingRight = 20;
   const paddingTop = 25;
@@ -36,8 +54,8 @@ export function SimpleLineChart({ labels, values, height = 160, stroke = "#2563e
   });
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block", minWidth: `${width}px` }}>
+    <div ref={containerRef} style={{ width: "100%" }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}>
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={stroke} stopOpacity="0.25" />
@@ -77,46 +95,67 @@ export function SimpleLineChart({ labels, values, height = 160, stroke = "#2563e
         {linePath && <path d={linePath} fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
 
         {/* Data points & Labels */}
-        {coords.map((c, i) => (
-          <g key={i} className="chart-dot-group">
-            <circle
-              cx={c.x}
-              cy={c.y}
-              r="4.5"
-              fill="var(--card-bg)"
-              stroke={stroke}
-              strokeWidth="2.5"
-            />
-            
-            {/* Show value label on high-density displays if needed, otherwise show clean metadata */}
-            {coords.length <= 15 ? (
-              <text
-                x={c.x}
-                y={c.y - 10}
-                textAnchor="middle"
-                fill="var(--text-main)"
-                fontSize="10px"
-                fontWeight="700"
-              >
-                {Math.round(c.value).toLocaleString()}
-              </text>
-            ) : null}
+        {coords.map((c, i) => {
+          const tooltipWidth = 80;
+          const tooltipHeight = 24;
+          const rectX = Math.max(5, Math.min(width - tooltipWidth - 5, c.x - tooltipWidth / 2));
+          const rectY = c.y - tooltipHeight - 8;
+          const textX = rectX + tooltipWidth / 2;
+          const textY = rectY + 15;
 
-            {/* X Axis Labels */}
-            {i % Math.ceil(coords.length / 10) === 0 ? (
-              <text
-                x={c.x}
-                y={height - 6}
-                textAnchor="middle"
-                fill="var(--text-muted)"
-                fontSize="10px"
-                fontWeight="500"
-              >
-                {labels[i]}
-              </text>
-            ) : null}
-          </g>
-        ))}
+          return (
+            <g key={i} className="chart-dot-group" style={{ cursor: "pointer" }}>
+              <circle
+                cx={c.x}
+                cy={c.y}
+                r="4.5"
+                fill="var(--card-bg)"
+                stroke={stroke}
+                strokeWidth="2.5"
+                style={{ transition: "r 0.15s ease-in-out" }}
+              />
+              
+              {/* Tooltip Box */}
+              <g className="chart-tooltip" style={{ pointerEvents: "none" }}>
+                <rect
+                  x={rectX}
+                  y={rectY}
+                  width={tooltipWidth}
+                  height={tooltipHeight}
+                  rx="4"
+                  fill="var(--primary)"
+                  stroke="var(--border-color)"
+                  strokeWidth="1"
+                  style={{ opacity: 0.95 }}
+                />
+                <text
+                  x={textX}
+                  y={textY}
+                  textAnchor="middle"
+                  fill="var(--primary-fg)"
+                  fontSize="10px"
+                  fontWeight="700"
+                >
+                  {Math.round(c.value).toLocaleString()}
+                </text>
+              </g>
+
+              {/* X Axis Labels */}
+              {i % Math.ceil(coords.length / 10) === 0 ? (
+                <text
+                  x={c.x}
+                  y={height - 6}
+                  textAnchor="middle"
+                  fill="var(--text-muted)"
+                  fontSize="10px"
+                  fontWeight="500"
+                >
+                  {labels[i]}
+                </text>
+              ) : null}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
