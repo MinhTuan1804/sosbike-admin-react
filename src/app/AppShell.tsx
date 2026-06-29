@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "./shell.css";
 import { clearAccessToken } from "../features/auth/authStorage";
@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Menu,
   Sun,
+  Moon,
   Bell,
   Search,
   ChevronDown
@@ -89,6 +90,24 @@ export function AppShell() {
   const location = useLocation();
   const currentLabel = routeLabels[location.pathname] ?? "Admin";
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || stored === "light") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme(prev => prev === "light" ? "dark" : "light");
+  }
 
   function handleLogout() {
     clearAccessToken();
@@ -201,9 +220,14 @@ export function AppShell() {
               <kbd className="topbar__search-kbd">⌘K</kbd>
             </div>
 
-            {/* Dark Mode Switcher Mock */}
-            <button className="topbar__icon-btn" aria-label="Đổi chủ đề" title="Đổi chủ đề (Chức năng mô phỏng)">
-              <Sun size={15} />
+            {/* Dark Mode Switcher */}
+            <button 
+              className="topbar__icon-btn" 
+              onClick={toggleTheme} 
+              aria-label="Đổi chủ đề" 
+              title={theme === "light" ? "Chuyển sang giao diện Tối" : "Chuyển sang giao diện Sáng"}
+            >
+              {theme === "light" ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
             {/* Notification Bell Mock */}

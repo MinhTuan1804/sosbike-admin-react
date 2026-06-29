@@ -40,6 +40,7 @@ export function DashboardPage() {
   );
   const [blogAnalytics, setBlogAnalytics] =
     useState<BlogAnalyticsResponse | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   async function refresh() {
     setLoading(true);
@@ -257,6 +258,30 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Tabs Menu switcher */}
+      <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "8px" }}>
+        <div className="tabs-list">
+          <button 
+            className={`tabs-trigger ${activeTab === 'overview' ? 'tabs-trigger--active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Tổng quan
+          </button>
+          <button 
+            className={`tabs-trigger ${activeTab === 'analytics' ? 'tabs-trigger--active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Biểu đồ chi tiết
+          </button>
+          <button 
+            className={`tabs-trigger ${activeTab === 'blogs' ? 'tabs-trigger--active' : ''}`}
+            onClick={() => setActiveTab('blogs')}
+          >
+            Bài viết & Landing
+          </button>
+        </div>
+      </div>
+
       {loading && !data ? (
         <div style={{ display: "grid", gap: "24px" }}>
           {/* Skeleton KPI Grid */}
@@ -357,8 +382,8 @@ export function DashboardPage() {
         </div>
       ) : data ? (
         <>
-          {/* KPI Dashboard Grid */}
-          <div className="grid-4">
+          {activeTab === "overview" && (
+            <div className="grid-4">
             {/* KPI Card 1: Revenue */}
             <div
               className="card"
@@ -677,8 +702,10 @@ export function DashboardPage() {
               </div>
             </div>
           </div>
+          )}
 
-          <div className="card" style={{ display: "grid", gap: "16px" }}>
+          {activeTab === "blogs" && (
+            <div className="card" style={{ display: "grid", gap: "16px" }}>
             <div
               className="flex-between"
               style={{ flexWrap: "wrap", gap: "12px" }}
@@ -1080,9 +1107,10 @@ export function DashboardPage() {
               </table>
             </div>
           </div>
+          )}
 
-          {/* Charts Row 1 */}
-          <div className="grid-2" style={{ marginTop: "8px" }}>
+          {activeTab === "overview" && (
+            <div className="grid-2" style={{ marginTop: "8px" }}>
             <div className="card">
               <h2
                 style={{
@@ -1119,9 +1147,10 @@ export function DashboardPage() {
               />
             </div>
           </div>
+          )}
 
-          {/* Charts Row 2 */}
-          <div className="grid-2">
+          {activeTab === "analytics" && (
+            <div className="grid-2">
             <div className="card">
               <h2
                 style={{
@@ -1176,6 +1205,7 @@ export function DashboardPage() {
               />
             </div>
           </div>
+          )}
         </>
       ) : (
         <div
