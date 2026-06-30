@@ -40,3 +40,7 @@ export async function getOrderDetails(orderId: string): Promise<any> {
 export async function cancelOrder(orderId: string, reason?: string) {
   await http.post(`/admin/orders/${orderId}/cancel`, { reason });
 }
+
+export async function deleteOrder(orderId: string) {
+  await http.delete(`/admin/orders/${orderId}`);
+}

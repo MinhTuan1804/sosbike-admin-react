@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listOrders, getOrderDetails, cancelOrder } from "./ordersApi";
+import { listOrders, getOrderDetails, cancelOrder, deleteOrder } from "./ordersApi";
 import { Modal } from "../../shared/components/Modal";
 import { Flame, Search, RefreshCw, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
 
