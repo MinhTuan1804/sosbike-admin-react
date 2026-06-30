@@ -45,6 +45,10 @@ export async function updateUserFlags(userId: string, flags: { isLocked?: boolea
   await http.patch(`/admin/users/${userId}/flags`, flags);
 }
 
+export async function updateWalletStatus(userId: string, payload: { status?: "ACTIVE" | "LOCKED"; resetFailedAttempts?: boolean }) {
+  await http.patch(`/admin/users/${userId}/wallet-status`, payload);
+}
+
 export async function getUser(userId: string) {
   const resp = await http.get(`/admin/users/${userId}`);
   return resp.data;

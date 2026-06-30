@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle, Eye, Users, UserPlus, Search, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic, hardDeleteUser } from "./usersApi";
+import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic, hardDeleteUser, updateWalletStatus } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
 
 export function UsersPage() {
@@ -562,14 +562,32 @@ export function UsersPage() {
                       </div>
                     </div>
                     {mechanicDetail.wallet ? (
-                      <div className="card" style={{ display: "grid", gap: "6px", fontSize: "13px" }}>
+                      <div className="card" style={{ display: "grid", gap: "8px", fontSize: "13px" }}>
+                        <div>Số dư ví: <strong>{mechanicDetail.wallet.balance?.toLocaleString("vi-VN") ?? 0} đ</strong></div>
+                        <div>Nhập sai mã PIN: <strong>{mechanicDetail.wallet.failedPinAttempts ?? 0} / 5</strong></div>
                         <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
                         <div>Số TK: <strong className="tabular-nums">{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
                         <div>Chủ TK: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
-                        <div className="mt-4">
-                          Trạng thái: <span className={`badge ${mechanicDetail.wallet.bankName ? "badge--success" : "badge--danger"}`}>
-                            {mechanicDetail.wallet.bankName ? "Đã liên kết" : "Chưa liên kết"}
-                          </span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
+                          <div>
+                            Ví: <span className={`badge ${mechanicDetail.wallet.status === "ACTIVE" ? "badge--success" : "badge--danger"}`}>
+                              {mechanicDetail.wallet.status === "ACTIVE" ? "Hoạt động" : "Đã khóa"}
+                            </span>
+                          </div>
+                          <button
+                            className={`btn btn--sm ${mechanicDetail.wallet.status === "ACTIVE" ? "btn--danger" : "btn--success"}`}
+                            onClick={async () => {
+                              try {
+                                const newStatus = mechanicDetail.wallet.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
+                                await updateWalletStatus(mechanicDetail.userId, { status: newStatus });
+                                await refetchDetail();
+                              } catch (err: any) {
+                                alert(err.message || "Không thể cập nhật trạng thái ví");
+                              }
+                            }}
+                          >
+                            {mechanicDetail.wallet.status === "ACTIVE" ? "Khóa ví" : "Mở khóa ví"}
+                          </button>
                         </div>
                       </div>
                     ) : (

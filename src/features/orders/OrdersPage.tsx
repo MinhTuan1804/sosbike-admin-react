@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listOrders, getOrderDetails } from "./ordersApi";
+import { listOrders, getOrderDetails, cancelOrder } from "./ordersApi";
 import { Modal } from "../../shared/components/Modal";
 import { Flame, Search, RefreshCw, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
 
@@ -240,7 +240,27 @@ export function OrdersPage() {
         title="Chi tiết đơn cứu hộ"
         size="lg"
         footer={
-          <button className="btn" onClick={() => setSelectedOrderId(null)}>Đóng</button>
+          <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "flex-end" }}>
+            {orderDetail && !["COMPLETED", "CANCELLED", "CANCELLED_AFTER_ARRIVED"].includes(orderDetail.status) && (
+              <button
+                className="btn btn--danger"
+                onClick={async () => {
+                  const reason = prompt("Nhập lý do hủy đơn (hoặc bỏ trống):");
+                  if (reason === null) return; // user cancelled prompt
+                  try {
+                    await cancelOrder(orderDetail.orderId, reason || undefined);
+                    await detailQuery.refetch();
+                    await ordersQuery.refetch();
+                  } catch (err: any) {
+                    alert(err.message || "Không thể hủy đơn hàng");
+                  }
+                }}
+              >
+                Hủy đơn
+              </button>
+            )}
+            <button className="btn" onClick={() => setSelectedOrderId(null)}>Đóng</button>
+          </div>
         }
       >
         {detailQuery.isFetching ? (

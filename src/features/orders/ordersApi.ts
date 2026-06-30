@@ -36,3 +36,7 @@ export async function getOrderDetails(orderId: string): Promise<any> {
   const resp = await http.get(`/admin/orders/${orderId}`);
   return resp.data;
 }
+
+export async function cancelOrder(orderId: string, reason?: string) {
+  await http.post(`/admin/orders/${orderId}/cancel`, { reason });
+}
