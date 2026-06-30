@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./shell.css";
 import { clearAccessToken } from "../features/auth/authStorage";
+import {
+  AdminNotificationItem,
+  listMyNotifications,
+  markAllNotificationsRead,
+  markNotificationRead
+} from "../features/notifications/notificationsApi";
 import {
   LayoutDashboard,
   Flame,
@@ -88,8 +94,14 @@ const routeLabels: Record<string, string> = {
 
 export function AppShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentLabel = routeLabels[location.pathname] ?? "Admin";
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AdminNotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const notificationRef = useRef<HTMLDivElement | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const stored = localStorage.getItem("theme");
     if (stored === "dark" || stored === "light") return stored;
@@ -104,6 +116,58 @@ export function AppShell() {
     }
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    void loadNotifications();
+    const timer = window.setInterval(() => {
+      void loadNotifications();
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!notificationRef.current?.contains(event.target as Node)) {
+        setNotificationOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function loadNotifications() {
+    try {
+      setNotificationsLoading(true);
+      const data = await listMyNotifications(10);
+      setNotifications(data.items ?? []);
+      setUnreadCount(data.unreadCount ?? 0);
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }
+
+  async function handleNotificationClick(item: AdminNotificationItem) {
+    if (!item.isRead) {
+      await markNotificationRead(item.notificationId);
+      await loadNotifications();
+    }
+
+    const target = resolveAdminNotificationUrl(item.actionUrl);
+    if (target) {
+      setNotificationOpen(false);
+      navigate(target);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    await markAllNotificationsRead();
+    await loadNotifications();
+  }
 
   function toggleTheme() {
     setTheme(prev => prev === "light" ? "dark" : "light");
@@ -230,10 +294,68 @@ export function AppShell() {
               {theme === "light" ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
-            {/* Notification Bell Mock */}
-            <button className="topbar__icon-btn" aria-label="Thông báo" title="Thông báo (Chức năng mô phỏng)">
-              <Bell size={15} />
-            </button>
+            <div className="topbar__notifications" ref={notificationRef}>
+              <button
+                className="topbar__icon-btn topbar__icon-btn--notification"
+                aria-label="Thông báo"
+                title="Thông báo"
+                onClick={() => setNotificationOpen(prev => !prev)}
+              >
+                <Bell size={15} />
+                {unreadCount > 0 && (
+                  <span className="topbar__notification-badge">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {notificationOpen && (
+                <div className="notification-popover" role="dialog" aria-label="Thông báo admin">
+                  <div className="notification-popover__header">
+                    <div>
+                      <div className="notification-popover__title">Thông báo</div>
+                      <div className="notification-popover__subtitle">Tự động lưu tối đa 7 ngày</div>
+                    </div>
+                    <button
+                      className="notification-popover__action"
+                      onClick={handleMarkAllRead}
+                      disabled={unreadCount === 0}
+                    >
+                      Đã đọc
+                    </button>
+                  </div>
+
+                  <div className="notification-popover__list">
+                    {notificationsLoading ? (
+                      <div className="notification-popover__empty">Đang tải thông báo...</div>
+                    ) : notifications.length === 0 ? (
+                      <div className="notification-popover__empty">Chưa có thông báo mới.</div>
+                    ) : (
+                      notifications.map((item) => (
+                        <button
+                          key={item.notificationId}
+                          className={
+                            item.isRead
+                              ? "notification-popover__item"
+                              : "notification-popover__item notification-popover__item--unread"
+                          }
+                          onClick={() => void handleNotificationClick(item)}
+                        >
+                          <span className="notification-popover__dot" aria-hidden="true" />
+                          <span className="notification-popover__body">
+                            <span className="notification-popover__item-title">{item.title}</span>
+                            <span className="notification-popover__item-content">{item.content}</span>
+                            <span className="notification-popover__item-time">
+                              {formatNotificationTime(item.createdAt)}
+                            </span>
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="topbar__status" aria-label="Trạng thái API: Online" title={import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}>
               API Online
@@ -248,4 +370,28 @@ export function AppShell() {
       </main>
     </div>
   );
+}
+
+function formatNotificationTime(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function resolveAdminNotificationUrl(actionUrl?: string | null) {
+  if (!actionUrl) return null;
+
+  if (actionUrl.startsWith("/admin/finance")) return "/finance";
+  if (actionUrl.startsWith("/users/verify-mechanics")) return "/verify-mechanics";
+  if (actionUrl.startsWith("/admin/")) return actionUrl.replace(/^\/admin/, "") || "/dashboard";
+  if (actionUrl.startsWith("/")) return actionUrl;
+
+  return null;
 }

@@ -19,7 +19,7 @@ npm run dev
 - API base URL: tạo file `.env.local`
 
 ```bash
-VITE_API_BASE_URL=https://api.sosbike.io.vn/api
+VITE_API_BASE_URL=http://localhost:5200/api
 ```
 
 - Khi test local, đổi lại thành `http://localhost:5200/api`.
