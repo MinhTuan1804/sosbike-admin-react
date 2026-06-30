@@ -22,6 +22,7 @@ const WalletSchema = z.object({
   accountHolderName: z.string().nullable().optional(),
   isBankVerified: z.boolean(),
   dailyWithdrawLimit: z.number().nullable().optional(),
+  failedPinAttempts: z.number().nullable().optional(),
   lastUpdated: z.string().nullable().optional()
 });
 

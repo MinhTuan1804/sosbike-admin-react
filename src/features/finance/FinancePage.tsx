@@ -8,6 +8,7 @@ import {
   listWithdrawRequests,
   rejectWithdraw
 } from "./financeApi";
+import { updateWalletStatus } from "../users/usersApi";
 import { Modal } from "../../shared/components/Modal";
 import { Wallet, History, ArrowDownToLine, RefreshCw } from "lucide-react";
 
@@ -265,6 +266,8 @@ export function FinancePage() {
                       <th>Trạng thái</th>
                       <th>Thông tin ngân hàng</th>
                       <th>Hạn mức rút / ngày</th>
+                      <th>Nhập sai PIN</th>
+                      <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -309,11 +312,36 @@ export function FinancePage() {
                             {w.dailyWithdrawLimit != null ? formatMoney(w.dailyWithdrawLimit) : "-"}
                           </span>
                         </td>
+                        <td>
+                          {w.userType === "MECHANIC" ? (
+                            <strong className="tabular-nums" style={{ color: (w.failedPinAttempts ?? 0) >= 5 ? "var(--danger)" : "inherit" }}>
+                              {w.failedPinAttempts ?? 0} / 5
+                            </strong>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className={`btn btn--sm ${w.status === "ACTIVE" ? "btn--danger" : "btn--success"}`}
+                            onClick={async () => {
+                              try {
+                                const newStatus = w.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
+                                await updateWalletStatus(w.userId, { status: newStatus });
+                                await walletsQuery.refetch();
+                              } catch (err: any) {
+                                alert(err.message || "Không thể cập nhật trạng thái ví");
+                              }
+                            }}
+                          >
+                            {w.status === "ACTIVE" ? "Khóa ví" : "Mở khóa ví"}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                     {walletsQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6}>
+                        <td colSpan={8}>
                           <div className="empty-state">Không có tài khoản ví nào phù hợp.</div>
                         </td>
                       </tr>
