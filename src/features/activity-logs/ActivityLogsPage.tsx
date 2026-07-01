@@ -183,6 +183,21 @@ export function ActivityLogsPage() {
 
   return (
     <div style={{ display: "grid", gap: "20px" }}>
+      <div
+        style={{
+          padding: "12px 16px",
+          borderRadius: "10px",
+          background: "rgba(37,99,235,0.08)",
+          border: "1px solid rgba(37,99,235,0.2)",
+          fontSize: "13px",
+          lineHeight: 1.5,
+          color: "#1e3a8a"
+        }}
+      >
+        <strong>Tự động sao lưu:</strong> Hệ thống backup nhật ký hoạt động <strong>2 tuần/lần</strong>,
+        xuất file Excel (tên dạng <code>nhat-ky-hoat-dong_tu-dd-MM-yyyy_den-dd-MM-yyyy.xlsx</code>),
+        upload lên Google Drive thư mục <strong>SOSBIKE-NhatKyHoatDong</strong>, sau đó tự động xóa dữ liệu đã backup khỏi DB.
+      </div>
       <div className="flex-between">
         <div>
           <h1 style={{ fontSize: "28px", fontWeight: 800, display: "flex", alignItems: "center", gap: "10px" }}>
