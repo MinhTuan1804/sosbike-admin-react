@@ -35,6 +35,12 @@ export function ConfigPage() {
   const [versions, setVersions] = useState<ConfigVersionResponse[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [showGoongKey, setShowGoongKey] = useState(false);
+  const [showGoogleMapKey, setShowGoogleMapKey] = useState(false);
+  const [showResendApiKey, setShowResendApiKey] = useState(false);
+  const [showPayOsApiKey, setShowPayOsApiKey] = useState(false);
+  const [showPayOsChecksumKey, setShowPayOsChecksumKey] = useState(false);
+  const [showEsmsApiKey, setShowEsmsApiKey] = useState(false);
+  const [showEsmsSecretKey, setShowEsmsSecretKey] = useState(false);
 
   // Dialog State
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -430,45 +436,379 @@ export function ConfigPage() {
               </h2>
             </div>
 
-            <div style={{ display: "grid", gap: "16px" }}>
-              <div className="form-group">
-                <label>Goong Map API Key</label>
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <input
-                    type={showGoongKey ? "text" : "password"}
-                    className="input"
-                    style={{ paddingRight: "40px" }}
-                    value={draftConfig.thirdParty?.goongApiKey ?? ""}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        thirdParty: { ...draftConfig.thirdParty, goongApiKey: e.target.value }
-                      })
-                    }
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGoongKey(!showGoongKey)}
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--text-muted)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "4px"
-                    }}
-                  >
-                    {showGoongKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+            <div style={{ display: "grid", gap: "20px" }}>
+              
+              {/* SECTION: MAPS */}
+              <div style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
+                <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)", marginBottom: "12px" }}>Cấu hình Bản đồ (Maps API)</div>
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Goong Map API Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showGoongKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.goongApiKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, goongApiKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowGoongKey(!showGoongKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showGoongKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.goongApiKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.goongApiKey")}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Google Map API Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showGoogleMapKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.googleMapApiKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, googleMapApiKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowGoogleMapKey(!showGoogleMapKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showGoogleMapKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.googleMapApiKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.googleMapApiKey")}</span>
+                    )}
+                  </div>
                 </div>
-                {fieldError("thirdParty.goongApiKey") && (
-                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.goongApiKey")}</span>
-                )}
               </div>
+
+              {/* SECTION: RESEND EMAIL */}
+              <div style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
+                <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)", marginBottom: "12px" }}>Cấu hình Email (Resend)</div>
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Resend API Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showResendApiKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.resendApiKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, resendApiKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowResendApiKey(!showResendApiKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showResendApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.resendApiKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.resendApiKey")}</span>
+                    )}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div className="form-group">
+                      <label>Email gửi đi (From Email)</label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={draftConfig.thirdParty?.resendFromEmail ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, resendFromEmail: e.target.value }
+                          })
+                        }
+                      />
+                      {fieldError("thirdParty.resendFromEmail") && (
+                        <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.resendFromEmail")}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label>Tên người gửi (From Name)</label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={draftConfig.thirdParty?.resendFromName ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, resendFromName: e.target.value }
+                          })
+                        }
+                      />
+                      {fieldError("thirdParty.resendFromName") && (
+                        <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.resendFromName")}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: PAYOS */}
+              <div style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
+                <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)", marginBottom: "12px" }}>Cổng thanh toán payOS</div>
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>payOS Client ID</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={draftConfig.thirdParty?.payOsClientId ?? ""}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          thirdParty: { ...draftConfig.thirdParty, payOsClientId: e.target.value }
+                        })
+                      }
+                    />
+                    {fieldError("thirdParty.payOsClientId") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.payOsClientId")}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>payOS API Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showPayOsApiKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.payOsApiKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, payOsApiKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPayOsApiKey(!showPayOsApiKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showPayOsApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.payOsApiKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.payOsApiKey")}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>payOS Checksum Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showPayOsChecksumKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.payOsChecksumKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, payOsChecksumKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPayOsChecksumKey(!showPayOsChecksumKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showPayOsChecksumKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.payOsChecksumKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.payOsChecksumKey")}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: ESMS SMS */}
+              <div>
+                <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)", marginBottom: "12px" }}>Dịch vụ gửi SMS (ESMS)</div>
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>ESMS API Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showEsmsApiKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.esmsApiKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, esmsApiKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEsmsApiKey(!showEsmsApiKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showEsmsApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.esmsApiKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.esmsApiKey")}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>ESMS Secret Key</label>
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                      <input
+                        type={showEsmsSecretKey ? "text" : "password"}
+                        className="input"
+                        style={{ paddingRight: "40px" }}
+                        value={draftConfig.thirdParty?.esmsSecretKey ?? ""}
+                        onChange={(e) =>
+                          setDraftConfig({
+                            ...draftConfig,
+                            thirdParty: { ...draftConfig.thirdParty, esmsSecretKey: e.target.value }
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEsmsSecretKey(!showEsmsSecretKey)}
+                        style={{
+                          position: "absolute",
+                          right: "10px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px"
+                        }}
+                      >
+                        {showEsmsSecretKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {fieldError("thirdParty.esmsSecretKey") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.esmsSecretKey")}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tên Brandname hiển thị (Brandname)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={draftConfig.thirdParty?.esmsBrandName ?? ""}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          thirdParty: { ...draftConfig.thirdParty, esmsBrandName: e.target.value }
+                        })
+                      }
+                    />
+                    {fieldError("thirdParty.esmsBrandName") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.esmsBrandName")}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 

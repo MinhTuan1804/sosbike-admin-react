@@ -51,10 +51,30 @@ const hexColorSchema = (defaultValue: string) => z
 
 const thirdPartySchema = z
   .object({
-    goongApiKey: z.string().trim().default("J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq")
+    goongApiKey: z.string().trim().default("J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq"),
+    googleMapApiKey: z.string().trim().default(""),
+    payOsClientId: z.string().trim().default(""),
+    payOsApiKey: z.string().trim().default(""),
+    payOsChecksumKey: z.string().trim().default(""),
+    resendApiKey: z.string().trim().default(""),
+    resendFromEmail: z.string().trim().default(""),
+    resendFromName: z.string().trim().default(""),
+    esmsApiKey: z.string().trim().default(""),
+    esmsSecretKey: z.string().trim().default(""),
+    esmsBrandName: z.string().trim().default("")
   })
   .default({
-    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq"
+    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq",
+    googleMapApiKey: "",
+    payOsClientId: "",
+    payOsApiKey: "",
+    payOsChecksumKey: "",
+    resendApiKey: "",
+    resendFromEmail: "",
+    resendFromName: "",
+    esmsApiKey: "",
+    esmsSecretKey: "",
+    esmsBrandName: ""
   });
 
 const landingPageSchema = z
@@ -128,7 +148,17 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     mechanicRegisterEnabled: true
   },
   thirdParty: {
-    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq"
+    goongApiKey: "J7uk8GJZvzozpZ8p631cnxMVXUNVz0O0juQCSAJq",
+    googleMapApiKey: "",
+    payOsClientId: "",
+    payOsApiKey: "",
+    payOsChecksumKey: "",
+    resendApiKey: "",
+    resendFromEmail: "",
+    resendFromName: "",
+    esmsApiKey: "",
+    esmsSecretKey: "",
+    esmsBrandName: ""
   },
   landingPage: {
     hotline: "0982815244",
