@@ -21,9 +21,11 @@ import {
   Package,
   Warehouse,
   BadgeCheck,
-  Star
+  Star,
+  ExternalLink,
+  FolderOpen
 } from "lucide-react";
-import { ActivityLogItem, listActivityLogs } from "./activityLogsApi";
+import { ActivityLogBackupDriveInfo, ActivityLogItem, getActivityLogBackupDrive, listActivityLogs } from "./activityLogsApi";
 
 const PAGE_SIZE = 20;
 
@@ -137,8 +139,15 @@ export function ActivityLogsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({ eventType: "", q: "", from: "", to: "" });
+  const [backupDrive, setBackupDrive] = useState<ActivityLogBackupDriveInfo | null>(null);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
+
+  useEffect(() => {
+    getActivityLogBackupDrive()
+      .then(setBackupDrive)
+      .catch((err) => console.warn("Không tải link Drive backup:", err));
+  }, []);
 
   async function refresh() {
     setLoading(true);
@@ -196,7 +205,56 @@ export function ActivityLogsPage() {
       >
         <strong>Tự động sao lưu:</strong> Hệ thống backup nhật ký hoạt động <strong>2 tuần/lần</strong>,
         xuất file Excel (tên dạng <code>nhat-ky-hoat-dong_tu-dd-MM-yyyy_den-dd-MM-yyyy.xlsx</code>),
-        upload lên Google Drive thư mục <strong>SOSBIKE-NhatKyHoatDong</strong>, sau đó tự động xóa dữ liệu đã backup khỏi DB.
+        upload lên Google Drive thư mục <strong>{backupDrive?.folderName ?? "SOSBIKE-NhatKyHoatDong"}</strong>,
+        sau đó tự động xóa dữ liệu đã backup khỏi DB.
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
+          {backupDrive?.logFolderUrl && (
+            <a
+              href={backupDrive.logFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                background: "#fff",
+                border: "1px solid rgba(37,99,235,0.35)",
+                color: "#1d4ed8",
+                fontWeight: 700,
+                fontSize: "13px",
+                textDecoration: "none"
+              }}
+            >
+              <FolderOpen size={15} /> Mở thư mục backup log
+              <ExternalLink size={13} />
+            </a>
+          )}
+          {backupDrive?.parentFolderUrl && (
+            <a
+              href={backupDrive.parentFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                background: "#fff",
+                border: "1px solid rgba(37,99,235,0.25)",
+                color: "#1e40af",
+                fontWeight: 600,
+                fontSize: "13px",
+                textDecoration: "none"
+              }}
+            >
+              <FolderOpen size={15} /> Thư mục {backupDrive.parentFolderName ?? "cha"}
+              <ExternalLink size={13} />
+            </a>
+          )}
+        </div>
       </div>
       <div className="flex-between">
         <div>
