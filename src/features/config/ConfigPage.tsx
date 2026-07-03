@@ -969,19 +969,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Bảo trì hệ thống (Maintenance Mode)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Khóa ứng dụng và hiện banner bảo trì</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.featureFlags.maintenanceMode}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        featureFlags: { ...draftConfig.featureFlags, maintenanceMode: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: draftConfig.featureFlags.maintenanceMode ? "var(--success)" : "var(--text-muted)" }}>
+                    {draftConfig.featureFlags.maintenanceMode ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.featureFlags.maintenanceMode}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          featureFlags: { ...draftConfig.featureFlags, maintenanceMode: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
               <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--neutral-bg)" }}>
@@ -989,19 +994,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Chức năng SOS Khẩn cấp (SOS Button)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Hiển thị nút gọi khẩn cấp trên app</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.featureFlags.sosEnabled}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        featureFlags: { ...draftConfig.featureFlags, sosEnabled: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: draftConfig.featureFlags.sosEnabled ? "var(--success)" : "var(--text-muted)" }}>
+                    {draftConfig.featureFlags.sosEnabled ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.featureFlags.sosEnabled}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          featureFlags: { ...draftConfig.featureFlags, sosEnabled: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
               <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--neutral-bg)" }}>
@@ -1009,19 +1019,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Đăng ký Khách hàng mới (Customer Gate)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Cho phép khách hàng tạo mới tài khoản</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.featureFlags.customerRegisterEnabled}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        featureFlags: { ...draftConfig.featureFlags, customerRegisterEnabled: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: draftConfig.featureFlags.customerRegisterEnabled ? "var(--success)" : "var(--text-muted)" }}>
+                    {draftConfig.featureFlags.customerRegisterEnabled ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.featureFlags.customerRegisterEnabled}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          featureFlags: { ...draftConfig.featureFlags, customerRegisterEnabled: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
               <div className="flex-between" style={{ padding: "4px 0" }}>
@@ -1029,19 +1044,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Đăng ký Thợ sửa xe mới (Mechanic Gate)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Cho phép thợ nộp hồ sơ xin việc trên app</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.featureFlags.mechanicRegisterEnabled}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        featureFlags: { ...draftConfig.featureFlags, mechanicRegisterEnabled: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: draftConfig.featureFlags.mechanicRegisterEnabled ? "var(--success)" : "var(--text-muted)" }}>
+                    {draftConfig.featureFlags.mechanicRegisterEnabled ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.featureFlags.mechanicRegisterEnabled}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          featureFlags: { ...draftConfig.featureFlags, mechanicRegisterEnabled: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
             </div>
@@ -1245,19 +1265,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Bật sao lưu nhật ký hoạt động (Drive Backup)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Tự động sao lưu dữ liệu nhật ký lên Google Drive</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.activityLog?.backupEnabled ?? true}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        activityLog: { ...draftConfig.activityLog, backupEnabled: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: (draftConfig.activityLog?.backupEnabled ?? true) ? "var(--success)" : "var(--text-muted)" }}>
+                    {(draftConfig.activityLog?.backupEnabled ?? true) ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.activityLog?.backupEnabled ?? true}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          activityLog: { ...draftConfig.activityLog, backupEnabled: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -1363,19 +1388,24 @@ export function ConfigPage() {
                   <div style={{ fontWeight: "600", fontSize: "13px" }}>Bật phụ thu ban đêm (Night Surcharge)</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Tự động cộng thêm phụ thu cho các đơn cứu hộ ban đêm</div>
                 </div>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={draftConfig.nightSurcharge?.nightSurchargeEnabled ?? true}
-                    onChange={(e) =>
-                      setDraftConfig({
-                        ...draftConfig,
-                        nightSurcharge: { ...draftConfig.nightSurcharge, nightSurchargeEnabled: e.target.checked }
-                      })
-                    }
-                  />
-                  <span className="slider" />
-                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: (draftConfig.nightSurcharge?.nightSurchargeEnabled ?? true) ? "var(--success)" : "var(--text-muted)" }}>
+                    {(draftConfig.nightSurcharge?.nightSurchargeEnabled ?? true) ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.nightSurcharge?.nightSurchargeEnabled ?? true}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          nightSurcharge: { ...draftConfig.nightSurcharge, nightSurchargeEnabled: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider" />
+                  </label>
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
