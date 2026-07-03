@@ -3,7 +3,7 @@ import { AppConfigSchema, defaultConfig, AppConfig } from "./configTypes";
 import { __CONFIG_STORAGE_KEY__, loadConfig, saveConfig } from "./configStorage";
 import { getAppConfig, getConfigVersions, rollbackConfig, saveAppConfig, ConfigVersionResponse } from "./configApi";
 import { Modal } from "../../shared/components/Modal";
-import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff, RefreshCw, Save } from "lucide-react";
+import { Cloud, Coins, Palette, Sliders, AlertTriangle, Globe, Key, Eye, EyeOff, RefreshCw, Save, Wrench, Database, Wallet, Moon } from "lucide-react";
 
 function formatDateTime(isoString: string | null | undefined) {
   if (!isoString) return "Chưa rõ";
@@ -29,9 +29,6 @@ export function ConfigPage() {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dbUpdatedAt, setDbUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [jsonText, setJsonText] = useState(() => JSON.stringify(localInitial, null, 2));
-  const [jsonError, setJsonError] = useState<string | null>(null);
-  const [jsonDirty, setJsonDirty] = useState(false);
   const [versions, setVersions] = useState<ConfigVersionResponse[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [showGoongKey, setShowGoongKey] = useState(false);
@@ -83,11 +80,6 @@ export function ConfigPage() {
     loadFromDb();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (jsonDirty) return;
-    setJsonText(JSON.stringify(draftConfig, null, 2));
-  }, [draftConfig, jsonDirty]);
 
   async function onSaveToDb() {
     setError(null);
@@ -148,29 +140,6 @@ export function ConfigPage() {
         setLoading(false);
       }
     });
-  }
-
-  function onApplyJson() {
-    setJsonError(null);
-    try {
-      const parsed = JSON.parse(jsonText) as AppConfig;
-      const normalized = AppConfigSchema.parse(parsed);
-      setDraftConfig(normalized);
-      setJsonDirty(false);
-    } catch (e) {
-      setJsonError(e instanceof Error ? e.message : "JSON không đúng chuẩn schema.");
-    }
-  }
-
-  function onFormatJson() {
-    try {
-      const parsed = JSON.parse(jsonText);
-      setJsonText(JSON.stringify(parsed, null, 2));
-      setJsonDirty(false);
-      setJsonError(null);
-    } catch (e) {
-      setJsonError(e instanceof Error ? e.message : "JSON không hợp lệ.");
-    }
   }
 
   return (
@@ -1078,6 +1047,395 @@ export function ConfigPage() {
             </div>
           </div>
 
+          {/* Rescue Settings */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Wrench size={18} style={{ color: "var(--primary)" }} />
+                Cấu hình Cứu hộ (Rescue)
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gap: "12px" }}>
+              <div className="form-group">
+                <label>Bán kính tìm kiếm thợ cứu hộ (km)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  className="input"
+                  value={draftConfig.rescue?.matchingRadiusKm ?? 30}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      rescue: { ...draftConfig.rescue, matchingRadiusKm: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("rescue.matchingRadiusKm") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.matchingRadiusKm")}</span>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Chờ thợ nhận đơn (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.pendingTimeoutMinutes ?? 5}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, pendingTimeoutMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.pendingTimeoutMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.pendingTimeoutMinutes")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Chờ thợ đến nơi tối đa (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.acceptedTimeoutMinutes ?? 45}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, acceptedTimeoutMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.acceptedTimeoutMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.acceptedTimeoutMinutes")}</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Nhắc thợ di chuyển (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.acceptedReminderMinutes ?? 30}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, acceptedReminderMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.acceptedReminderMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.acceptedReminderMinutes")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Nhắc thợ khi đã đến nơi (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.arrivedReminderMinutes ?? 30}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, arrivedReminderMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.arrivedReminderMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.arrivedReminderMinutes")}</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Cảnh báo thợ đến trễ (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.arrivedAlertAdminMinutes ?? 60}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, arrivedAlertAdminMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.arrivedAlertAdminMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.arrivedAlertAdminMinutes")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Cảnh báo sửa chữa lâu (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.repairingAlertAdminMinutes ?? 180}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, repairingAlertAdminMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.repairingAlertAdminMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.repairingAlertAdminMinutes")}</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Nhắc thợ báo giá (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.quotingReminderMinutes ?? 15}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, quotingReminderMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.quotingReminderMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.quotingReminderMinutes")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Chờ thợ báo giá tối đa (phút)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.rescue?.quotingTimeoutMinutes ?? 30}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        rescue: { ...draftConfig.rescue, quotingTimeoutMinutes: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("rescue.quotingTimeoutMinutes") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("rescue.quotingTimeoutMinutes")}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Log Settings */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Database size={18} style={{ color: "var(--primary)" }} />
+                Sao lưu Nhật ký (Activity Log)
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gap: "14px" }}>
+              <div className="flex-between" style={{ padding: "4px 0" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Bật sao lưu nhật ký hoạt động (Drive Backup)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Tự động sao lưu dữ liệu nhật ký lên Google Drive</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.activityLog?.backupEnabled ?? true}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        activityLog: { ...draftConfig.activityLog, backupEnabled: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Chu kỳ sao lưu nhật ký (ngày)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.activityLog?.backupIntervalDays ?? 14}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        activityLog: { ...draftConfig.activityLog, backupIntervalDays: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("activityLog.backupIntervalDays") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("activityLog.backupIntervalDays")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Chu kỳ kiểm tra sao lưu (giờ)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.activityLog?.checkIntervalHours ?? 24}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        activityLog: { ...draftConfig.activityLog, checkIntervalHours: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("activityLog.checkIntervalHours") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("activityLog.checkIntervalHours")}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet Settings */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Wallet size={18} style={{ color: "var(--primary)" }} />
+                Cấu hình Ví &amp; Giao dịch
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gap: "12px" }}>
+              <div className="form-group">
+                <label>Số tiền rút tối thiểu mỗi lần (VND)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.wallet?.minWithdrawAmount ?? 50000}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      wallet: { ...draftConfig.wallet, minWithdrawAmount: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("wallet.minWithdrawAmount") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("wallet.minWithdrawAmount")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Số tiền rút tối đa hàng ngày (VND)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.wallet?.maxDailyWithdrawAmount ?? 5000000}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      wallet: { ...draftConfig.wallet, maxDailyWithdrawAmount: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("wallet.maxDailyWithdrawAmount") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("wallet.maxDailyWithdrawAmount")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Night Surcharge Settings */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Moon size={18} style={{ color: "var(--primary)" }} />
+                Phụ thu ban đêm cho cứu hộ
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gap: "14px" }}>
+              <div className="flex-between" style={{ padding: "4px 0" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Bật phụ thu ban đêm (Night Surcharge)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Tự động cộng thêm phụ thu cho các đơn cứu hộ ban đêm</div>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={draftConfig.nightSurcharge?.nightSurchargeEnabled ?? true}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        nightSurcharge: { ...draftConfig.nightSurcharge, nightSurchargeEnabled: e.target.checked }
+                      })
+                    }
+                  />
+                  <span className="slider" />
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Giờ bắt đầu phụ thu (0-23)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.nightSurcharge?.nightStartHour ?? 22}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        nightSurcharge: { ...draftConfig.nightSurcharge, nightStartHour: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("nightSurcharge.nightStartHour") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("nightSurcharge.nightStartHour")}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Giờ kết thúc phụ thu (0-23)</label>
+                  <input
+                    type="number"
+                    className="input"
+                    value={draftConfig.nightSurcharge?.nightEndHour ?? 5}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        nightSurcharge: { ...draftConfig.nightSurcharge, nightEndHour: Number(e.target.value) }
+                      })
+                    }
+                  />
+                  {fieldError("nightSurcharge.nightEndHour") && (
+                    <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("nightSurcharge.nightEndHour")}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Số tiền phụ thu thêm (VND)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.nightSurcharge?.nightSurchargeFee ?? 25000}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      nightSurcharge: { ...draftConfig.nightSurcharge, nightSurchargeFee: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("nightSurcharge.nightSurchargeFee") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("nightSurcharge.nightSurchargeFee")}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Mock Screen Background Preview */}
           <div className="card">
             <h3 className="card__title" style={{ marginBottom: "12px" }}>Mockup Giao diện ứng dụng</h3>
@@ -1099,37 +1457,6 @@ export function ConfigPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Advanced: Raw JSON Panel */}
-      <div className="card">
-        <div className="section-header" style={{ marginBottom: "12px" }}>
-          <h2>Cấu hình nâng cao (Raw JSON Editor)</h2>
-        </div>
-        <p style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px" }}>
-          Chỉ chỉnh sửa nội dung bên dưới khi bạn hiểu rõ cấu trúc dữ liệu cấu hình. Bấm Apply JSON trước khi Lưu cài đặt.
-        </p>
-
-        <textarea
-          className="textarea"
-          style={{ fontFamily: "monospace", fontSize: "13px", background: "#0f172a", color: "#38bdf8", border: "1px solid #1e293b" }}
-          rows={12}
-          value={jsonText}
-          onChange={(e) => {
-            setJsonText(e.target.value);
-            setJsonDirty(true);
-          }}
-        />
-
-        <div className="flex-gap" style={{ marginTop: "12px" }}>
-          <button className="btn btn--sm" onClick={onApplyJson}>Áp dụng thay đổi JSON</button>
-          <button className="btn btn--sm" onClick={onFormatJson}>Tự động Định dạng</button>
-          {jsonError && (
-            <span style={{ color: "var(--danger)", fontSize: "12px", alignSelf: "center", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-              <AlertTriangle size={14} /> {jsonError}
-            </span>
-          )}
         </div>
       </div>
 

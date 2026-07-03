@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, Download, History, RefreshCw, Ticket, Wallet } from "lucide-react";
+import { ArrowDownToLine, Download, History, RefreshCw, Wallet } from "lucide-react";
 import {
   approveWithdraw,
   exportTransactions,
   giftMechanics,
-  listSubscriptions,
   listTransactions,
   listWallets,
   listWithdrawRequests,
@@ -14,7 +13,7 @@ import {
 import { updateWalletStatus } from "../users/usersApi";
 import { Modal } from "../../shared/components/Modal";
 
-type Tab = "wallets" | "transactions" | "withdraw" | "subscriptions";
+type Tab = "wallets" | "transactions" | "withdraw";
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -202,11 +201,6 @@ export function FinancePage() {
   const [wrStatus, setWrStatus] = useState("PENDING");
   const [wrPage, setWrPage] = useState(1);
 
-  const [subscriptionQuery, setSubscriptionQuery] = useState("");
-  const [subscriptionAudience, setSubscriptionAudience] = useState("");
-  const [subscriptionStatus, setSubscriptionStatus] = useState("");
-  const [subscriptionPage, setSubscriptionPage] = useState(1);
-
   const [currentRequest, setCurrentRequest] = useState<any | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [actionNote, setActionNote] = useState("");
@@ -254,21 +248,6 @@ export function FinancePage() {
     enabled: tab === "withdraw"
   });
 
-  const subscriptionsQuery = useQuery({
-    queryKey: useMemo(
-      () => ["finance-subscriptions", { subscriptionQuery, subscriptionAudience, subscriptionStatus, subscriptionPage }],
-      [subscriptionQuery, subscriptionAudience, subscriptionStatus, subscriptionPage]
-    ),
-    queryFn: () =>
-      listSubscriptions({
-        q: subscriptionQuery || undefined,
-        targetAudience: subscriptionAudience || undefined,
-        status: subscriptionStatus || undefined,
-        page: subscriptionPage,
-        pageSize: 20
-      }),
-    enabled: tab === "subscriptions"
-  });
 
   async function handleExportTransactions() {
     setExportingTransactions(true);
@@ -371,13 +350,6 @@ export function FinancePage() {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <ArrowDownToLine size={16} />
             <span>Duyệt rút tiền ({wrQuery.data?.total ?? "-"})</span>
-          </div>
-        </button>
-
-        <button style={tabButtonStyle(tab === "subscriptions")} onClick={() => setTab("subscriptions")}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <Ticket size={16} />
-            <span>Người mua gói ({subscriptionsQuery.data?.total ?? "-"})</span>
           </div>
         </button>
       </div>
@@ -875,147 +847,6 @@ export function FinancePage() {
                 label="yêu cầu"
                 onPrev={() => setWrPage((prev) => prev - 1)}
                 onNext={() => setWrPage((prev) => prev + 1)}
-              />
-            </>
-          ) : (
-            <SkeletonCard />
-          )}
-        </div>
-      )}
-
-      {tab === "subscriptions" && (
-        <div style={{ display: "grid", gap: "16px" }}>
-          <div className="section-header">
-            <h2>Danh sách người đã mua gói</h2>
-          </div>
-
-          <div className="filter-bar">
-            <input
-              className="input"
-              style={{ flex: 1, minWidth: "260px" }}
-              placeholder="Tìm theo tên, số điện thoại hoặc tên gói..."
-              value={subscriptionQuery}
-              onChange={(e) => {
-                setSubscriptionQuery(e.target.value);
-                setSubscriptionPage(1);
-              }}
-            />
-            <select
-              className="select"
-              style={{ width: "180px" }}
-              value={subscriptionAudience}
-              onChange={(e) => {
-                setSubscriptionAudience(e.target.value);
-                setSubscriptionPage(1);
-              }}
-            >
-              <option value="">Tất cả đối tượng</option>
-              <option value="B2C">Khách hàng</option>
-              <option value="B2B">Thợ sửa xe</option>
-              <option value="DRIVER">Tài xế</option>
-            </select>
-            <select
-              className="select"
-              style={{ width: "180px" }}
-              value={subscriptionStatus}
-              onChange={(e) => {
-                setSubscriptionStatus(e.target.value);
-                setSubscriptionPage(1);
-              }}
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="EXPIRED">EXPIRED</option>
-              <option value="CANCELLED">CANCELLED</option>
-            </select>
-            <button
-              className="btn btn--ghost"
-              onClick={() => subscriptionsQuery.refetch()}
-              disabled={subscriptionsQuery.isFetching}
-            >
-              <RefreshCw size={14} />
-              {subscriptionsQuery.isFetching ? "Đang tải..." : "Tải lại"}
-            </button>
-          </div>
-
-          {subscriptionsQuery.isError ? (
-            <ErrorCard error={subscriptionsQuery.error} />
-          ) : subscriptionsQuery.data ? (
-            <>
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Người dùng</th>
-                      <th>Vai trò</th>
-                      <th>Gói hiện tại</th>
-                      <th>Đối tượng gói</th>
-                      <th>Giá gói</th>
-                      <th>Trạng thái</th>
-                      <th>Tự gia hạn</th>
-                      <th>Hiệu lực</th>
-                      <th>Ngày mua</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subscriptionsQuery.data.items.map((item) => (
-                      <tr key={item.subscriptionId}>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{item.fullName}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.phoneNumber}</div>
-                        </td>
-                        <td>
-                          <span className={`badge ${item.userType === "MECHANIC" ? "badge--info" : "badge--success"}`}>
-                            {item.userType}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{item.planName}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Plan ID: {item.planId}</div>
-                        </td>
-                        <td>{item.targetAudience}</td>
-                        <td className="tabular-nums" style={{ fontWeight: 700 }}>
-                          {formatMoney(item.price)}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              item.status === "ACTIVE"
-                                ? "badge--success"
-                                : item.status === "EXPIRED"
-                                  ? "badge--warning"
-                                  : "badge--danger"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td>{item.autoRenew ? "Có" : "Không"}</td>
-                        <td>
-                          <div>{formatDate(item.startDate)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>đến {formatDate(item.endDate)}</div>
-                        </td>
-                        <td>{formatDate(item.createdAt)}</td>
-                      </tr>
-                    ))}
-                    {subscriptionsQuery.data.items.length === 0 && (
-                      <tr>
-                        <td colSpan={9}>
-                          <div className="empty-state">Chưa có người mua gói phù hợp bộ lọc.</div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <Pagination
-                page={subscriptionPage}
-                pageSize={20}
-                total={subscriptionsQuery.data.total}
-                label="người mua gói"
-                onPrev={() => setSubscriptionPage((prev) => prev - 1)}
-                onNext={() => setSubscriptionPage((prev) => prev + 1)}
               />
             </>
           ) : (

@@ -97,6 +97,66 @@ const landingPageSchema = z
     secondaryColor: "#3B82F6"
   });
 
+const rescueSchema = z
+  .object({
+    matchingRadiusKm: z.number().min(0.1, "Bán kính tối thiểu 0.1km.").default(30),
+    pendingTimeoutMinutes: z.number().int().min(1, "Thời gian chờ tối thiểu 1 phút.").default(5),
+    acceptedReminderMinutes: z.number().int().min(1, "Thời gian nhắc nhở tối thiểu 1 phút.").default(30),
+    acceptedTimeoutMinutes: z.number().int().min(1, "Thời gian chờ tối đa tối thiểu 1 phút.").default(45),
+    arrivedReminderMinutes: z.number().int().min(1, "Thời gian nhắc nhở tối thiểu 1 phút.").default(30),
+    arrivedAlertAdminMinutes: z.number().int().min(1, "Thời gian cảnh báo tối thiểu 1 phút.").default(60),
+    quotingReminderMinutes: z.number().int().min(1, "Thời gian nhắc nhở tối thiểu 1 phút.").default(15),
+    quotingTimeoutMinutes: z.number().int().min(1, "Thời gian chờ tối đa tối thiểu 1 phút.").default(30),
+    repairingAlertAdminMinutes: z.number().int().min(1, "Thời gian cảnh báo tối thiểu 1 phút.").default(180)
+  })
+  .default({
+    matchingRadiusKm: 30,
+    pendingTimeoutMinutes: 5,
+    acceptedReminderMinutes: 30,
+    acceptedTimeoutMinutes: 45,
+    arrivedReminderMinutes: 30,
+    arrivedAlertAdminMinutes: 60,
+    quotingReminderMinutes: 15,
+    quotingTimeoutMinutes: 30,
+    repairingAlertAdminMinutes: 180
+  });
+
+const activityLogSchema = z
+  .object({
+    backupEnabled: z.boolean().default(true),
+    backupIntervalDays: z.number().int().min(1, "Chu kỳ tối thiểu 1 ngày.").default(14),
+    checkIntervalHours: z.number().int().min(1, "Chu kỳ tối thiểu 1 giờ.").default(24)
+  })
+  .default({
+    backupEnabled: true,
+    backupIntervalDays: 14,
+    checkIntervalHours: 24
+  });
+
+const walletSchema = z
+  .object({
+    minWithdrawAmount: z.number().min(0, "Số tiền tối thiểu là 0đ.").default(50000),
+    maxDailyWithdrawAmount: z.number().min(0, "Số tiền tối đa là 0đ.").default(5000000)
+  })
+  .default({
+    minWithdrawAmount: 50000,
+    maxDailyWithdrawAmount: 5000000
+  });
+
+const nightSurchargeSchema = z
+  .object({
+    nightSurchargeEnabled: z.boolean().default(true),
+    nightStartHour: z.number().int().min(0).max(23, "Giờ phải từ 0 đến 23.").default(22),
+    nightEndHour: z.number().int().min(0).max(23, "Giờ phải từ 0 đến 23.").default(5),
+    nightSurchargeFee: z.number().min(0, "Số tiền phụ thu tối thiểu là 0đ.").default(25000)
+  })
+  .default({
+    nightSurchargeEnabled: true,
+    nightStartHour: 22,
+    nightEndHour: 5,
+    nightSurchargeFee: 25000
+  });
+
 export const AppConfigSchema = z
   .object({
     platform: z.object({
@@ -112,7 +172,11 @@ export const AppConfigSchema = z
     }),
     featureFlags: featureFlagsSchema,
     thirdParty: thirdPartySchema,
-    landingPage: landingPageSchema
+    landingPage: landingPageSchema,
+    rescue: rescueSchema,
+    activityLog: activityLogSchema,
+    wallet: walletSchema,
+    nightSurcharge: nightSurchargeSchema
   })
   .superRefine((value, ctx) => {
     const total = value.platform.defaultPlatformFeeRate + value.platform.mechanicCommissionDefault;
@@ -168,5 +232,31 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     backgroundImageUrl: "",
     primaryColor: "#DA251D",
     secondaryColor: "#3B82F6"
+  },
+  rescue: {
+    matchingRadiusKm: 30,
+    pendingTimeoutMinutes: 5,
+    acceptedReminderMinutes: 30,
+    acceptedTimeoutMinutes: 45,
+    arrivedReminderMinutes: 30,
+    arrivedAlertAdminMinutes: 60,
+    quotingReminderMinutes: 15,
+    quotingTimeoutMinutes: 30,
+    repairingAlertAdminMinutes: 180
+  },
+  activityLog: {
+    backupEnabled: true,
+    backupIntervalDays: 14,
+    checkIntervalHours: 24
+  },
+  wallet: {
+    minWithdrawAmount: 50000,
+    maxDailyWithdrawAmount: 5000000
+  },
+  nightSurcharge: {
+    nightSurchargeEnabled: true,
+    nightStartHour: 22,
+    nightEndHour: 5,
+    nightSurchargeFee: 25000
   }
 });

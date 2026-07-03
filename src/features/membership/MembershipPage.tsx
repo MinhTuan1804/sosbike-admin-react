@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Ticket, Star, Info, AlertTriangle } from "lucide-react";
+import { Ticket, Star, Info, AlertTriangle, Users, RefreshCw } from "lucide-react";
 import {
   BenefitListItem,
   PlanDetail,
@@ -16,13 +16,65 @@ import {
   updatePlan,
   upsertPlanBenefit
 } from "./membershipApi";
+import { listSubscriptions } from "../finance/financeApi";
 import { Modal } from "../../shared/components/Modal";
 
 function formatMoney(v: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Math.round(v));
 }
 
-type TabKey = "plans" | "benefits";
+function formatDate(dateStr?: string | null) {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleString("vi-VN");
+}
+
+function Pagination({
+  page,
+  pageSize,
+  total,
+  label,
+  onPrev,
+  onNext
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  label: string;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
+        flexWrap: "wrap",
+        marginTop: "16px"
+      }}
+    >
+      <span style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+        Tổng cộng: <strong>{total}</strong> {label}
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button className="btn btn--ghost btn--sm" onClick={onPrev} disabled={page <= 1}>
+          Trước
+        </button>
+        <span style={{ minWidth: "84px", textAlign: "center", color: "var(--text-secondary)", fontSize: "13px" }}>
+          Trang {page} / {totalPages}
+        </span>
+        <button className="btn btn--ghost btn--sm" onClick={onNext} disabled={page >= totalPages}>
+          Sau
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type TabKey = "plans" | "benefits" | "subscriptions";
 const AUDIENCES = ["B2C", "B2B", "DRIVER"] as const;
 
 export function MembershipPage() {
@@ -70,6 +122,15 @@ export function MembershipPage() {
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  // Subscription list state
+  const [subscriptionQuery, setSubscriptionQuery] = useState("");
+  const [subscriptionAudience, setSubscriptionAudience] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState("");
+  const [subscriptionPage, setSubscriptionPage] = useState(1);
+  const [subscriptionsData, setSubscriptionsData] = useState<{ items: any[]; total: number } | null>(null);
+  const [isLoadingSubscriptions, setIsLoadingSubscriptions] = useState(false);
+  const [subscriptionsError, setSubscriptionsError] = useState<any>(null);
 
   const selectedPlanBenefitsMap = useMemo(() => {
     const map = new Map<number, { benefitValue: number | null; usageLimit: number | null }>();
@@ -130,6 +191,31 @@ export function MembershipPage() {
     }
     refreshSelectedPlan(selectedPlanId);
   }, [selectedPlanId]);
+
+  async function refreshSubscriptions() {
+    setIsLoadingSubscriptions(true);
+    setSubscriptionsError(null);
+    try {
+      const data = await listSubscriptions({
+        q: subscriptionQuery || undefined,
+        targetAudience: subscriptionAudience || undefined,
+        status: subscriptionStatus || undefined,
+        page: subscriptionPage,
+        pageSize: 20
+      });
+      setSubscriptionsData(data);
+    } catch (err) {
+      setSubscriptionsError(err);
+    } finally {
+      setIsLoadingSubscriptions(false);
+    }
+  }
+
+  useEffect(() => {
+    if (tab === "subscriptions") {
+      refreshSubscriptions();
+    }
+  }, [tab, subscriptionQuery, subscriptionAudience, subscriptionStatus, subscriptionPage]);
 
   // Trigger Confirmation Modal
   function triggerConfirm(message: string, onConfirm: () => void) {
@@ -344,6 +430,25 @@ export function MembershipPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <Star size={16} />
             <span>Danh mục quyền lợi</span>
+          </div>
+        </button>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            borderBottom: tab === "subscriptions" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
+            color: tab === "subscriptions" ? "var(--primary)" : "var(--text-muted)",
+            fontWeight: tab === "subscriptions" ? "700" : "500",
+            padding: "12px 4px",
+            fontSize: "14px",
+            cursor: "pointer",
+            transition: "all var(--transition-fast)"
+          }}
+          onClick={() => setTab("subscriptions")}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Users size={16} />
+            <span>Người đã mua gói</span>
           </div>
         </button>
       </div>
@@ -611,6 +716,150 @@ export function MembershipPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Subscriptions Workspace */}
+      {tab === "subscriptions" && (
+        <div style={{ display: "grid", gap: "16px" }}>
+          <div className="section-header">
+            <h2>Danh sách người đã mua gói dịch vụ</h2>
+          </div>
+
+          <div className="filter-bar">
+            <input
+              className="input"
+              style={{ flex: 1, minWidth: "260px" }}
+              placeholder="Tìm theo tên, số điện thoại hoặc tên gói..."
+              value={subscriptionQuery}
+              onChange={(e) => {
+                setSubscriptionQuery(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            />
+            <select
+              className="select"
+              style={{ width: "180px" }}
+              value={subscriptionAudience}
+              onChange={(e) => {
+                setSubscriptionAudience(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            >
+              <option value="">Tất cả đối tượng</option>
+              <option value="B2C">Khách hàng</option>
+              <option value="B2B">Thợ sửa xe</option>
+              <option value="DRIVER">Tài xế</option>
+            </select>
+            <select
+              className="select"
+              style={{ width: "180px" }}
+              value={subscriptionStatus}
+              onChange={(e) => {
+                setSubscriptionStatus(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="EXPIRED">EXPIRED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+            <button
+              className="btn btn--ghost"
+              onClick={refreshSubscriptions}
+              disabled={isLoadingSubscriptions}
+            >
+              <RefreshCw size={14} />
+              {isLoadingSubscriptions ? "Đang tải..." : "Tải lại"}
+            </button>
+          </div>
+
+          {subscriptionsError ? (
+            <div style={{ color: "var(--danger)", padding: "12px", border: "1px solid var(--danger)", borderRadius: "6px" }}>
+              Có lỗi xảy ra: {subscriptionsError.message || JSON.stringify(subscriptionsError)}
+            </div>
+          ) : subscriptionsData ? (
+            <>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Người dùng</th>
+                      <th>Vai trò</th>
+                      <th>Gói hiện tại</th>
+                      <th>Đối tượng gói</th>
+                      <th>Giá gói</th>
+                      <th>Trạng thái</th>
+                      <th>Tự gia hạn</th>
+                      <th>Hiệu lực</th>
+                      <th>Ngày mua</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptionsData.items.map((item) => (
+                      <tr key={item.subscriptionId}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{item.fullName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.phoneNumber}</div>
+                        </td>
+                        <td>
+                          <span className={`badge ${item.userType === "MECHANIC" ? "badge--info" : "badge--success"}`}>
+                            {item.userType}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{item.planName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Plan ID: {item.planId}</div>
+                        </td>
+                        <td>{item.targetAudience}</td>
+                        <td className="tabular-nums" style={{ fontWeight: 700 }}>
+                          {formatMoney(item.price)}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              item.status === "ACTIVE"
+                                ? "badge--success"
+                                : item.status === "EXPIRED"
+                                  ? "badge--warning"
+                                  : "badge--danger"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>{item.autoRenew ? "Có" : "Không"}</td>
+                        <td>
+                          <div>{formatDate(item.startDate)}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>đến {formatDate(item.endDate)}</div>
+                        </td>
+                        <td>{formatDate(item.createdAt)}</td>
+                      </tr>
+                    ))}
+                    {subscriptionsData.items.length === 0 && (
+                      <tr>
+                        <td colSpan={9}>
+                          <div className="empty-state">Chưa có người mua gói phù hợp bộ lọc.</div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pagination
+                page={subscriptionPage}
+                pageSize={20}
+                total={subscriptionsData.total}
+                label="người mua gói"
+                onPrev={() => setSubscriptionPage((prev) => prev - 1)}
+                onNext={() => setSubscriptionPage((prev) => prev + 1)}
+              />
+            </>
+          ) : (
+            <div className="empty-state">Đang tải dữ liệu...</div>
+          )}
         </div>
       )}
 

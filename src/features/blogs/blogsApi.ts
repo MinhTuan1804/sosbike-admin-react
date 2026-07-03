@@ -62,6 +62,7 @@ export type BlogUpsertPayload = {
   coverimageurl?: string | null;
   category?: string | null;
   ispublished: boolean;
+  publishedat?: string | null;
 };
 
 export async function listBlogs(params: { q?: string; includeDeleted?: boolean; page?: number; pageSize?: number }) {

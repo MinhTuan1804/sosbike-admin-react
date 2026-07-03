@@ -30,6 +30,8 @@ export function BlogsPage() {
     category: "",
     ispublished: false
   });
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState("");
 
   async function refresh() {
     setLoading(true);
@@ -62,6 +64,8 @@ export function BlogsPage() {
       category: "",
       ispublished: false
     });
+    setIsScheduled(false);
+    setScheduledTime("");
     setModalOpen(true);
   }
 
@@ -76,6 +80,18 @@ export function BlogsPage() {
       category: detail.category ?? "",
       ispublished: detail.ispublished
     });
+
+    const isSched = !detail.ispublished && !!detail.publishedat && new Date(detail.publishedat) > new Date();
+    setIsScheduled(isSched);
+    if (detail.publishedat) {
+      const localDate = new Date(detail.publishedat);
+      const offset = localDate.getTimezoneOffset();
+      const adjustedDate = new Date(localDate.getTime() - (offset * 60 * 1000));
+      setScheduledTime(adjustedDate.toISOString().slice(0, 16));
+    } else {
+      setScheduledTime("");
+    }
+
     setModalOpen(true);
   }
 
@@ -96,8 +112,17 @@ export function BlogsPage() {
         content: form.content.trim(),
         coverimageurl: form.coverimageurl?.trim() || null,
         category: form.category?.trim() || null,
-        ispublished: form.ispublished
+        ispublished: form.ispublished,
+        publishedat: null
       };
+
+      if (isScheduled && scheduledTime) {
+        payload.publishedat = new Date(scheduledTime).toISOString();
+        payload.ispublished = false;
+      } else if (form.ispublished) {
+        payload.publishedat = new Date().toISOString();
+      }
+
       if (editing) {
         await updateBlog(editing.blogpostid, payload);
       } else {
@@ -294,8 +319,22 @@ export function BlogsPage() {
                 <td>{(blog.viewCount ?? 0).toLocaleString()}</td>
                 <td>{(blog.uniqueViewers ?? 0).toLocaleString()}</td>
                 <td>
-                  <span className={`badge ${blog.isdeleted ? "badge--danger" : blog.ispublished ? "badge--success" : "badge--warning"}`}>
-                    {blog.isdeleted ? "Đã xóa" : blog.ispublished ? "Đã đăng" : "Nháp"}
+                  <span className={`badge ${
+                    blog.isdeleted 
+                      ? "badge--danger" 
+                      : blog.ispublished 
+                        ? "badge--success" 
+                        : (blog.publishedat && new Date(blog.publishedat) > new Date())
+                          ? "badge--info"
+                          : "badge--warning"
+                  }`}>
+                    {blog.isdeleted 
+                      ? "Đã xóa" 
+                      : blog.ispublished 
+                        ? "Đã đăng" 
+                        : (blog.publishedat && new Date(blog.publishedat) > new Date())
+                          ? "Đã lên lịch"
+                          : "Nháp"}
                   </span>
                 </td>
                 <td>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
@@ -352,14 +391,49 @@ export function BlogsPage() {
             <label>Danh mục</label>
             <input className="input" value={form.category ?? ""} onChange={(e) => setForm({ ...form, category: e.target.value })} />
           </div>
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-            <input
-              type="checkbox"
-              checked={form.ispublished}
-              onChange={(e) => setForm({ ...form, ispublished: e.target.checked })}
-            />
-            <span style={{ fontSize: "13px", fontWeight: 600 }}>Xuất bản ngay</span>
-          </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+            <div style={{ display: "flex", gap: "24px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.ispublished}
+                  onChange={(e) => {
+                    setForm({ ...form, ispublished: e.target.checked });
+                    if (e.target.checked) {
+                      setIsScheduled(false);
+                    }
+                  }}
+                />
+                <span style={{ fontSize: "13px", fontWeight: 600 }}>Xuất bản ngay</span>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={isScheduled}
+                  onChange={(e) => {
+                    setIsScheduled(e.target.checked);
+                    if (e.target.checked) {
+                      setForm({ ...form, ispublished: false });
+                    }
+                  }}
+                />
+                <span style={{ fontSize: "13px", fontWeight: 600 }}>Lên lịch đăng bài (Hẹn giờ)</span>
+              </label>
+            </div>
+
+            {isScheduled && (
+              <div className="form-group" style={{ animation: "fadeIn 0.2s ease" }}>
+                <label>Ngày & Khung giờ đăng bài</label>
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
 

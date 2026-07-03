@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./shell.css";
+import { http } from "../shared/http";
+import axios from "axios";
 import { clearAccessToken } from "../features/auth/authStorage";
 import {
   AdminNotificationItem,
@@ -102,6 +104,7 @@ export function AppShell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
+  const [isApiOnline, setIsApiOnline] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const stored = localStorage.getItem("theme");
     if (stored === "dark" || stored === "light") return stored;
@@ -116,6 +119,52 @@ export function AppShell() {
     }
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    async function checkApiStatus() {
+      try {
+        await http.get("/config/app");
+        setIsApiOnline(true);
+      } catch (err: any) {
+        if (axios.isAxiosError(err) && !err.response) {
+          setIsApiOnline(false);
+        } else {
+          setIsApiOnline(true);
+        }
+      }
+    }
+
+    void checkApiStatus();
+    const timerId = window.setInterval(() => {
+      void checkApiStatus();
+    }, 15_000);
+
+    const reqInterceptor = http.interceptors.request.use(
+      (config) => config,
+      (error) => Promise.reject(error)
+    );
+
+    const resInterceptor = http.interceptors.response.use(
+      (response) => {
+        setIsApiOnline(true);
+        return response;
+      },
+      (error) => {
+        if (axios.isAxiosError(error) && !error.response) {
+          setIsApiOnline(false);
+        } else {
+          setIsApiOnline(true);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      window.clearInterval(timerId);
+      http.interceptors.request.eject(reqInterceptor);
+      http.interceptors.response.eject(resInterceptor);
+    };
+  }, []);
 
   useEffect(() => {
     void loadNotifications();
@@ -357,8 +406,12 @@ export function AppShell() {
               )}
             </div>
 
-            <div className="topbar__status" aria-label="Trạng thái API: Online" title={import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}>
-              API Online
+            <div
+              className={`topbar__status ${isApiOnline ? "" : "topbar__status--offline"}`}
+              aria-label={`Trạng thái API: ${isApiOnline ? "Online" : "Offline"}`}
+              title={import.meta.env.VITE_API_BASE_URL ?? "(no VITE_API_BASE_URL)"}
+            >
+              {isApiOnline ? "API Online" : "API Offline"}
             </div>
           </div>
         </header>
