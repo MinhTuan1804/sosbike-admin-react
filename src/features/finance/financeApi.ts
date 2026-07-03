@@ -30,6 +30,7 @@ const TxSchema = z.object({
   transactionId: z.string(),
   walletId: z.string(),
   userId: z.string(),
+  userType: z.string(),
   phoneNumber: z.string(),
   fullName: z.string(),
   amount: z.number(),
@@ -61,13 +62,33 @@ const WithdrawReqSchema = z.object({
   accountHolderName: z.string().nullable().optional()
 });
 
+const SubscriptionSchema = z.object({
+  subscriptionId: z.string(),
+  userId: z.string(),
+  phoneNumber: z.string(),
+  fullName: z.string(),
+  userType: z.string(),
+  planId: z.number(),
+  planName: z.string(),
+  targetAudience: z.string(),
+  price: z.number(),
+  status: z.string(),
+  autoRenew: z.boolean(),
+  paymentId: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string(),
+  createdAt: z.string().nullable().optional()
+});
+
 export async function listWallets(params: { q?: string; userType?: string; page?: number; pageSize?: number }) {
   const resp = await http.get("/admin/finance/wallets", { params });
   return PagedSchema(WalletSchema).parse(resp.data);
 }
 
 export async function listTransactions(params: {
+  q?: string;
   walletId?: string;
+  userType?: string;
   type?: string;
   flow?: string;
   page?: number;
@@ -77,9 +98,34 @@ export async function listTransactions(params: {
   return PagedSchema(TxSchema).parse(resp.data);
 }
 
+export async function exportTransactions(params: {
+  q?: string;
+  walletId?: string;
+  userType?: string;
+  type?: string;
+  flow?: string;
+}) {
+  const resp = await http.get("/admin/finance/transactions/export", {
+    params,
+    responseType: "blob"
+  });
+  return resp.data as Blob;
+}
+
 export async function listWithdrawRequests(params: { status?: string; page?: number; pageSize?: number }) {
   const resp = await http.get("/admin/finance/withdraw-requests", { params });
   return PagedSchema(WithdrawReqSchema).parse(resp.data);
+}
+
+export async function listSubscriptions(params: {
+  q?: string;
+  targetAudience?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  const resp = await http.get("/admin/finance/subscriptions", { params });
+  return PagedSchema(SubscriptionSchema).parse(resp.data);
 }
 
 export async function approveWithdraw(requestId: string, note?: string) {

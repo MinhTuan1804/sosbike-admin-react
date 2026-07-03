@@ -7,4 +7,6 @@ dist/
 
 .env.local
 tsconfig.tsbuildinfo
+google-credentials.json
+**/google-credentials.json
 

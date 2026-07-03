@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowDownToLine, Download, History, RefreshCw, Ticket, Wallet } from "lucide-react";
 import {
   approveWithdraw,
+  exportTransactions,
   giftMechanics,
+  listSubscriptions,
   listTransactions,
   listWallets,
   listWithdrawRequests,
@@ -10,12 +13,15 @@ import {
 } from "./financeApi";
 import { updateWalletStatus } from "../users/usersApi";
 import { Modal } from "../../shared/components/Modal";
-import { Wallet, History, ArrowDownToLine, RefreshCw } from "lucide-react";
 
-type Tab = "wallets" | "transactions" | "withdraw";
+type Tab = "wallets" | "transactions" | "withdraw" | "subscriptions";
 
-function formatMoney(v: number) {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Math.round(v));
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0
+  }).format(Math.round(value));
 }
 
 function formatDate(dateStr?: string | null) {
@@ -23,8 +29,64 @@ function formatDate(dateStr?: string | null) {
   return new Date(dateStr).toLocaleString("vi-VN");
 }
 
-function getVietQRBankId(bankName: string): string {
+function getFlowLabel(flowType?: string | null) {
+  switch ((flowType ?? "").toUpperCase()) {
+    case "IN":
+      return "Tiền vào";
+    case "OUT":
+      return "Tiền ra";
+    default:
+      return flowType || "-";
+  }
+}
+
+function getTransactionTypeLabel(transactionType?: string | null) {
+  switch ((transactionType ?? "").toUpperCase()) {
+    case "TOP_UP":
+    case "TOPUP":
+    case "TOP_UP_WALLET":
+      return "Nạp ví";
+    case "WITHDRAW":
+    case "WITHDRAWAL":
+      return "Rút tiền";
+    case "ORDER_PAYMENT":
+      return "Thanh toán đơn cứu hộ";
+    case "COMMISSION_DEDUCTION":
+      return "Trừ phí nền tảng";
+    case "SUBSCRIPTION":
+      return "Thanh toán gói thành viên";
+    case "RESCUE_INCOME":
+      return "Thu nhập cứu hộ";
+    case "ORDER_INCOME":
+      return "Thu nhập đơn hàng";
+    case "REPAIR_INCOME":
+      return "Thu nhập sửa chữa";
+    default:
+      return transactionType || "-";
+  }
+}
+
+function getTransactionStatusLabel(status?: string | null) {
+  switch ((status ?? "").toUpperCase()) {
+    case "SUCCESS":
+    case "PAID":
+    case "COMPLETED":
+      return "Thành công";
+    case "PENDING":
+      return "Đang xử lý";
+    case "FAILED":
+      return "Thất bại";
+    case "CANCELLED":
+    case "CANCELED":
+      return "Đã hủy";
+    default:
+      return status || "-";
+  }
+}
+
+function getVietQRBankId(bankName: string) {
   if (!bankName) return "";
+
   const normalized = bankName
     .toLowerCase()
     .normalize("NFD")
@@ -48,45 +110,131 @@ function getVietQRBankId(bankName: string): string {
   if (normalized.includes("vib")) return "vib";
   if (normalized.includes("ocb")) return "ocb";
   if (normalized.includes("msb")) return "msb";
+
   return bankName;
+}
+
+function tabButtonStyle(active: boolean) {
+  return {
+    background: "transparent",
+    border: "none",
+    borderBottom: active ? "2px solid var(--secondary)" : "2px solid transparent",
+    color: active ? "var(--text-primary)" : "var(--text-secondary)",
+    padding: "0 0 14px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: 600
+  } as const;
+}
+
+function ErrorCard({ error }: { error: unknown }) {
+  return (
+    <div className="card" style={{ color: "var(--danger)" }}>
+      {error instanceof Error ? error.message : "Không tải được dữ liệu."}
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return <div className="card">Đang tải dữ liệu...</div>;
+}
+
+function Pagination({
+  page,
+  pageSize,
+  total,
+  label,
+  onPrev,
+  onNext
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  label: string;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
+        flexWrap: "wrap"
+      }}
+    >
+      <span style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+        Tổng cộng: <strong>{total}</strong> {label}
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button className="btn btn--ghost btn--sm" onClick={onPrev} disabled={page <= 1}>
+          Trước
+        </button>
+        <span style={{ minWidth: "84px", textAlign: "center", color: "var(--text-secondary)", fontSize: "13px" }}>
+          Trang {page} / {totalPages}
+        </span>
+        <button className="btn btn--ghost btn--sm" onClick={onNext} disabled={page >= totalPages}>
+          Sau
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function FinancePage() {
   const [tab, setTab] = useState<Tab>("wallets");
 
-  // Tab 1 (Wallets) Filters
   const [q, setQ] = useState("");
   const [userType, setUserType] = useState("");
   const [walletsPage, setWalletsPage] = useState(1);
 
-  // Tab 2 (Transactions) Filters
+  const [transactionQuery, setTransactionQuery] = useState("");
   const [walletId, setWalletId] = useState("");
+  const [transactionUserType, setTransactionUserType] = useState("");
   const [flow, setFlow] = useState("");
   const [txType, setTxType] = useState("");
   const [txPage, setTxPage] = useState(1);
+  const [exportingTransactions, setExportingTransactions] = useState(false);
 
-  // Tab 3 (Withdrawals) Filters
   const [wrStatus, setWrStatus] = useState("PENDING");
   const [wrPage, setWrPage] = useState(1);
 
-  // Modal Control for Approving / Rejecting
+  const [subscriptionQuery, setSubscriptionQuery] = useState("");
+  const [subscriptionAudience, setSubscriptionAudience] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState("");
+  const [subscriptionPage, setSubscriptionPage] = useState(1);
+
   const [currentRequest, setCurrentRequest] = useState<any | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [actionNote, setActionNote] = useState("");
   const [submittingAction, setSubmittingAction] = useState(false);
+  const [gifting, setGifting] = useState(false);
 
-  // Queries
   const walletsQuery = useQuery({
     queryKey: useMemo(() => ["finance-wallets", { q, userType, walletsPage }], [q, userType, walletsPage]),
-    queryFn: () => listWallets({ q: q || undefined, userType: userType || undefined, page: walletsPage, pageSize: 20 }),
+    queryFn: () =>
+      listWallets({
+        q: q || undefined,
+        userType: userType || undefined,
+        page: walletsPage,
+        pageSize: 20
+      }),
     enabled: tab === "wallets"
   });
 
   const txQuery = useQuery({
-    queryKey: useMemo(() => ["finance-tx", { walletId, flow, txType, txPage }], [walletId, flow, txType, txPage]),
+    queryKey: useMemo(
+      () => ["finance-transactions", { transactionQuery, walletId, transactionUserType, flow, txType, txPage }],
+      [transactionQuery, walletId, transactionUserType, flow, txType, txPage]
+    ),
     queryFn: () =>
       listTransactions({
+        q: transactionQuery || undefined,
         walletId: walletId || undefined,
+        userType: transactionUserType || undefined,
         flow: flow || undefined,
         type: txType || undefined,
         page: txPage,
@@ -96,13 +244,61 @@ export function FinancePage() {
   });
 
   const wrQuery = useQuery({
-    queryKey: useMemo(() => ["finance-wr", { wrStatus, wrPage }], [wrStatus, wrPage]),
-    queryFn: () => listWithdrawRequests({ status: wrStatus || undefined, page: wrPage, pageSize: 20 }),
+    queryKey: useMemo(() => ["finance-withdraw", { wrStatus, wrPage }], [wrStatus, wrPage]),
+    queryFn: () =>
+      listWithdrawRequests({
+        status: wrStatus || undefined,
+        page: wrPage,
+        pageSize: 20
+      }),
     enabled: tab === "withdraw"
   });
 
+  const subscriptionsQuery = useQuery({
+    queryKey: useMemo(
+      () => ["finance-subscriptions", { subscriptionQuery, subscriptionAudience, subscriptionStatus, subscriptionPage }],
+      [subscriptionQuery, subscriptionAudience, subscriptionStatus, subscriptionPage]
+    ),
+    queryFn: () =>
+      listSubscriptions({
+        q: subscriptionQuery || undefined,
+        targetAudience: subscriptionAudience || undefined,
+        status: subscriptionStatus || undefined,
+        page: subscriptionPage,
+        pageSize: 20
+      }),
+    enabled: tab === "subscriptions"
+  });
+
+  async function handleExportTransactions() {
+    setExportingTransactions(true);
+    try {
+      const blob = await exportTransactions({
+        q: transactionQuery || undefined,
+        walletId: walletId || undefined,
+        userType: transactionUserType || undefined,
+        flow: flow || undefined,
+        type: txType || undefined
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `lich-su-giao-dich-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Không xuất được Excel.");
+    } finally {
+      setExportingTransactions(false);
+    }
+  }
+
   async function handleSettleAction() {
     if (!currentRequest || !actionType) return;
+
     setSubmittingAction(true);
     try {
       if (actionType === "approve") {
@@ -110,30 +306,30 @@ export function FinancePage() {
       } else {
         await rejectWithdraw(currentRequest.requestId, actionNote);
       }
+
       setCurrentRequest(null);
       setActionType(null);
       setActionNote("");
       await wrQuery.refetch();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Thao tác thất bại.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Thao tác thất bại.");
     } finally {
       setSubmittingAction(false);
     }
   }
 
-  const [gifting, setGifting] = useState(false);
-
   async function handleGift() {
-    if (!window.confirm("Bạn có chắc chắn muốn TẶNG 5.000.000đ vào ví của TẤT CẢ thợ cứu hộ đang hoạt động không?")) {
+    if (!window.confirm("Bạn có chắc chắn muốn tặng 5.000.000đ vào ví của tất cả thợ đang hoạt động không?")) {
       return;
     }
+
     setGifting(true);
     try {
-      const resp = await giftMechanics(5000000);
-      alert(resp.message || "Tặng tiền thành công!");
+      const response = await giftMechanics(5000000);
+      alert(response.message || "Tặng tiền thành công.");
       await walletsQuery.refetch();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Thao tác thất bại.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Thao tác thất bại.");
     } finally {
       setGifting(false);
     }
@@ -141,76 +337,51 @@ export function FinancePage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      {/* Page Header */}
       <div className="page-header">
         <div className="page-header__info">
-          <h1>Tài chính &amp; Ví</h1>
-          <p>Quản lý số dư người dùng, xem lịch sử giao dịch và phê duyệt các yêu cầu rút tiền.</p>
+          <h1>Tài chính & Ví</h1>
+          <p>Quản lý số dư ví người dùng, xem lịch sử giao dịch, người mua gói và phê duyệt các yêu cầu rút tiền.</p>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "24px", marginBottom: "8px" }}>
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            borderBottom: tab === "wallets" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
-            color: tab === "wallets" ? "var(--primary)" : "var(--text-muted)",
-            fontWeight: tab === "wallets" ? "700" : "500",
-            padding: "12px 4px",
-            fontSize: "14px",
-            cursor: "pointer",
-            transition: "all var(--transition-fast)"
-          }}
-          onClick={() => setTab("wallets")}
-        >
+      <div
+        style={{
+          display: "flex",
+          borderBottom: "1px solid var(--border-color)",
+          gap: "24px",
+          marginBottom: "8px",
+          flexWrap: "wrap"
+        }}
+      >
+        <button style={tabButtonStyle(tab === "wallets")} onClick={() => setTab("wallets")}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <Wallet size={16} />
             <span>Tài khoản ví ({walletsQuery.data?.total ?? "-"})</span>
           </div>
         </button>
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            borderBottom: tab === "transactions" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
-            color: tab === "transactions" ? "var(--primary)" : "var(--text-muted)",
-            fontWeight: tab === "transactions" ? "700" : "500",
-            padding: "12px 4px",
-            fontSize: "14px",
-            cursor: "pointer",
-            transition: "all var(--transition-fast)"
-          }}
-          onClick={() => setTab("transactions")}
-        >
+
+        <button style={tabButtonStyle(tab === "transactions")} onClick={() => setTab("transactions")}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <History size={16} />
             <span>Lịch sử giao dịch ({txQuery.data?.total ?? "-"})</span>
           </div>
         </button>
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            borderBottom: tab === "withdraw" ? "2.5px solid var(--primary)" : "2.5px solid transparent",
-            color: tab === "withdraw" ? "var(--primary)" : "var(--text-muted)",
-            fontWeight: tab === "withdraw" ? "700" : "500",
-            padding: "12px 4px",
-            fontSize: "14px",
-            cursor: "pointer",
-            transition: "all var(--transition-fast)"
-          }}
-          onClick={() => setTab("withdraw")}
-        >
+
+        <button style={tabButtonStyle(tab === "withdraw")} onClick={() => setTab("withdraw")}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <ArrowDownToLine size={16} />
             <span>Duyệt rút tiền ({wrQuery.data?.total ?? "-"})</span>
           </div>
         </button>
+
+        <button style={tabButtonStyle(tab === "subscriptions")} onClick={() => setTab("subscriptions")}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Ticket size={16} />
+            <span>Người mua gói ({subscriptionsQuery.data?.total ?? "-"})</span>
+          </div>
+        </button>
       </div>
 
-      {/* Tab 1: Wallets list */}
       {tab === "wallets" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div className="section-header">
@@ -223,13 +394,19 @@ export function FinancePage() {
               style={{ flex: 1, minWidth: "220px" }}
               placeholder="Tìm theo tên thợ, tên khách hoặc số điện thoại..."
               value={q}
-              onChange={(e) => { setQ(e.target.value); setWalletsPage(1); }}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setWalletsPage(1);
+              }}
             />
             <select
               className="select"
               style={{ width: "200px" }}
               value={userType}
-              onChange={(e) => { setUserType(e.target.value); setWalletsPage(1); }}
+              onChange={(e) => {
+                setUserType(e.target.value);
+                setWalletsPage(1);
+              }}
             >
               <option value="">Tất cả vai trò</option>
               <option value="CUSTOMER">CUSTOMER</option>
@@ -246,14 +423,12 @@ export function FinancePage() {
               onClick={handleGift}
               disabled={gifting || walletsQuery.isFetching}
             >
-              {gifting ? "Đang xử lý..." : "Tặng 5Tr Cho Tất Cả Thợ"}
+              {gifting ? "Đang xử lý..." : "Tặng 5Tr cho tất cả thợ"}
             </button>
           </div>
 
           {walletsQuery.isError ? (
-            <div className="card" style={{ color: "var(--danger)", border: "1px solid var(--danger)", background: "var(--danger-bg)" }}>
-              <strong>Lỗi:</strong> {String(walletsQuery.error)}
-            </div>
+            <ErrorCard error={walletsQuery.error} />
           ) : walletsQuery.data ? (
             <>
               <div className="table-container">
@@ -271,36 +446,41 @@ export function FinancePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {walletsQuery.data.items.map((w) => (
-                      <tr key={w.walletId}>
+                    {walletsQuery.data.items.map((wallet) => (
+                      <tr key={wallet.walletId}>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{w.fullName}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{w.phoneNumber}</div>
+                          <div style={{ fontWeight: 600 }}>{wallet.fullName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{wallet.phoneNumber}</div>
                         </td>
                         <td>
-                          <span className={`badge ${w.userType === "MECHANIC" ? "badge--info" : "badge--success"}`} style={{ fontSize: "10px" }}>
-                            {w.userType}
+                          <span
+                            className={`badge ${wallet.userType === "MECHANIC" ? "badge--info" : "badge--success"}`}
+                            style={{ fontSize: "10px" }}
+                          >
+                            {wallet.userType}
                           </span>
                         </td>
                         <td>
                           <span className="tabular-nums" style={{ fontWeight: 700, color: "var(--secondary)", fontSize: "15px" }}>
-                            {w.balance != null ? formatMoney(w.balance) : "0 đ"}
+                            {wallet.balance != null ? formatMoney(wallet.balance) : "0 đ"}
                           </span>
                         </td>
                         <td>
-                          <span className={`badge ${w.status === "ACTIVE" ? "badge--success" : "badge--warning"}`}>
-                            {w.status ?? "UNKNOWN"}
+                          <span className={`badge ${wallet.status === "ACTIVE" ? "badge--success" : "badge--warning"}`}>
+                            {wallet.status ?? "UNKNOWN"}
                           </span>
                         </td>
                         <td>
-                          {w.bankName ? (
+                          {wallet.bankName ? (
                             <div style={{ display: "grid", gap: "2px" }}>
-                              <div style={{ fontWeight: "500" }}>{w.bankName}</div>
+                              <div style={{ fontWeight: 500 }}>{wallet.bankName}</div>
                               <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                                {w.accountNumber} • <span style={{ textTransform: "uppercase" }}>{w.accountHolderName}</span>
+                                {wallet.accountNumber} • <span style={{ textTransform: "uppercase" }}>{wallet.accountHolderName}</span>
                               </div>
                               <div style={{ marginTop: "2px" }}>
-                                <span className="badge badge--success" style={{ fontSize: "9px", padding: "1px 6px" }}>Đã liên kết</span>
+                                <span className="badge badge--success" style={{ fontSize: "9px", padding: "1px 6px" }}>
+                                  Đã liên kết
+                                </span>
                               </div>
                             </div>
                           ) : (
@@ -309,13 +489,16 @@ export function FinancePage() {
                         </td>
                         <td>
                           <span className="tabular-nums" style={{ fontWeight: 600 }}>
-                            {w.dailyWithdrawLimit != null ? formatMoney(w.dailyWithdrawLimit) : "-"}
+                            {wallet.dailyWithdrawLimit != null ? formatMoney(wallet.dailyWithdrawLimit) : "-"}
                           </span>
                         </td>
                         <td>
-                          {w.userType === "MECHANIC" ? (
-                            <strong className="tabular-nums" style={{ color: (w.failedPinAttempts ?? 0) >= 5 ? "var(--danger)" : "inherit" }}>
-                              {w.failedPinAttempts ?? 0} / 5
+                          {wallet.userType === "MECHANIC" ? (
+                            <strong
+                              className="tabular-nums"
+                              style={{ color: (wallet.failedPinAttempts ?? 0) >= 5 ? "var(--danger)" : "inherit" }}
+                            >
+                              {wallet.failedPinAttempts ?? 0} / 5
                             </strong>
                           ) : (
                             "—"
@@ -323,18 +506,18 @@ export function FinancePage() {
                         </td>
                         <td>
                           <button
-                            className={`btn btn--sm ${w.status === "ACTIVE" ? "btn--danger" : "btn--success"}`}
+                            className={`btn btn--sm ${wallet.status === "ACTIVE" ? "btn--danger" : "btn--success"}`}
                             onClick={async () => {
                               try {
-                                const newStatus = w.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
-                                await updateWalletStatus(w.userId, { status: newStatus });
+                                const newStatus = wallet.status === "ACTIVE" ? "LOCKED" : "ACTIVE";
+                                await updateWalletStatus(wallet.userId, { status: newStatus });
                                 await walletsQuery.refetch();
-                              } catch (err: any) {
-                                alert(err.message || "Không thể cập nhật trạng thái ví");
+                              } catch (error: any) {
+                                alert(error.message || "Không thể cập nhật trạng thái ví.");
                               }
                             }}
                           >
-                            {w.status === "ACTIVE" ? "Khóa ví" : "Mở khóa ví"}
+                            {wallet.status === "ACTIVE" ? "Khóa ví" : "Mở khóa ví"}
                           </button>
                         </td>
                       </tr>
@@ -350,55 +533,93 @@ export function FinancePage() {
                 </table>
               </div>
 
-              {/* Pagination */}
-              <div className="pagination">
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{walletsQuery.data.total}</b> tài khoản</span>
-                <div className="flex-gap">
-                  <button className="btn btn--sm" disabled={walletsPage <= 1} onClick={() => setWalletsPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {walletsPage}</span>
-                  <button className="btn btn--sm" disabled={walletsPage * 20 >= walletsQuery.data.total} onClick={() => setWalletsPage(p => p + 1)}>Sau</button>
-                </div>
-              </div>
+              <Pagination
+                page={walletsPage}
+                pageSize={20}
+                total={walletsQuery.data.total}
+                label="tài khoản"
+                onPrev={() => setWalletsPage((prev) => prev - 1)}
+                onNext={() => setWalletsPage((prev) => prev + 1)}
+              />
             </>
           ) : (
-            <div className="card">
-              <div className="skeleton" style={{ height: "200px" }} />
-            </div>
+            <SkeletonCard />
           )}
         </div>
       )}
 
-      {/* Tab 2: Transactions list */}
       {tab === "transactions" && (
         <div style={{ display: "grid", gap: "16px" }}>
-          <div className="section-header">
-            <h2>Lịch sử giao dịch</h2>
+          <div className="section-header" style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <div>
+              <h2>Lịch sử giao dịch</h2>
+              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "13px" }}>
+                Hiển thị mã giao dịch, ví, người dùng, loại giao dịch, tham chiếu đơn hàng/thanh toán, trạng thái và ghi chú.
+              </p>
+            </div>
+            <button className="btn btn--success" onClick={handleExportTransactions} disabled={exportingTransactions}>
+              <Download size={14} />
+              {exportingTransactions ? "Đang xuất..." : "Xuất Excel"}
+            </button>
           </div>
 
           <div className="filter-bar">
             <input
               className="input"
-              style={{ flex: 1, minWidth: "200px" }}
-              placeholder="Nhập mã ví (Wallet ID) nếu muốn lọc..."
+              style={{ flex: 1, minWidth: "220px" }}
+              placeholder="Tìm theo tên, số điện thoại hoặc ghi chú..."
+              value={transactionQuery}
+              onChange={(e) => {
+                setTransactionQuery(e.target.value);
+                setTxPage(1);
+              }}
+            />
+            <input
+              className="input"
+              style={{ width: "240px" }}
+              placeholder="Lọc theo mã ví (Wallet ID) nếu cần..."
               value={walletId}
-              onChange={(e) => { setWalletId(e.target.value); setTxPage(1); }}
+              onChange={(e) => {
+                setWalletId(e.target.value);
+                setTxPage(1);
+              }}
             />
             <select
               className="select"
               style={{ width: "160px" }}
+              value={transactionUserType}
+              onChange={(e) => {
+                setTransactionUserType(e.target.value);
+                setTxPage(1);
+              }}
+            >
+              <option value="">Tất cả vai trò</option>
+              <option value="CUSTOMER">CUSTOMER</option>
+              <option value="MECHANIC">MECHANIC</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <select
+              className="select"
+              style={{ width: "160px" }}
               value={flow}
-              onChange={(e) => { setFlow(e.target.value); setTxPage(1); }}
+              onChange={(e) => {
+                setFlow(e.target.value);
+                setTxPage(1);
+              }}
             >
               <option value="">Tất cả luồng tiền</option>
-              <option value="IN">Nhận tiền (IN)</option>
-              <option value="OUT">Rút tiền (OUT)</option>
+              <option value="IN">Tiền vào</option>
+              <option value="OUT">Tiền ra</option>
             </select>
             <input
               className="input"
-              style={{ width: "200px" }}
-              placeholder="Loại giao dịch (vd WITHDRAWAL)"
+              style={{ width: "220px" }}
+              placeholder="Loại giao dịch, ví dụ: ORDER_PAYMENT"
               value={txType}
-              onChange={(e) => { setTxType(e.target.value); setTxPage(1); }}
+              onChange={(e) => {
+                setTxType(e.target.value);
+                setTxPage(1);
+              }}
             />
             <button className="btn btn--ghost" onClick={() => txQuery.refetch()} disabled={txQuery.isFetching}>
               <RefreshCw size={14} />
@@ -407,65 +628,82 @@ export function FinancePage() {
           </div>
 
           {txQuery.isError ? (
-            <div className="card" style={{ color: "var(--danger)", border: "1px solid var(--danger)", background: "var(--danger-bg)" }}>
-              <strong>Lỗi:</strong> {String(txQuery.error)}
-            </div>
+            <ErrorCard error={txQuery.error} />
           ) : txQuery.data ? (
             <>
               <div className="table-container">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Thành viên</th>
+                      <th>Mã giao dịch</th>
+                      <th>Chủ ví</th>
                       <th>Loại giao dịch</th>
                       <th>Luồng tiền</th>
                       <th>Số tiền</th>
-                      <th>Số dư Trước/Sau</th>
-                      <th>Thời gian giao dịch</th>
+                      <th>Số dư trước / sau</th>
+                      <th>Tham chiếu</th>
+                      <th>Trạng thái</th>
+                      <th>Ghi chú</th>
+                      <th>Thời gian</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {txQuery.data.items.map((t) => (
-                      <tr key={t.transactionId}>
+                    {txQuery.data.items.map((tx) => (
+                      <tr key={tx.transactionId}>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{t.fullName}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{t.phoneNumber}</div>
+                          <div className="tabular-nums" style={{ fontWeight: 700 }}>
+                            {tx.transactionId.slice(0, 8).toUpperCase()}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{tx.walletId.slice(0, 8)}</div>
                         </td>
                         <td>
-                          <span style={{ fontWeight: "700", fontSize: "12px", color: "var(--secondary)" }}>
-                            {t.transactionType}
+                          <div style={{ fontWeight: 600 }}>{tx.fullName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{tx.phoneNumber}</div>
+                          <div style={{ marginTop: "4px" }}>
+                            <span className={`badge ${tx.userType === "MECHANIC" ? "badge--info" : "badge--success"}`} style={{ fontSize: "10px" }}>
+                              {tx.userType}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{getTransactionTypeLabel(tx.transactionType)}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{tx.transactionType}</div>
+                        </td>
+                        <td>
+                          <span className={`badge ${tx.flowType === "IN" ? "badge--success" : "badge--warning"}`}>{getFlowLabel(tx.flowType)}</span>
+                        </td>
+                        <td className="tabular-nums" style={{ fontWeight: 700 }}>
+                          {formatMoney(tx.amount)}
+                        </td>
+                        <td className="tabular-nums">
+                          <div>{formatMoney(tx.balanceBefore)}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>→ {formatMoney(tx.balanceAfter)}</div>
+                        </td>
+                        <td>
+                          <div>Đơn: {tx.referenceOrderId ?? "-"}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Thanh toán: {tx.paymentId ?? "-"}</div>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              ["SUCCESS", "PAID", "COMPLETED"].includes((tx.status ?? "").toUpperCase())
+                                ? "badge--success"
+                                : (tx.status ?? "").toUpperCase() === "PENDING"
+                                  ? "badge--warning"
+                                  : "badge--danger"
+                            }`}
+                          >
+                            {getTransactionStatusLabel(tx.status)}
                           </span>
-                          {t.description && (
-                            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
-                              {t.description}
-                            </div>
-                          )}
                         </td>
-                        <td>
-                          <span className={`badge ${t.flowType === "IN" ? "badge--success" : "badge--danger"}`}>
-                            {t.flowType === "IN" ? "Nạp / Thu" : "Rút / Chi"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="tabular-nums" style={{
-                            fontWeight: 700,
-                            fontSize: "14px",
-                            color: t.flowType === "IN" ? "var(--success)" : "var(--danger)"
-                          }}>
-                            {t.flowType === "IN" ? "+" : "-"} {formatMoney(t.amount)}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                          <div className="tabular-nums">Trước: {formatMoney(t.balanceBefore)}</div>
-                          <div className="tabular-nums">Sau: {formatMoney(t.balanceAfter)}</div>
-                        </td>
-                        <td>{formatDate(t.createdAt)}</td>
+                        <td style={{ maxWidth: "240px" }}>{tx.description || "-"}</td>
+                        <td>{formatDate(tx.createdAt)}</td>
                       </tr>
                     ))}
                     {txQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6}>
-                          <div className="empty-state">Không có giao dịch nào khớp với bộ lọc.</div>
+                        <td colSpan={10}>
+                          <div className="empty-state">Chưa có giao dịch nào phù hợp bộ lọc.</div>
                         </td>
                       </tr>
                     )}
@@ -473,29 +711,25 @@ export function FinancePage() {
                 </table>
               </div>
 
-              {/* Pagination */}
-              <div className="pagination">
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{txQuery.data.total}</b> giao dịch</span>
-                <div className="flex-gap">
-                  <button className="btn btn--sm" disabled={txPage <= 1} onClick={() => setTxPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {txPage}</span>
-                  <button className="btn btn--sm" disabled={txPage * 20 >= txQuery.data.total} onClick={() => setTxPage(p => p + 1)}>Sau</button>
-                </div>
-              </div>
+              <Pagination
+                page={txPage}
+                pageSize={20}
+                total={txQuery.data.total}
+                label="giao dịch"
+                onPrev={() => setTxPage((prev) => prev - 1)}
+                onNext={() => setTxPage((prev) => prev + 1)}
+              />
             </>
           ) : (
-            <div className="card">
-              <div className="skeleton" style={{ height: "200px" }} />
-            </div>
+            <SkeletonCard />
           )}
         </div>
       )}
 
-      {/* Tab 3: Withdraw approvals */}
       {tab === "withdraw" && (
         <div style={{ display: "grid", gap: "16px" }}>
           <div className="section-header">
-            <h2>Yêu cầu rút tiền</h2>
+            <h2>Duyệt rút tiền</h2>
           </div>
 
           <div className="filter-bar">
@@ -503,13 +737,14 @@ export function FinancePage() {
               className="select"
               style={{ width: "220px" }}
               value={wrStatus}
-              onChange={(e) => { setWrStatus(e.target.value); setWrPage(1); }}
+              onChange={(e) => {
+                setWrStatus(e.target.value);
+                setWrPage(1);
+              }}
             >
-              <option value="PENDING">PENDING (Chờ duyệt)</option>
-              <option value="APPROVED">APPROVED (Đã duyệt)</option>
-              <option value="COMPLETED">COMPLETED (Hoàn tất)</option>
-              <option value="REJECTED">REJECTED (Từ chối)</option>
-              <option value="">Tất cả yêu cầu</option>
+              <option value="PENDING">Đang chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Đã từ chối</option>
             </select>
             <button className="btn btn--ghost" onClick={() => wrQuery.refetch()} disabled={wrQuery.isFetching}>
               <RefreshCw size={14} />
@@ -518,100 +753,113 @@ export function FinancePage() {
           </div>
 
           {wrQuery.isError ? (
-            <div className="card" style={{ color: "var(--danger)", border: "1px solid var(--danger)", background: "var(--danger-bg)" }}>
-              <strong>Lỗi:</strong> {String(wrQuery.error)}
-            </div>
+            <ErrorCard error={wrQuery.error} />
           ) : wrQuery.data ? (
             <>
               <div className="table-container">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Người rút tiền</th>
+                      <th>Người rút</th>
                       <th>Số tiền</th>
+                      <th>Ngân hàng</th>
                       <th>Trạng thái</th>
-                      <th>Tài khoản thụ hưởng</th>
-                      <th>Ngày gửi</th>
-                      <th>Thao tác</th>
+                      <th>Ghi chú</th>
+                      <th>Thời gian yêu cầu</th>
+                      <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {wrQuery.data.items.map((r) => (
-                      <tr key={r.requestId}>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{r.fullName}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{r.phoneNumber}</div>
-                        </td>
-                        <td>
-                          <span className="tabular-nums" style={{ fontWeight: 800, fontSize: "15px", color: "var(--secondary)" }}>
-                            {formatMoney(r.amount)}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`badge ${
-                            r.status === "PENDING" ? "badge--warning" :
-                            r.status === "REJECTED" ? "badge--danger" : "badge--success"
-                          }`}>
-                            {r.status === "PENDING"
-                              ? "Chờ duyệt"
-                              : r.status === "APPROVED"
-                                ? "Đã duyệt"
-                                : r.status === "COMPLETED"
-                                  ? "Hoàn tất"
-                                  : "Từ chối"}
-                          </span>
-                          {r.note && (
-                            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", maxWidth: "200px" }}>
-                              Ghi chú: {r.note}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          {r.bankName ? (
-                            <div style={{ display: "grid", gap: "2px" }}>
-                              <div style={{ fontWeight: "600" }}>{r.bankName}</div>
-                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                                STK: {r.accountNumber} • <span style={{ textTransform: "uppercase" }}>{r.accountHolderName}</span>
+                    {wrQuery.data.items.map((request) => {
+                      const bankCode = getVietQRBankId(request.bankName ?? "");
+                      const qrUrl =
+                        bankCode && request.accountNumber
+                          ? `https://img.vietqr.io/image/${bankCode}-${request.accountNumber}-compact2.png?amount=${Math.round(
+                              request.amount
+                            )}&addInfo=RUT%20TIEN%20SOSBIKE`
+                          : null;
+
+                      return (
+                        <tr key={request.requestId}>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{request.fullName}</div>
+                            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{request.phoneNumber}</div>
+                          </td>
+                          <td className="tabular-nums" style={{ fontWeight: 700 }}>
+                            {formatMoney(request.amount)}
+                          </td>
+                          <td>
+                            {request.bankName ? (
+                              <div style={{ display: "grid", gap: "2px" }}>
+                                <div style={{ fontWeight: 500 }}>{request.bankName}</div>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                  {request.accountNumber} • {request.accountHolderName}
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <span style={{ color: "var(--text-light)" }}>N/A</span>
-                          )}
-                        </td>
-                        <td>{formatDate(r.requestedAt)}</td>
-                        <td>
-                          {r.status === "PENDING" ? (
-                            <div className="flex-gap gap-8">
-                              <button
-                                className="btn btn--primary btn--sm"
-                                onClick={() => {
-                                  setCurrentRequest(r);
-                                  setActionType("approve");
-                                  setActionNote("");
-                                }}
-                              >
-                                Duyệt chi
-                              </button>
-                              <button
-                                className="btn btn--danger btn--sm"
-                                onClick={() => {
-                                  setCurrentRequest(r);
-                                  setActionType("reject");
-                                  setActionNote("");
-                                }}
-                              >
-                                Từ chối
-                              </button>
-                            </div>
-                          ) : (
-                            <span style={{ color: "var(--text-light)", fontSize: "12px" }}>Đã xử lý</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                request.status === "APPROVED"
+                                  ? "badge--success"
+                                  : request.status === "REJECTED"
+                                    ? "badge--danger"
+                                    : "badge--warning"
+                              }`}
+                            >
+                              {request.status}
+                            </span>
+                          </td>
+                          <td>{request.note || "-"}</td>
+                          <td>
+                            <div>{formatDate(request.requestedAt)}</div>
+                            {request.reviewedAt && (
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                Xử lý: {formatDate(request.reviewedAt)}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {request.status === "PENDING" ? (
+                              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                <button
+                                  className="btn btn--sm btn--success"
+                                  onClick={() => {
+                                    setCurrentRequest(request);
+                                    setActionType("approve");
+                                    setActionNote("");
+                                  }}
+                                >
+                                  Duyệt
+                                </button>
+                                <button
+                                  className="btn btn--sm btn--danger"
+                                  onClick={() => {
+                                    setCurrentRequest(request);
+                                    setActionType("reject");
+                                    setActionNote("");
+                                  }}
+                                >
+                                  Từ chối
+                                </button>
+                              </div>
+                            ) : qrUrl ? (
+                              <a className="btn btn--sm btn--ghost" href={qrUrl} target="_blank" rel="noreferrer">
+                                Mở mã QR
+                              </a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {wrQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={6}>
+                        <td colSpan={7}>
                           <div className="empty-state">Không có yêu cầu rút tiền nào.</div>
                         </td>
                       </tr>
@@ -620,118 +868,211 @@ export function FinancePage() {
                 </table>
               </div>
 
-              {/* Pagination */}
-              <div className="pagination">
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Tổng cộng: <b className="tabular-nums">{wrQuery.data.total}</b> yêu cầu</span>
-                <div className="flex-gap">
-                  <button className="btn btn--sm" disabled={wrPage <= 1} onClick={() => setWrPage(p => p - 1)}>Trước</button>
-                  <span style={{ fontSize: "12px", fontWeight: "600" }} className="tabular-nums">Trang {wrPage}</span>
-                  <button className="btn btn--sm" disabled={wrPage * 20 >= wrQuery.data.total} onClick={() => setWrPage(p => p + 1)}>Sau</button>
-                </div>
-              </div>
+              <Pagination
+                page={wrPage}
+                pageSize={20}
+                total={wrQuery.data.total}
+                label="yêu cầu"
+                onPrev={() => setWrPage((prev) => prev - 1)}
+                onNext={() => setWrPage((prev) => prev + 1)}
+              />
             </>
           ) : (
-            <div className="card">
-              <div className="skeleton" style={{ height: "200px" }} />
-            </div>
+            <SkeletonCard />
           )}
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={!!currentRequest}
-        onClose={() => setCurrentRequest(null)}
-        title={actionType === "approve" ? "Xác nhận duyệt chi tiền" : "Từ chối yêu cầu rút tiền"}
-        footer={
-          <div className="flex-gap">
-            <button className="btn" onClick={() => setCurrentRequest(null)} disabled={submittingAction}>Hủy</button>
+      {tab === "subscriptions" && (
+        <div style={{ display: "grid", gap: "16px" }}>
+          <div className="section-header">
+            <h2>Danh sách người đã mua gói</h2>
+          </div>
+
+          <div className="filter-bar">
+            <input
+              className="input"
+              style={{ flex: 1, minWidth: "260px" }}
+              placeholder="Tìm theo tên, số điện thoại hoặc tên gói..."
+              value={subscriptionQuery}
+              onChange={(e) => {
+                setSubscriptionQuery(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            />
+            <select
+              className="select"
+              style={{ width: "180px" }}
+              value={subscriptionAudience}
+              onChange={(e) => {
+                setSubscriptionAudience(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            >
+              <option value="">Tất cả đối tượng</option>
+              <option value="B2C">Khách hàng</option>
+              <option value="B2B">Thợ sửa xe</option>
+              <option value="DRIVER">Tài xế</option>
+            </select>
+            <select
+              className="select"
+              style={{ width: "180px" }}
+              value={subscriptionStatus}
+              onChange={(e) => {
+                setSubscriptionStatus(e.target.value);
+                setSubscriptionPage(1);
+              }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="EXPIRED">EXPIRED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
             <button
-              className={`btn ${actionType === "approve" ? "btn--primary" : "btn--danger"}`}
+              className="btn btn--ghost"
+              onClick={() => subscriptionsQuery.refetch()}
+              disabled={subscriptionsQuery.isFetching}
+            >
+              <RefreshCw size={14} />
+              {subscriptionsQuery.isFetching ? "Đang tải..." : "Tải lại"}
+            </button>
+          </div>
+
+          {subscriptionsQuery.isError ? (
+            <ErrorCard error={subscriptionsQuery.error} />
+          ) : subscriptionsQuery.data ? (
+            <>
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Người dùng</th>
+                      <th>Vai trò</th>
+                      <th>Gói hiện tại</th>
+                      <th>Đối tượng gói</th>
+                      <th>Giá gói</th>
+                      <th>Trạng thái</th>
+                      <th>Tự gia hạn</th>
+                      <th>Hiệu lực</th>
+                      <th>Ngày mua</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptionsQuery.data.items.map((item) => (
+                      <tr key={item.subscriptionId}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{item.fullName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{item.phoneNumber}</div>
+                        </td>
+                        <td>
+                          <span className={`badge ${item.userType === "MECHANIC" ? "badge--info" : "badge--success"}`}>
+                            {item.userType}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{item.planName}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Plan ID: {item.planId}</div>
+                        </td>
+                        <td>{item.targetAudience}</td>
+                        <td className="tabular-nums" style={{ fontWeight: 700 }}>
+                          {formatMoney(item.price)}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              item.status === "ACTIVE"
+                                ? "badge--success"
+                                : item.status === "EXPIRED"
+                                  ? "badge--warning"
+                                  : "badge--danger"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>{item.autoRenew ? "Có" : "Không"}</td>
+                        <td>
+                          <div>{formatDate(item.startDate)}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>đến {formatDate(item.endDate)}</div>
+                        </td>
+                        <td>{formatDate(item.createdAt)}</td>
+                      </tr>
+                    ))}
+                    {subscriptionsQuery.data.items.length === 0 && (
+                      <tr>
+                        <td colSpan={9}>
+                          <div className="empty-state">Chưa có người mua gói phù hợp bộ lọc.</div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <Pagination
+                page={subscriptionPage}
+                pageSize={20}
+                total={subscriptionsQuery.data.total}
+                label="người mua gói"
+                onPrev={() => setSubscriptionPage((prev) => prev - 1)}
+                onNext={() => setSubscriptionPage((prev) => prev + 1)}
+              />
+            </>
+          ) : (
+            <SkeletonCard />
+          )}
+        </div>
+      )}
+
+      <Modal
+        isOpen={!!currentRequest && !!actionType}
+        onClose={() => {
+          if (submittingAction) return;
+          setCurrentRequest(null);
+          setActionType(null);
+          setActionNote("");
+        }}
+        title={actionType === "approve" ? "Duyệt yêu cầu rút tiền" : "Từ chối yêu cầu rút tiền"}
+        footer={
+          <>
+            <button
+              className="btn btn--ghost"
+              onClick={() => {
+                setCurrentRequest(null);
+                setActionType(null);
+                setActionNote("");
+              }}
+              disabled={submittingAction}
+            >
+              Hủy
+            </button>
+            <button
+              className={`btn ${actionType === "approve" ? "btn--success" : "btn--danger"}`}
               onClick={handleSettleAction}
               disabled={submittingAction}
             >
-              {submittingAction ? "Đang xử lý..." : actionType === "approve" ? "Xác nhận hoàn tất" : "Xác nhận Từ chối"}
+              {submittingAction ? "Đang xử lý..." : actionType === "approve" ? "Xác nhận duyệt" : "Xác nhận từ chối"}
             </button>
-          </div>
+          </>
         }
       >
-        {currentRequest && (
-          <div style={{ display: "grid", gap: "16px" }}>
-            <div className="card" style={{ background: "var(--neutral-bg)", padding: "12px" }}>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-item__label">Người nhận thụ hưởng</span>
-                  <span className="detail-item__value">{currentRequest.fullName} ({currentRequest.phoneNumber})</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-item__label">Ngân hàng</span>
-                  <span className="detail-item__value">{currentRequest.bankName}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-item__label">Số tài khoản</span>
-                  <span className="detail-item__value tabular-nums">{currentRequest.accountNumber}</span>
-                </div>
-              </div>
+        <div style={{ display: "grid", gap: "12px" }}>
+          {currentRequest && (
+            <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+              Xác nhận xử lý yêu cầu rút {formatMoney(currentRequest.amount)} của {currentRequest.fullName}.
             </div>
-
-            <div className="flex-between" style={{ padding: "0 4px" }}>
-              <span style={{ fontWeight: "600" }}>Số tiền giao dịch:</span>
-              <span className="tabular-nums" style={{ fontSize: "18px", fontWeight: "800", color: "var(--primary)" }}>{formatMoney(currentRequest.amount)}</span>
-            </div>
-
-            {actionType === "approve" && (
-              <div style={{ 
-                display: "flex", 
-                flexDirection: "column", 
-                alignItems: "center", 
-                padding: "16px", 
-                background: "rgba(255, 255, 255, 0.03)", 
-                border: "1px solid var(--border-color)", 
-                borderRadius: "12px", 
-                margin: "4px 0" 
-              }}>
-                <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: "12px" }}>QUÉT MÃ VIETQR ĐỂ CHUYỂN KHOẢN TAY</span>
-                <div style={{ 
-                  padding: "12px", 
-                  background: "#ffffff", 
-                  borderRadius: "16px", 
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                  display: "inline-block"
-                }}>
-                  <img 
-                    src={`https://img.vietqr.io/image/${getVietQRBankId(currentRequest.bankName ?? "")}-${currentRequest.accountNumber}-compact.png?amount=${currentRequest.amount}&addInfo=${encodeURIComponent("SOSBIKE RUT " + currentRequest.phoneNumber)}&accountName=${encodeURIComponent(currentRequest.accountHolderName ?? "")}`} 
-                    alt="VietQR code" 
-                    style={{ width: "180px", height: "180px", display: "block", borderRadius: "8px" }} 
-                  />
-                </div>
-                <p style={{ 
-                  fontSize: "12px", 
-                  color: "var(--text-muted)", 
-                  textAlign: "center", 
-                  marginTop: "12px", 
-                  marginBottom: 0,
-                  maxWidth: "280px", 
-                  lineHeight: "1.5" 
-                }}>
-                  Vui lòng dùng ứng dụng Ngân hàng để quét mã QR và thực hiện chuyển tiền thủ công trước khi nhấn <strong>Xác nhận hoàn tất</strong>.
-                </p>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label>Ghi chú của Admin (nếu có)</label>
-              <textarea
-                className="textarea"
-                rows={3}
-                placeholder={actionType === "approve" ? "Nhập mã giao dịch đối chiếu hoặc ghi chú chuyển tiền..." : "Nhập lý do từ chối cụ thể để gửi cho người dùng..."}
-                value={actionNote}
-                onChange={(e) => setActionNote(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
+          )}
+          <label style={{ display: "grid", gap: "6px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600 }}>Ghi chú</span>
+            <textarea
+              className="textarea"
+              rows={4}
+              placeholder="Nhập ghi chú nội bộ hoặc nội dung phản hồi..."
+              value={actionNote}
+              onChange={(e) => setActionNote(e.target.value)}
+            />
+          </label>
+        </div>
       </Modal>
     </div>
   );
