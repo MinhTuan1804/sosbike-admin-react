@@ -31,14 +31,6 @@ export function ConfigPage() {
   const [loading, setLoading] = useState(false);
   const [versions, setVersions] = useState<ConfigVersionResponse[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
-  const [showGoongKey, setShowGoongKey] = useState(false);
-  const [showGoogleMapKey, setShowGoogleMapKey] = useState(false);
-  const [showResendApiKey, setShowResendApiKey] = useState(false);
-  const [showPayOsApiKey, setShowPayOsApiKey] = useState(false);
-  const [showPayOsChecksumKey, setShowPayOsChecksumKey] = useState(false);
-  const [showEsmsApiKey, setShowEsmsApiKey] = useState(false);
-  const [showEsmsSecretKey, setShowEsmsSecretKey] = useState(false);
-
   // Dialog State
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
@@ -413,11 +405,9 @@ export function ConfigPage() {
                 <div style={{ display: "grid", gap: "12px" }}>
                   <div className="form-group">
                     <label>Goong Map API Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showGoongKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.goongApiKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -426,68 +416,12 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowGoongKey(!showGoongKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showGoongKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.goongApiKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.goongApiKey")}</span>
                     )}
                   </div>
 
-                  <div className="form-group">
-                    <label>Google Map API Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                      <input
-                        type={showGoogleMapKey ? "text" : "password"}
-                        className="input"
-                        style={{ paddingRight: "40px" }}
-                        value={draftConfig.thirdParty?.googleMapApiKey ?? ""}
-                        onChange={(e) =>
-                          setDraftConfig({
-                            ...draftConfig,
-                            thirdParty: { ...draftConfig.thirdParty, googleMapApiKey: e.target.value }
-                          })
-                        }
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowGoogleMapKey(!showGoogleMapKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showGoogleMapKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                    {fieldError("thirdParty.googleMapApiKey") && (
-                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.googleMapApiKey")}</span>
-                    )}
-                  </div>
+                  {/* Google Map API Key is configured statically on mobile platforms */}
                 </div>
               </div>
 
@@ -497,11 +431,9 @@ export function ConfigPage() {
                 <div style={{ display: "grid", gap: "12px" }}>
                   <div className="form-group">
                     <label>Resend API Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showResendApiKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.resendApiKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -510,25 +442,6 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowResendApiKey(!showResendApiKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showResendApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.resendApiKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.resendApiKey")}</span>
                     )}
@@ -598,11 +511,9 @@ export function ConfigPage() {
 
                   <div className="form-group">
                     <label>payOS API Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showPayOsApiKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.payOsApiKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -611,25 +522,6 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPayOsApiKey(!showPayOsApiKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showPayOsApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.payOsApiKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.payOsApiKey")}</span>
                     )}
@@ -637,11 +529,9 @@ export function ConfigPage() {
 
                   <div className="form-group">
                     <label>payOS Checksum Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showPayOsChecksumKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.payOsChecksumKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -650,25 +540,6 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPayOsChecksumKey(!showPayOsChecksumKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showPayOsChecksumKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.payOsChecksumKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.payOsChecksumKey")}</span>
                     )}
@@ -682,11 +553,9 @@ export function ConfigPage() {
                 <div style={{ display: "grid", gap: "12px" }}>
                   <div className="form-group">
                     <label>ESMS API Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showEsmsApiKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.esmsApiKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -695,25 +564,6 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowEsmsApiKey(!showEsmsApiKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showEsmsApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.esmsApiKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.esmsApiKey")}</span>
                     )}
@@ -721,11 +571,9 @@ export function ConfigPage() {
 
                   <div className="form-group">
                     <label>ESMS Secret Key</label>
-                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                       <input
-                        type={showEsmsSecretKey ? "text" : "password"}
+                        type="password"
                         className="input"
-                        style={{ paddingRight: "40px" }}
                         value={draftConfig.thirdParty?.esmsSecretKey ?? ""}
                         onChange={(e) =>
                           setDraftConfig({
@@ -734,25 +582,6 @@ export function ConfigPage() {
                           })
                         }
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowEsmsSecretKey(!showEsmsSecretKey)}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "4px"
-                        }}
-                      >
-                        {showEsmsSecretKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
                     {fieldError("thirdParty.esmsSecretKey") && (
                       <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.esmsSecretKey")}</span>
                     )}

@@ -176,6 +176,32 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
+    let timeoutId: number;
+
+    const resetTimer = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        alert("Phiên làm việc đã hết hạn do bạn không hoạt động lâu. Vui lòng đăng nhập lại.");
+        handleLogout();
+      }, 15 * 60 * 1000);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!notificationRef.current?.contains(event.target as Node)) {
         setNotificationOpen(false);
