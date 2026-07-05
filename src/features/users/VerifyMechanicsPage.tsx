@@ -192,7 +192,13 @@ export function VerifyMechanicsPage() {
                   </td>
                   <td>
                     <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                      {m.createdAt ? new Date(m.createdAt).toLocaleDateString("vi-VN", { dateStyle: "medium" }) : "---"}
+                      {m.createdAt ? (() => {
+                        let str = m.createdAt.trim();
+                        if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+                          str += "Z";
+                        }
+                        return new Date(str).toLocaleDateString("vi-VN", { dateStyle: "medium" });
+                      })() : "---"}
                     </div>
                   </td>
                   <td>

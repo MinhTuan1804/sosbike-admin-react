@@ -10,7 +10,11 @@ function formatMoney(v: number) {
 
 function formatDate(dateStr?: string | null) {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("vi-VN");
+  let str = dateStr.trim();
+  if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+    str += "Z";
+  }
+  return new Date(str).toLocaleString("vi-VN");
 }
 
 const STATUS_OPTIONS = [

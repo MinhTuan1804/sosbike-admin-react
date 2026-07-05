@@ -7,7 +7,11 @@ const PAGE_SIZE = 20;
 
 function formatDateTime(value?: string | null) {
   if (!value) return "-";
-  const date = new Date(value);
+  let str = value.trim();
+  if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+    str += "Z";
+  }
+  const date = new Date(str);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("vi-VN");
 }

@@ -17,6 +17,15 @@ import {
 } from "../blogs/blogsApi";
 import { useNavigate } from "react-router-dom";
 
+function parseUTCDate(dateStr?: string | null) {
+  if (!dateStr) return new Date();
+  let str = dateStr.trim();
+  if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+    str += "Z";
+  }
+  return new Date(str);
+}
+
 function formatMoney(v: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -1038,7 +1047,7 @@ export function DashboardPage() {
                         </td>
                         <td style={{ fontVariantNumeric: "tabular-nums" }}>
                           {row.lastViewedAt
-                            ? new Date(row.lastViewedAt).toLocaleString("vi-VN")
+                            ? parseUTCDate(row.lastViewedAt).toLocaleString("vi-VN")
                             : "-"}
                         </td>
                       </tr>
@@ -1084,7 +1093,7 @@ export function DashboardPage() {
                       </td>
                       <td style={{ fontVariantNumeric: "tabular-nums" }}>
                         {blog.publishedat
-                          ? new Date(blog.publishedat).toLocaleString("vi-VN")
+                          ? parseUTCDate(blog.publishedat).toLocaleString("vi-VN")
                           : "-"}
                       </td>
                     </tr>

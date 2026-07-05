@@ -13,6 +13,15 @@ import {
 } from "./blogsApi";
 import { Trophy, Eye, Users, Globe, Smartphone } from "lucide-react";
 
+function parseUTCDate(dateStr?: string | null) {
+  if (!dateStr) return new Date();
+  let str = dateStr.trim();
+  if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+    str += "Z";
+  }
+  return new Date(str);
+}
+
 export function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogListItem[]>([]);
   const [analytics, setAnalytics] = useState<BlogAnalyticsResponse | null>(null);
@@ -81,10 +90,10 @@ export function BlogsPage() {
       ispublished: detail.ispublished
     });
 
-    const isSched = !detail.ispublished && !!detail.publishedat && new Date(detail.publishedat) > new Date();
+    const isSched = !detail.ispublished && !!detail.publishedat && parseUTCDate(detail.publishedat) > new Date();
     setIsScheduled(isSched);
     if (detail.publishedat) {
-      const localDate = new Date(detail.publishedat);
+      const localDate = parseUTCDate(detail.publishedat);
       const offset = localDate.getTimezoneOffset();
       const adjustedDate = new Date(localDate.getTime() - (offset * 60 * 1000));
       setScheduledTime(adjustedDate.toISOString().slice(0, 16));
@@ -324,7 +333,7 @@ export function BlogsPage() {
                       ? "badge--danger" 
                       : blog.ispublished 
                         ? "badge--success" 
-                        : (blog.publishedat && new Date(blog.publishedat) > new Date())
+                        : (blog.publishedat && parseUTCDate(blog.publishedat) > new Date())
                           ? "badge--info"
                           : "badge--warning"
                   }`}>
@@ -332,12 +341,12 @@ export function BlogsPage() {
                       ? "Đã xóa" 
                       : blog.ispublished 
                         ? "Đã đăng" 
-                        : (blog.publishedat && new Date(blog.publishedat) > new Date())
+                        : (blog.publishedat && parseUTCDate(blog.publishedat) > new Date())
                           ? "Đã lên lịch"
                           : "Nháp"}
                   </span>
                 </td>
-                <td>{blog.publishedat ? new Date(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
+                <td>{blog.publishedat ? parseUTCDate(blog.publishedat).toLocaleString("vi-VN") : "-"}</td>
                 <td>
                   <div className="flex-gap gap-8">
                     <button className="btn btn--sm" onClick={() => openEdit(blog)}>Sửa</button>

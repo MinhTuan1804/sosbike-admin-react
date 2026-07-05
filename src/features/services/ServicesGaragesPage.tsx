@@ -551,7 +551,13 @@ export function ServicesGaragesPage() {
                       )}
                     </td>
                     <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                      {s.requestedAt ? new Date(s.requestedAt).toLocaleString("vi-VN") : "—"}
+                      {s.requestedAt ? (() => {
+                        let str = s.requestedAt.trim();
+                        if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+                          str += "Z";
+                        }
+                        return new Date(str).toLocaleString("vi-VN");
+                      })() : "—"}
                     </td>
                     <td>
                       {s.status === "PENDING" ? (

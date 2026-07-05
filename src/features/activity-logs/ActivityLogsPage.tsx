@@ -89,7 +89,11 @@ const EVENT_GROUPS: { label: string; options: string[] }[] = [
 ];
 
 function formatDateTime(iso: string) {
-  const d = new Date(iso);
+  let str = iso.trim();
+  if (!str.endsWith("Z") && !str.includes("+") && str.includes("T")) {
+    str += "Z";
+  }
+  const d = new Date(str);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleString("vi-VN", {
     day: "2-digit",
