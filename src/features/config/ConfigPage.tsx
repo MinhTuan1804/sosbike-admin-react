@@ -25,6 +25,7 @@ function formatDateTime(isoString: string | null | undefined) {
 export function ConfigPage() {
   const localInitial = useMemo(() => loadConfig(), []);
   const [draftConfig, setDraftConfig] = useState<AppConfig>(localInitial);
+  const [dbConfig, setDbConfig] = useState<AppConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dbUpdatedAt, setDbUpdatedAt] = useState<string | null>(null);
@@ -36,6 +37,11 @@ export function ConfigPage() {
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   const validation = useMemo(() => AppConfigSchema.safeParse(draftConfig), [draftConfig]);
+
+  const isDirty = useMemo(() => {
+    if (!dbConfig) return false;
+    return JSON.stringify(draftConfig) !== JSON.stringify(dbConfig);
+  }, [draftConfig, dbConfig]);
   const validationErrors = useMemo(() => {
     if (validation.success) return {};
     const errors: Record<string, string> = {};
@@ -59,6 +65,7 @@ export function ConfigPage() {
       setDbUpdatedAt(res.updatedAt);
       const parsed = AppConfigSchema.parse(res.config);
       setDraftConfig(parsed);
+      setDbConfig(parsed);
       saveConfig(parsed);
       await loadVersions();
     } catch (e) {
@@ -168,7 +175,7 @@ export function ConfigPage() {
             </div>
           </div>
           <div className="flex-gap gap-8">
-            <button className="btn btn--sm" onClick={onResetDefault}>Reset Default</button>
+            <button className="btn btn--sm" onClick={onResetDefault}>Khôi phục mặc định</button>
             <button className="btn btn--sm" onClick={onLoadLocal}>Tải bản backup local</button>
           </div>
         </div>
@@ -179,6 +186,13 @@ export function ConfigPage() {
         <div style={{ color: "var(--danger)", background: "var(--danger-bg)", border: "1px solid var(--danger)", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
           <AlertTriangle size={16} />
           <span><b>Lỗi đồng bộ:</b> {error}</span>
+        </div>
+      )}
+
+      {isDirty && !hasValidationError && (
+        <div style={{ color: "#92400E", background: "#FEF3C7", border: "1px solid #FCD34D", padding: "12px 16px", borderRadius: "var(--radius-md)", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+          <AlertTriangle size={16} style={{ color: "#D97706" }} />
+          <span><b>Thay đổi chưa lưu:</b> Bạn đã thay đổi cấu hình nhưng chưa lưu. Hãy bấm nút <b>"Lưu cài đặt vào DB"</b> ở góc trên bên phải để áp dụng thay đổi.</span>
         </div>
       )}
 
