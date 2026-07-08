@@ -21,6 +21,10 @@ export type DashboardOverviewResponse = {
     users: { customers: number[]; mechanics: number[]; admins: number[] };
     orders: { total: number[]; completed: number[]; cancelled: number[] };
   };
+  revenueByMethod: { label: string; value: number; color: string }[];
+  cancellationReasons: { label: string; value: number; color: string }[];
+  mechanicStatus: { label: string; value: number; color: string }[];
+  topLocations: { location: string; count: number }[];
 };
 
 export async function getDashboardOverview(params?: { from?: string; to?: string }) {
