@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { loginWithPassword } from "./authApi";
 import { setAccessToken } from "./authStorage";
@@ -12,6 +12,14 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("reason") === "inactivity") {
+      navigate("/login", { replace: true });
+      alert("Phiên làm việc đã hết hạn do bạn không hoạt động lâu. Vui lòng đăng nhập lại.");
+    }
+  }, [location.search, navigate]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

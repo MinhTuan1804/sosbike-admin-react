@@ -181,8 +181,7 @@ export function AppShell() {
     const resetTimer = () => {
       window.clearTimeout(timeoutId);
       timeoutId = window.setTimeout(() => {
-        alert("Phiên làm việc đã hết hạn do bạn không hoạt động lâu. Vui lòng đăng nhập lại.");
-        handleLogout();
+        handleLogoutInactivity();
       }, 15 * 60 * 1000);
     };
 
@@ -251,6 +250,11 @@ export function AppShell() {
   function handleLogout() {
     clearAccessToken();
     window.location.href = "/login";
+  }
+
+  function handleLogoutInactivity() {
+    clearAccessToken();
+    window.location.href = "/login?reason=inactivity";
   }
 
   return (
