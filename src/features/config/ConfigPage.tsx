@@ -109,6 +109,45 @@ export function ConfigPage() {
     setError(null);
   }
 
+  function updateRegionField(index: number, field: string, value: any) {
+    const regions = draftConfig.rescue?.allowedRegions ?? [];
+    const newRegions = [...regions];
+    newRegions[index] = { ...newRegions[index], [field]: value };
+    setDraftConfig({
+      ...draftConfig,
+      rescue: { ...draftConfig.rescue, allowedRegions: newRegions }
+    });
+  }
+
+  function addRegion() {
+    const regions = draftConfig.rescue?.allowedRegions ?? [];
+    const newRegions = [
+      ...regions,
+      {
+        cityName: "Khu vực mới",
+        keywords: [],
+        minLat: 10.35,
+        maxLat: 11.16,
+        minLng: 106.36,
+        maxLng: 107.03,
+        isEnabled: true
+      }
+    ];
+    setDraftConfig({
+      ...draftConfig,
+      rescue: { ...draftConfig.rescue, allowedRegions: newRegions }
+    });
+  }
+
+  function removeRegion(index: number) {
+    const regions = draftConfig.rescue?.allowedRegions ?? [];
+    const newRegions = regions.filter((_, i) => i !== index);
+    setDraftConfig({
+      ...draftConfig,
+      rescue: { ...draftConfig.rescue, allowedRegions: newRegions }
+    });
+  }
+
   async function loadVersions() {
     setVersionsLoading(true);
     try {
@@ -1090,6 +1129,170 @@ export function ConfigPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Rescue Allowed Regions Settings */}
+          <div className="card">
+            <div className="section-header" style={{ marginBottom: "16px" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}>
+                <Globe size={18} style={{ color: "var(--primary)" }} />
+                Giới hạn Vùng hoạt động Cứu hộ (GPS Boundaries)
+              </h2>
+            </div>
+            
+            <div style={{ display: "grid", gap: "16px" }}>
+              {/* Global toggle for location restriction */}
+              <div className="flex-between" style={{ padding: "4px 0", borderBottom: "1px solid var(--border)", paddingBottom: "16px" }}>
+                <div>
+                  <div style={{ fontWeight: "600", fontSize: "13px" }}>Giới hạn phạm vi hoạt động cứu hộ (GPS)</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Bật để chặn các yêu cầu cứu hộ ngoài khu vực hỗ trợ. Tắt để cho phép cứu hộ ở mọi nơi (phục vụ test).
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: (draftConfig.rescue?.enableLocationRestriction ?? true) ? "var(--success)" : "var(--text-muted)" }}>
+                    {(draftConfig.rescue?.enableLocationRestriction ?? true) ? "Bật" : "Tắt"}
+                  </span>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={draftConfig.rescue?.enableLocationRestriction ?? true}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          rescue: { ...draftConfig.rescue, enableLocationRestriction: e.target.checked }
+                        })
+                      }
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Regions list */}
+              {(draftConfig.rescue?.enableLocationRestriction ?? true) && (
+                <div style={{ display: "grid", gap: "16px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Danh sách khu vực được hỗ trợ ({draftConfig.rescue?.allowedRegions?.length ?? 0})
+                  </div>
+                  
+                  {(draftConfig.rescue?.allowedRegions ?? []).map((region, index) => (
+                    <div key={index} style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "16px", backgroundColor: "rgba(0,0,0,0.01)", display: "grid", gap: "12px", position: "relative" }}>
+                      
+                      {/* Region header with active status & delete button */}
+                      <div className="flex-between" style={{ borderBottom: "1px dashed var(--border)", paddingBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "13px", fontWeight: "700" }}>Khu vực #{index + 1}</span>
+                          <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "10px", fontWeight: "600", backgroundColor: region.isEnabled ? "rgba(16,185,129,0.1)" : "rgba(107,114,128,0.1)", color: region.isEnabled ? "var(--success)" : "var(--text-muted)" }}>
+                            {region.isEnabled ? "Đang hoạt động" : "Tạm ngưng"}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={region.isEnabled}
+                              onChange={(e) => updateRegionField(index, "isEnabled", e.target.checked)}
+                            />
+                            Kích hoạt
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeRegion(index)}
+                            style={{ color: "var(--danger)", background: "none", border: "none", fontSize: "12px", fontWeight: "600", cursor: "pointer", padding: 0 }}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Input fields */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div className="form-group">
+                          <label style={{ fontSize: "11px", fontWeight: "600" }}>Tên Thành phố / Vùng</label>
+                          <input
+                            type="text"
+                            className="input"
+                            style={{ height: "36px", fontSize: "13px" }}
+                            value={region.cityName}
+                            onChange={(e) => updateRegionField(index, "cityName", e.target.value)}
+                            placeholder="VD: Thành phố Hồ Chí Minh"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label style={{ fontSize: "11px", fontWeight: "600" }}>Từ khóa nhận diện (Phân tách bằng dấu phẩy)</label>
+                          <input
+                            type="text"
+                            className="input"
+                            style={{ height: "36px", fontSize: "13px" }}
+                            value={region.keywords?.join(", ") ?? ""}
+                            onChange={(e) => updateRegionField(index, "keywords", e.target.value.split(",").map(k => k.trim()))}
+                            placeholder="VD: Hồ Chí Minh, TP.HCM, HCMC"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Lat/Lng bounding box coordinates */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                        <div className="form-group">
+                          <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Vĩ độ Min (Min Lat)</label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            className="input"
+                            style={{ height: "32px", fontSize: "12px", padding: "0 8px" }}
+                            value={region.minLat}
+                            onChange={(e) => updateRegionField(index, "minLat", Number(e.target.value))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Vĩ độ Max (Max Lat)</label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            className="input"
+                            style={{ height: "32px", fontSize: "12px", padding: "0 8px" }}
+                            value={region.maxLat}
+                            onChange={(e) => updateRegionField(index, "maxLat", Number(e.target.value))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Kinh độ Min (Min Lng)</label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            className="input"
+                            style={{ height: "32px", fontSize: "12px", padding: "0 8px" }}
+                            value={region.minLng}
+                            onChange={(e) => updateRegionField(index, "minLng", Number(e.target.value))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Kinh độ Max (Max Lng)</label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            className="input"
+                            style={{ height: "32px", fontSize: "12px", padding: "0 8px" }}
+                            value={region.maxLng}
+                            onChange={(e) => updateRegionField(index, "maxLng", Number(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add button */}
+                  <button
+                    type="button"
+                    onClick={addRegion}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", width: "100%", height: "40px", border: "1px dashed var(--primary)", borderRadius: "8px", color: "var(--primary)", backgroundColor: "transparent", fontWeight: "600", fontSize: "13px", cursor: "pointer" }}
+                  >
+                    + Thêm khu vực mới
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

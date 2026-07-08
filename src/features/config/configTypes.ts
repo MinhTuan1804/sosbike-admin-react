@@ -97,6 +97,16 @@ const landingPageSchema = z
     secondaryColor: "#3B82F6"
   });
 
+const allowedRegionSchema = z.object({
+  cityName: z.string().trim().min(1, "Tên thành phố không được trống."),
+  keywords: z.array(z.string().trim()).default([]),
+  minLat: z.number({ invalid_type_error: "Phải là số." }),
+  maxLat: z.number({ invalid_type_error: "Phải là số." }),
+  minLng: z.number({ invalid_type_error: "Phải là số." }),
+  maxLng: z.number({ invalid_type_error: "Phải là số." }),
+  isEnabled: z.boolean().default(true)
+});
+
 const rescueSchema = z
   .object({
     matchingRadiusKm: z.number().min(0.1, "Bán kính tối thiểu 0.1km.").default(30),
@@ -107,7 +117,19 @@ const rescueSchema = z
     arrivedAlertAdminMinutes: z.number().int().min(1, "Thời gian cảnh báo tối thiểu 1 phút.").default(60),
     quotingReminderMinutes: z.number().int().min(1, "Thời gian nhắc nhở tối thiểu 1 phút.").default(15),
     quotingTimeoutMinutes: z.number().int().min(1, "Thời gian chờ tối đa tối thiểu 1 phút.").default(30),
-    repairingAlertAdminMinutes: z.number().int().min(1, "Thời gian cảnh báo tối thiểu 1 phút.").default(180)
+    repairingAlertAdminMinutes: z.number().int().min(1, "Thời gian cảnh báo tối thiểu 1 phút.").default(180),
+    enableLocationRestriction: z.boolean().default(true),
+    allowedRegions: z.array(allowedRegionSchema).default([
+      {
+        cityName: "Thành phố Hồ Chí Minh",
+        keywords: ["HỒ CHÍ MINH", "TP.HCM", "TP. HCM", "HO CHI MINH", "HCMC"],
+        minLat: 10.35,
+        maxLat: 11.16,
+        minLng: 106.36,
+        maxLng: 107.03,
+        isEnabled: true
+      }
+    ])
   })
   .default({
     matchingRadiusKm: 30,
@@ -118,7 +140,19 @@ const rescueSchema = z
     arrivedAlertAdminMinutes: 60,
     quotingReminderMinutes: 15,
     quotingTimeoutMinutes: 30,
-    repairingAlertAdminMinutes: 180
+    repairingAlertAdminMinutes: 180,
+    enableLocationRestriction: true,
+    allowedRegions: [
+      {
+        cityName: "Thành phố Hồ Chí Minh",
+        keywords: ["HỒ CHÍ MINH", "TP.HCM", "TP. HCM", "HO CHI MINH", "HCMC"],
+        minLat: 10.35,
+        maxLat: 11.16,
+        minLng: 106.36,
+        maxLng: 107.03,
+        isEnabled: true
+      }
+    ]
   });
 
 const activityLogSchema = z
@@ -242,7 +276,19 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     arrivedAlertAdminMinutes: 60,
     quotingReminderMinutes: 15,
     quotingTimeoutMinutes: 30,
-    repairingAlertAdminMinutes: 180
+    repairingAlertAdminMinutes: 180,
+    enableLocationRestriction: true,
+    allowedRegions: [
+      {
+        cityName: "Thành phố Hồ Chí Minh",
+        keywords: ["HỒ CHÍ MINH", "TP.HCM", "TP. HCM", "HO CHI MINH", "HCMC"],
+        minLat: 10.35,
+        maxLat: 11.16,
+        minLng: 106.36,
+        maxLng: 107.03,
+        isEnabled: true
+      }
+    ]
   },
   activityLog: {
     backupEnabled: true,
