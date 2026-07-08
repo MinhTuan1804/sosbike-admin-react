@@ -434,7 +434,7 @@ export function DashboardPage() {
                   </h2>
                   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "160px", flex: 1 }}>
                     {data.revenueByMethod && data.revenueByMethod.length > 0 ? (
-                      <SimpleDonut values={data.revenueByMethod} size={150} />
+                      <SimpleDonut values={data.revenueByMethod} size={150} subLabel="Doanh thu" valueFormatter={formatMoney} />
                     ) : (
                       <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>Không có dữ liệu doanh thu</div>
                     )}
@@ -635,7 +635,7 @@ export function DashboardPage() {
                   </h2>
                   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "160px", flex: 1 }}>
                     {data.mechanicStatus && data.mechanicStatus.length > 0 ? (
-                      <SimpleDonut values={data.mechanicStatus} size={150} />
+                      <SimpleDonut values={data.mechanicStatus} size={150} subLabel="Nhân sự" />
                     ) : (
                       <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>Không có dữ liệu thợ</div>
                     )}

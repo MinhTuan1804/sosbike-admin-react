@@ -3,9 +3,16 @@ import { useState } from "react";
 type Props = {
   values: Array<{ label: string; value: number; color: string }>;
   size?: number;
+  subLabel?: string;
+  valueFormatter?: (val: number) => string;
 };
 
-export function SimpleDonut({ values, size = 160 }: Props) {
+export function SimpleDonut({ 
+  values, 
+  size = 160, 
+  subLabel = "Tổng đơn",
+  valueFormatter = (val) => val.toLocaleString()
+}: Props) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const total = values.reduce((s, x) => s + x.value, 0) || 0;
   const r = size / 2 - 12;
@@ -14,14 +21,19 @@ export function SimpleDonut({ values, size = 160 }: Props) {
   const circ = 2 * Math.PI * r;
 
   let offset = 0;
+  const textToRender = hoveredIndex !== null ? valueFormatter(values[hoveredIndex].value) : valueFormatter(total);
+  // Dynamically calculate font size based on the rendered text length
+  const calculatedFontSize = textToRender.length > 15 ? "11px" : textToRender.length > 11 ? "13px" : textToRender.length > 8 ? "15px" : "18px";
+
   return (
     <div style={{
       display: "flex",
       gap: "24px",
       alignItems: "center",
-      justifyContent: "space-between"
+      justifyContent: "space-between",
+      width: "100%"
     }}>
-      <div style={{ position: "relative", width: size, height: size }}>
+      <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
         <svg width={size} height={size}>
           <g transform={`rotate(-90 ${cx} ${cy})`}>
             {values.map((v, index) => {
@@ -62,13 +74,13 @@ export function SimpleDonut({ values, size = 160 }: Props) {
             textAnchor="middle"
             dominantBaseline="middle"
             style={{
-              fontSize: hoveredIndex !== null ? "16px" : "20px",
+              fontSize: calculatedFontSize,
               fontWeight: "800",
               fill: hoveredIndex !== null ? values[hoveredIndex].color : "var(--secondary)",
               transition: "fill 0.15s ease, font-size 0.15s ease"
             }}
           >
-            {hoveredIndex !== null ? values[hoveredIndex].value.toLocaleString() : total.toLocaleString()}
+            {textToRender}
           </text>
           <text
             x={cx}
@@ -83,12 +95,12 @@ export function SimpleDonut({ values, size = 160 }: Props) {
               letterSpacing: "0.05em"
             }}
           >
-            {hoveredIndex !== null ? values[hoveredIndex].label : "Tổng đơn"}
+            {hoveredIndex !== null ? values[hoveredIndex].label : subLabel}
           </text>
         </svg>
       </div>
 
-      <div style={{ display: "grid", gap: "10px", flex: 1 }}>
+      <div style={{ display: "grid", gap: "10px", flex: 1, minWidth: 0 }}>
         {values.map((v, index) => {
           const percent = total > 0 ? Math.round((v.value / total) * 100) : 0;
           const isHovered = hoveredIndex === index;
@@ -106,17 +118,29 @@ export function SimpleDonut({ values, size = 160 }: Props) {
                 borderRadius: "4px",
                 paddingLeft: isHovered ? "6px" : "0",
                 paddingRight: isHovered ? "6px" : "0",
-                transition: "all 0.15s ease"
+                transition: "all 0.15s ease",
+                gap: "12px"
               }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: v.color, display: "inline-block" }} />
-                <span style={{ color: "var(--text-muted)", fontWeight: "500" }}>{v.label}</span>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", minWidth: 0, flex: 1 }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: v.color, display: "inline-block", flexShrink: 0 }} />
+                <span 
+                  style={{ 
+                    color: "var(--text-muted)", 
+                    fontWeight: "500", 
+                    overflow: "hidden", 
+                    textOverflow: "ellipsis", 
+                    whiteSpace: "nowrap" 
+                  }} 
+                  title={v.label}
+                >
+                  {v.label}
+                </span>
               </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <b style={{ color: "var(--text-main)" }}>{v.value.toLocaleString()}</b>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+                <b style={{ color: "var(--text-main)", whiteSpace: "nowrap" }}>{valueFormatter(v.value)}</b>
                 <span style={{ color: "var(--text-light)", fontSize: "10px", background: "var(--neutral-bg)", padding: "2px 6px", borderRadius: "10px", fontWeight: "600" }}>{percent}%</span>
               </div>
             </div>
