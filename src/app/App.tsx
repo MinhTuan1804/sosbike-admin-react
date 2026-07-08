@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./AppShell";
 import { LoginPage } from "../features/auth/LoginPage";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { LoadingProvider, LoadingScreen } from "../shared/components/LoadingScreen";
 
 const DashboardPage = lazy(() => import("../features/dashboard/DashboardPage").then(m => ({ default: m.DashboardPage })));
 const OrdersPage = lazy(() => import("../features/orders/OrdersPage").then(m => ({ default: m.OrdersPage })));
@@ -18,27 +19,29 @@ const ActivityLogsPage = lazy(() => import("../features/activity-logs/ActivityLo
 
 export function App() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center", color: "#6b7280" }}>Đang tải trang...</div>}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<RequireAuth />}>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/finance" element={<FinancePage />} />
-            <Route path="/membership" element={<MembershipPage />} />
-            <Route path="/services" element={<ServicesGaragesPage />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
-            <Route path="/blogs" element={<BlogsPage />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/verify-mechanics" element={<VerifyMechanicsPage />} />
-            <Route path="/activity-logs" element={<ActivityLogsPage />} />
-            <Route path="/config" element={<ConfigPage />} />
+    <LoadingProvider>
+      <Suspense fallback={<LoadingScreen message="Đang tải trang..." />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<RequireAuth />}>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/finance" element={<FinancePage />} />
+              <Route path="/membership" element={<MembershipPage />} />
+              <Route path="/services" element={<ServicesGaragesPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/blogs" element={<BlogsPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/verify-mechanics" element={<VerifyMechanicsPage />} />
+              <Route path="/activity-logs" element={<ActivityLogsPage />} />
+              <Route path="/config" element={<ConfigPage />} />
+            </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+    </LoadingProvider>
   );
 }
