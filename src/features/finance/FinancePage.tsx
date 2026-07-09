@@ -211,6 +211,16 @@ export function FinancePage() {
   const [submittingAction, setSubmittingAction] = useState(false);
   const [gifting, setGifting] = useState(false);
 
+  const modalQrUrl = useMemo(() => {
+    if (!currentRequest || actionType !== "approve") return null;
+    const bankCode = getVietQRBankId(currentRequest.bankName ?? "");
+    return bankCode && currentRequest.accountNumber
+      ? `https://img.vietqr.io/image/${bankCode}-${currentRequest.accountNumber}-compact2.png?amount=${Math.round(
+          currentRequest.amount
+        )}&addInfo=RUT%20TIEN%20SOSBIKE`
+      : null;
+  }, [currentRequest, actionType]);
+
   const walletsQuery = useQuery({
     queryKey: useMemo(() => ["finance-wallets", { q, userType, walletsPage }], [q, userType, walletsPage]),
     queryFn: () =>
@@ -771,6 +781,26 @@ export function FinancePage() {
                                 <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
                                   {request.accountNumber} • {request.accountHolderName}
                                 </div>
+                                {qrUrl && (
+                                  <div style={{ marginTop: "4px" }}>
+                                    <a
+                                      className="btn btn--sm btn--ghost"
+                                      href={qrUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{
+                                        fontSize: "10px",
+                                        padding: "2px 6px",
+                                        height: "auto",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "4px"
+                                      }}
+                                    >
+                                      Xem mã QR
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               "-"
@@ -894,7 +924,69 @@ export function FinancePage() {
         <div style={{ display: "grid", gap: "12px" }}>
           {currentRequest && (
             <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
-              Xác nhận xử lý yêu cầu rút {formatMoney(currentRequest.amount)} của {currentRequest.fullName}.
+              {actionType === "approve" ? (
+                <>
+                  <p style={{ marginBottom: "8px" }}>
+                    Xác nhận xử lý và duyệt yêu cầu rút tiền của <strong>{currentRequest.fullName}</strong>.
+                  </p>
+                  <div 
+                    style={{ 
+                      background: "var(--background-secondary, #f8f9fa)", 
+                      padding: "12px", 
+                      borderRadius: "6px", 
+                      border: "1px solid var(--border-color, #dee2e6)",
+                      marginBottom: "12px",
+                      color: "var(--text-primary)"
+                    }}
+                  >
+                    <div style={{ marginBottom: "6px" }}>
+                      Số tiền rút: <strong style={{ color: "var(--secondary, #28a745)", fontSize: "16px" }}>{formatMoney(currentRequest.amount)}</strong>
+                    </div>
+                    <div>
+                      Ngân hàng: <strong>{currentRequest.bankName}</strong>
+                    </div>
+                    <div>
+                      Số tài khoản: <strong>{currentRequest.accountNumber}</strong>
+                    </div>
+                    <div>
+                      Tên chủ tài khoản: <strong style={{ textTransform: "uppercase" }}>{currentRequest.accountHolderName}</strong>
+                    </div>
+                  </div>
+
+                  {modalQrUrl ? (
+                    <div style={{ textAlign: "center", margin: "16px 0", display: "grid", gap: "8px", justifyContent: "center" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500 }}>
+                        Quét mã QR dưới đây để thực hiện chuyển tiền:
+                      </span>
+                      <img 
+                        src={modalQrUrl} 
+                        alt="Mã QR Chuyển Khoản" 
+                        style={{ 
+                          width: "220px", 
+                          height: "220px", 
+                          objectFit: "contain",
+                          border: "1px solid var(--border-color, #dee2e6)",
+                          borderRadius: "8px",
+                          padding: "8px",
+                          background: "#fff",
+                          margin: "0 auto"
+                        }} 
+                      />
+                      <span style={{ fontSize: "11px", color: "var(--danger, #dc3545)", fontWeight: "600" }}>
+                        * Vui lòng chuyển khoản thành công trước khi nhấn nút "Xác nhận duyệt".
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{ color: "var(--danger)", fontSize: "12px", padding: "8px 0" }}>
+                      Không thể tạo mã QR (thiếu thông tin ngân hàng hợp lệ).
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  Xác nhận xử lý yêu cầu rút {formatMoney(currentRequest.amount)} của {currentRequest.fullName}.
+                </>
+              )}
             </div>
           )}
           <label style={{ display: "grid", gap: "6px" }}>
