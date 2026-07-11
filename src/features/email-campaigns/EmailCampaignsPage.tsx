@@ -533,6 +533,7 @@ export function EmailCampaignsPage() {
             setDetailPage(1);
           }}
           title="Chi tiết chiến dịch email"
+          size="lg"
         >
           {detailLoading && !detailData ? (
             <div style={{ textAlign: "center", padding: "40px" }}>
@@ -738,6 +739,7 @@ export function EmailCampaignsPage() {
             }
           }}
           title="Tạo chiến dịch gửi email mới"
+          size="lg"
         >
           <form onSubmit={handleCreateSubmit} style={{ display: "grid", gap: "16px", maxHeight: "80vh", overflowY: "auto", paddingRight: "4px" }}>
             {formError && (
