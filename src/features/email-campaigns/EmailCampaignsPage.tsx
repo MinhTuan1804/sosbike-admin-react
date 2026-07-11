@@ -336,7 +336,15 @@ export function EmailCampaignsPage() {
                               ? "badge--warning"
                               : "badge--info"
                           }`}>
-                            {c.status}
+                            {c.status === "completed"
+                              ? "Hoàn thành"
+                              : c.status === "sending"
+                              ? "Đang gửi"
+                              : c.status === "active"
+                              ? "Hoạt động"
+                              : c.status === "draft"
+                              ? "Bản nháp"
+                              : c.status}
                           </span>
                         </td>
                         <td style={{ textAlign: "center", fontWeight: "700", verticalAlign: "middle" }}>
@@ -677,7 +685,23 @@ export function EmailCampaignsPage() {
                                   ? "badge--danger"
                                   : "badge--primary"
                               }`}>
-                                {log.status}
+                                {log.status === "opened"
+                                  ? "Đã mở"
+                                  : log.status === "clicked"
+                                  ? "Đã click"
+                                  : log.status === "delivered"
+                                  ? "Đã nhận"
+                                  : log.status === "bounced"
+                                  ? "Bị trả về"
+                                  : log.status === "failed"
+                                  ? "Thất bại"
+                                  : log.status === "complained"
+                                  ? "Báo spam"
+                                  : log.status === "sending"
+                                  ? "Đang gửi"
+                                  : log.status === "sent"
+                                  ? "Đã gửi"
+                                  : log.status}
                               </span>
                             </td>
                             <td style={{ fontFamily: "monospace", color: "var(--text-muted)" }}>

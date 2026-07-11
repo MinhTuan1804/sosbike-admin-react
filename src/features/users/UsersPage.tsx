@@ -157,9 +157,9 @@ export function UsersPage() {
           aria-label="Lọc theo vai trò"
         >
           <option value="">Tất cả vai trò</option>
-          <option value="ADMIN">ADMIN</option>
-          <option value="CUSTOMER">CUSTOMER</option>
-          <option value="MECHANIC">MECHANIC</option>
+          <option value="ADMIN">Quản trị viên</option>
+          <option value="CUSTOMER">Khách hàng</option>
+          <option value="MECHANIC">Thợ sửa xe</option>
         </select>
         <button className="btn" onClick={() => usersQuery.refetch()} disabled={usersQuery.isFetching} aria-label="Tải lại danh sách">
           <RefreshCw size={14} />
@@ -232,7 +232,7 @@ export function UsersPage() {
                       u.userType === "ADMIN"    ? "badge--danger"  :
                       u.userType === "MECHANIC" ? "badge--info"    : "badge--success"
                     }`}>
-                      {u.userType}
+                      {u.userType === "ADMIN" ? "Quản trị viên" : u.userType === "MECHANIC" ? "Thợ sửa xe" : "Khách hàng"}
                     </span>
                     {u.userType === "MECHANIC" && (
                       <Eye size={12} style={{ marginLeft: "6px", color: "var(--text-light)", verticalAlign: "middle" }} aria-hidden="true" />
@@ -240,12 +240,12 @@ export function UsersPage() {
                   </td>
                   <td>
                     <span className={`badge ${u.isActive ? "badge--success" : "badge--danger"}`}>
-                      {u.isActive ? "Active" : "Inactive"}
+                      {u.isActive ? "Hoạt động" : "Không hoạt động"}
                     </span>
                   </td>
                   <td>
                     <span className={`badge ${u.isLocked ? "badge--danger" : "badge--success"}`}>
-                      {u.isLocked ? "Locked" : "Unlocked"}
+                      {u.isLocked ? "Đã khóa" : "Hoạt động"}
                     </span>
                   </td>
                   <td>

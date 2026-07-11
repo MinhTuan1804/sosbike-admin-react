@@ -494,7 +494,7 @@ export function MembershipPage() {
                     <th>Gói dịch vụ</th>
                     <th>Audience</th>
                     <th>Giá / Hạn</th>
-                    <th>Soft Deleted</th>
+                    <th>Trạng thái</th>
                     <th />
                   </tr>
                 </thead>
@@ -518,7 +518,7 @@ export function MembershipPage() {
                       </td>
                       <td>
                         <span className={`badge ${p.isDeleted ? "badge--danger" : "badge--success"}`}>
-                          {p.isDeleted ? "Yes" : "No"}
+                          {p.isDeleted ? "Đã xóa" : "Hoạt động"}
                         </span>
                       </td>
                       <td>
@@ -765,9 +765,9 @@ export function MembershipPage() {
               }}
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="EXPIRED">EXPIRED</option>
-              <option value="CANCELLED">CANCELLED</option>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="EXPIRED">Hết hạn</option>
+              <option value="CANCELLED">Đã hủy</option>
             </select>
             <button
               className="btn btn--ghost"
@@ -809,7 +809,7 @@ export function MembershipPage() {
                         </td>
                         <td>
                           <span className={`badge ${item.userType === "MECHANIC" ? "badge--info" : "badge--success"}`}>
-                            {item.userType}
+                            {item.userType === "MECHANIC" ? "Thợ sửa xe" : item.userType === "CUSTOMER" ? "Khách hàng" : item.userType}
                           </span>
                         </td>
                         <td>
@@ -830,7 +830,13 @@ export function MembershipPage() {
                                   : "badge--danger"
                             }`}
                           >
-                            {item.status}
+                            {item.status === "ACTIVE"
+                              ? "Đang hoạt động"
+                              : item.status === "EXPIRED"
+                              ? "Hết hạn"
+                              : item.status === "CANCELLED"
+                              ? "Đã hủy"
+                              : item.status}
                           </span>
                         </td>
                         <td>{item.autoRenew ? "Có" : "Không"}</td>

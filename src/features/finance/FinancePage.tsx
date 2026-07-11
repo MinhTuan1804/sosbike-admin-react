@@ -453,7 +453,7 @@ export function FinancePage() {
                         </td>
                         <td>
                           <span className={`badge ${wallet.status === "ACTIVE" ? "badge--success" : "badge--warning"}`}>
-                            {wallet.status ?? "UNKNOWN"}
+                            {wallet.status === "ACTIVE" ? "Hoạt động" : wallet.status === "LOCKED" ? "Đã khóa" : (wallet.status ?? "Không xác định")}
                           </span>
                         </td>
                         <td>
