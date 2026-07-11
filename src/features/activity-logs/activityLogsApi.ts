@@ -45,3 +45,18 @@ export async function getActivityLogBackupDrive() {
   const res = await http.get<ActivityLogBackupDriveInfo>("/admin/activity-logs/backup-drive");
   return res.data;
 }
+
+export async function triggerActivityLogBackup(force = true) {
+  const res = await http.post("/admin/activity-logs/trigger-backup", null, { params: { force } });
+  return res.data;
+}
+
+export async function getDatabaseBackupDrive() {
+  const res = await http.get<ActivityLogBackupDriveInfo>("/admin/database-backups/drive");
+  return res.data;
+}
+
+export async function triggerDatabaseBackup(force = true) {
+  const res = await http.post("/admin/database-backups/trigger", null, { params: { force } });
+  return res.data;
+}

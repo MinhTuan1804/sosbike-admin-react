@@ -13,6 +13,7 @@ import { RequireAuth } from "../features/auth/RequireAuth";
 import { UsersPage } from "../features/users/UsersPage";
 import { VerifyMechanicsPage } from "../features/users/VerifyMechanicsPage";
 import { ActivityLogsPage } from "../features/activity-logs/ActivityLogsPage";
+import { EmailCampaignsPage } from "../features/email-campaigns/EmailCampaignsPage";
 
 export function App() {
   return (
@@ -28,6 +29,7 @@ export function App() {
           <Route path="/services" element={<ServicesGaragesPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/email-campaigns" element={<EmailCampaignsPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/verify-mechanics" element={<VerifyMechanicsPage />} />
           <Route path="/activity-logs" element={<ActivityLogsPage />} />

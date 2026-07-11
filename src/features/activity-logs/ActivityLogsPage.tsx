@@ -25,7 +25,15 @@ import {
   ExternalLink,
   FolderOpen
 } from "lucide-react";
-import { ActivityLogBackupDriveInfo, ActivityLogItem, getActivityLogBackupDrive, listActivityLogs } from "./activityLogsApi";
+import {
+  ActivityLogBackupDriveInfo,
+  ActivityLogItem,
+  getActivityLogBackupDrive,
+  getDatabaseBackupDrive,
+  listActivityLogs,
+  triggerActivityLogBackup,
+  triggerDatabaseBackup
+} from "./activityLogsApi";
 
 const PAGE_SIZE = 20;
 
@@ -69,12 +77,23 @@ const EVENT_META: Record<string, { label: string; color: string; bg: string; Ico
   MECHANIC_SERVICE_APPROVED: { label: "Duyệt dịch vụ thợ", color: "#15803d", bg: "rgba(22,163,74,0.12)", Icon: CheckCircle2 },
   MECHANIC_SERVICE_REJECTED: { label: "Từ chối dịch vụ thợ", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", Icon: XCircle },
   CONFIG_UPDATED: { label: "Cập nhật cấu hình", color: "#7c3aed", bg: "rgba(124,58,237,0.12)", Icon: Settings },
+  CONFIG_ROLLBACK: { label: "Rollback cấu hình", color: "#7c3aed", bg: "rgba(124,58,237,0.18)", Icon: Settings },
   BLOG_CREATED: { label: "Tạo bài viết", color: "#1d4ed8", bg: "rgba(37,99,235,0.12)", Icon: FileText },
   BLOG_UPDATED: { label: "Sửa bài viết", color: "#0891b2", bg: "rgba(8,145,178,0.12)", Icon: FileText },
   BLOG_DELETED: { label: "Xóa bài viết", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", Icon: FileText },
   SERVICE_MANAGED: { label: "Quản lý dịch vụ", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: Package },
   GARAGE_MANAGED: { label: "Quản lý garage", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: Warehouse },
   MEMBERSHIP_MANAGED: { label: "Quản lý gói thành viên", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: Package },
+  REVIEW_MODERATED: { label: "Duyệt đánh giá", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: Star },
+  ACTIVITY_LOG_BACKUP: { label: "Backup nhật ký", color: "#1d4ed8", bg: "rgba(37,99,235,0.12)", Icon: FolderOpen },
+  DATABASE_BACKUP: { label: "Backup database", color: "#1d4ed8", bg: "rgba(37,99,235,0.18)", Icon: FolderOpen },
+  EMAIL_CAMPAIGN_CREATED: { label: "Tạo email campaign", color: "#1d4ed8", bg: "rgba(37,99,235,0.12)", Icon: FileText },
+  EMAIL_CAMPAIGN_ACTIVATED: { label: "Kích hoạt email campaign", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: FileText },
+  EMAIL_CAMPAIGN_SENT: { label: "Gửi email campaign", color: "#15803d", bg: "rgba(22,163,74,0.12)", Icon: FileText },
+  ORDER_REJECTED: { label: "Thợ từ chối đơn", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", Icon: XCircle },
+  ORDER_TIMEOUT_CANCELLED: { label: "Timeout hủy đơn", color: "#b91c1c", bg: "rgba(220,38,38,0.18)", Icon: XCircle },
+  PAYMENT_FAILED: { label: "Thanh toán thất bại", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", Icon: CreditCard },
+  PASSWORD_CHANGE_FAILED: { label: "Đổi mật khẩu thất bại", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", Icon: KeyRound },
 
   // F. Đánh giá
   REVIEW_SUBMITTED: { label: "Gửi đánh giá", color: "#a16207", bg: "rgba(202,138,4,0.12)", Icon: Star }
@@ -140,14 +159,44 @@ export function ActivityLogsPage() {
   const [to, setTo] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({ eventType: "", q: "", from: "", to: "" });
   const [backupDrive, setBackupDrive] = useState<ActivityLogBackupDriveInfo | null>(null);
+  const [dbBackupDrive, setDbBackupDrive] = useState<ActivityLogBackupDriveInfo | null>(null);
+  const [backupBusy, setBackupBusy] = useState<"log" | "db" | null>(null);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total]);
 
   useEffect(() => {
     getActivityLogBackupDrive()
       .then(setBackupDrive)
-      .catch((err) => console.warn("Không tải link Drive backup:", err));
+      .catch((err) => console.warn("Không tải link Drive backup log:", err));
+    getDatabaseBackupDrive()
+      .then(setDbBackupDrive)
+      .catch((err) => console.warn("Không tải link Drive backup DB:", err));
   }, []);
+
+  async function runLogBackup() {
+    setBackupBusy("log");
+    try {
+      const res = await triggerActivityLogBackup(true);
+      alert(res?.message || "Đã chạy backup nhật ký.");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err?.message || "Backup nhật ký thất bại");
+    } finally {
+      setBackupBusy(null);
+    }
+  }
+
+  async function runDbBackup() {
+    if (!confirm("Chạy backup full Postgres (pg_dump) và upload Google Drive?")) return;
+    setBackupBusy("db");
+    try {
+      const res = await triggerDatabaseBackup(true);
+      alert(res?.message || "Đã chạy backup database.");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || err?.message || "Backup DB thất bại");
+    } finally {
+      setBackupBusy(null);
+    }
+  }
 
   async function refresh() {
     setLoading(true);
@@ -203,10 +252,9 @@ export function ActivityLogsPage() {
           color: "#1e3a8a"
         }}
       >
-        <strong>Tự động sao lưu:</strong> Hệ thống backup nhật ký hoạt động <strong>2 tuần/lần</strong>,
-        xuất file Excel (tên dạng <code>nhat-ky-hoat-dong_tu-dd-MM-yyyy_den-dd-MM-yyyy.xlsx</code>),
-        upload lên Google Drive thư mục <strong>{backupDrive?.folderName ?? "SOSBIKE-NhatKyHoatDong"}</strong>,
-        sau đó tự động xóa dữ liệu đã backup khỏi DB.
+        <strong>Tự động sao lưu:</strong> Nhật ký hoạt động backup <strong>2 tuần/lần</strong> (Excel → Drive),
+        database backup <strong>7 ngày/lần</strong> (pg_dump → .sql.gz → Drive thư mục{" "}
+        <strong>{dbBackupDrive?.folderName ?? "SOSBIKE-DatabaseBackup"}</strong>).
         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
           {backupDrive?.logFolderUrl && (
             <a
@@ -228,6 +276,29 @@ export function ActivityLogsPage() {
               }}
             >
               <FolderOpen size={15} /> Mở thư mục backup log
+              <ExternalLink size={13} />
+            </a>
+          )}
+          {dbBackupDrive?.logFolderUrl && (
+            <a
+              href={dbBackupDrive.logFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                background: "#fff",
+                border: "1px solid rgba(37,99,235,0.35)",
+                color: "#1d4ed8",
+                fontWeight: 700,
+                fontSize: "13px",
+                textDecoration: "none"
+              }}
+            >
+              <FolderOpen size={15} /> Mở thư mục backup DB
               <ExternalLink size={13} />
             </a>
           )}
@@ -254,6 +325,24 @@ export function ActivityLogsPage() {
               <ExternalLink size={13} />
             </a>
           )}
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={backupBusy !== null}
+            onClick={runLogBackup}
+            style={{ fontSize: "13px", fontWeight: 700 }}
+          >
+            {backupBusy === "log" ? "Đang backup log..." : "Backup log ngay"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={backupBusy !== null}
+            onClick={runDbBackup}
+            style={{ fontSize: "13px", fontWeight: 700 }}
+          >
+            {backupBusy === "db" ? "Đang backup DB..." : "Backup DB ngay"}
+          </button>
         </div>
       </div>
       <div className="flex-between">

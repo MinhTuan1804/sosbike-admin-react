@@ -23,7 +23,8 @@ import {
   Moon,
   Bell,
   Search,
-  ChevronDown
+  ChevronDown,
+  Mail
 } from "lucide-react";
 
 type NavItem = {
@@ -50,7 +51,8 @@ const navGroups: NavGroup[] = [
       { to: "/orders",   label: "Đơn cứu hộ",       icon: Flame },
       { to: "/services", label: "Dịch vụ & Garage",  icon: Wrench },
       { to: "/reviews",  label: "Đánh giá & Review", icon: MessageSquare },
-      { to: "/blogs",    label: "Blog",               icon: FileText }
+      { to: "/blogs",    label: "Blog",               icon: FileText },
+      { to: "/email-campaigns", label: "Email Marketing", icon: Mail }
     ]
   },
   {
@@ -78,6 +80,7 @@ const routeLabels: Record<string, string> = {
   "/services":         "Dịch vụ & Garage",
   "/reviews":          "Đánh giá & Review",
   "/blogs":            "Blog",
+  "/email-campaigns":  "Email Marketing",
   "/finance":          "Tài chính & Ví",
   "/membership":       "Gói & Quyền lợi",
   "/users":            "Tài khoản",
