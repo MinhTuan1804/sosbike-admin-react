@@ -537,6 +537,25 @@ export function ConfigPage() {
                       )}
                     </div>
                   </div>
+
+                  <div className="form-group">
+                    <label>Resend Webhook Secret (Signing Secret)</label>
+                    <input
+                      type="password"
+                      className="input"
+                      value={draftConfig.thirdParty?.resendWebhookSecret ?? ""}
+                      onChange={(e) =>
+                        setDraftConfig({
+                          ...draftConfig,
+                          thirdParty: { ...draftConfig.thirdParty, resendWebhookSecret: e.target.value }
+                        })
+                      }
+                      placeholder="whsec_..."
+                    />
+                    {fieldError("thirdParty.resendWebhookSecret") && (
+                      <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("thirdParty.resendWebhookSecret")}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 

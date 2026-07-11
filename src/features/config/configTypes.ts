@@ -59,6 +59,7 @@ const thirdPartySchema = z
     resendApiKey: z.string().trim().default(""),
     resendFromEmail: z.string().trim().default(""),
     resendFromName: z.string().trim().default(""),
+    resendWebhookSecret: z.string().trim().default(""),
     esmsApiKey: z.string().trim().default(""),
     esmsSecretKey: z.string().trim().default(""),
     esmsBrandName: z.string().trim().default("")
@@ -72,6 +73,7 @@ const thirdPartySchema = z
     resendApiKey: "",
     resendFromEmail: "",
     resendFromName: "",
+    resendWebhookSecret: "",
     esmsApiKey: "",
     esmsSecretKey: "",
     esmsBrandName: ""
@@ -254,6 +256,7 @@ export const defaultConfig: AppConfig = AppConfigSchema.parse({
     resendApiKey: "",
     resendFromEmail: "",
     resendFromName: "",
+    resendWebhookSecret: "",
     esmsApiKey: "",
     esmsSecretKey: "",
     esmsBrandName: ""
