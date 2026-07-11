@@ -16,6 +16,7 @@ const BlogsPage = lazy(() => import("../features/blogs/BlogsPage").then(m => ({ 
 const UsersPage = lazy(() => import("../features/users/UsersPage").then(m => ({ default: m.UsersPage })));
 const VerifyMechanicsPage = lazy(() => import("../features/users/VerifyMechanicsPage").then(m => ({ default: m.VerifyMechanicsPage })));
 const ActivityLogsPage = lazy(() => import("../features/activity-logs/ActivityLogsPage").then(m => ({ default: m.ActivityLogsPage })));
+const EmailCampaignsPage = lazy(() => import("../features/email-campaigns/EmailCampaignsPage").then(m => ({ default: m.EmailCampaignsPage })));
 
 export function App() {
   return (
@@ -36,6 +37,7 @@ export function App() {
               <Route path="/users" element={<UsersPage />} />
               <Route path="/verify-mechanics" element={<VerifyMechanicsPage />} />
               <Route path="/activity-logs" element={<ActivityLogsPage />} />
+              <Route path="/email-campaigns" element={<EmailCampaignsPage />} />
               <Route path="/config" element={<ConfigPage />} />
             </Route>
           </Route>
