@@ -684,10 +684,32 @@ export function EmailCampaignsPage() {
                               {log.resendEmailId || "-"}
                             </td>
                             <td style={{ color: "var(--text-muted)", fontSize: "11px" }}>
-                              {log.sentAt && <div>📤 Gửi: {formatDateTime(log.sentAt)}</div>}
-                              {log.deliveredAt && <div>📥 Nhận: {formatDateTime(log.deliveredAt)}</div>}
-                              {log.openedAt && <div style={{ color: "var(--success)", fontWeight: "600" }}>👁️ Mở: {formatDateTime(log.openedAt)}</div>}
-                              {log.clickedAt && <div style={{ color: "var(--info)", fontWeight: "600" }}>🖱️ Click: {formatDateTime(log.clickedAt)}</div>}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                {log.sentAt && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <Send size={12} style={{ color: "var(--text-light)" }} />
+                                    <span>Gửi: {formatDateTime(log.sentAt)}</span>
+                                  </div>
+                                )}
+                                {log.deliveredAt && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <CheckCircle size={12} style={{ color: "var(--success)" }} />
+                                    <span>Nhận: {formatDateTime(log.deliveredAt)}</span>
+                                  </div>
+                                )}
+                                {log.openedAt && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--success)", fontWeight: "600" }}>
+                                    <Eye size={12} />
+                                    <span>Mở: {formatDateTime(log.openedAt)}</span>
+                                  </div>
+                                )}
+                                {log.clickedAt && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--info)", fontWeight: "600" }}>
+                                    <MousePointerClick size={12} />
+                                    <span>Click: {formatDateTime(log.clickedAt)}</span>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
