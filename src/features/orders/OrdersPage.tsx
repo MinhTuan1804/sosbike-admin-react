@@ -373,10 +373,10 @@ export function OrdersPage() {
                         <td className="tabular-nums" style={{ textAlign: "right" }}>{formatMoney(q.unitPrice)}</td>
                         <td className="tabular-nums" style={{ textAlign: "right", fontWeight: 700 }}>{formatMoney(q.totalPrice)}</td>
                         <td>
-                          {q.isCustomerApproved
-                            ? <span className="badge badge--success">Đồng ý</span>
-                            : <span className="badge badge--danger">Từ chối</span>
-                          }
+                           {q.isCustomerApproved || ["REPAIRING", "COMPLETED"].includes(orderDetail.status)
+                             ? <span className="badge badge--success">Đồng ý</span>
+                             : <span className="badge badge--danger">Từ chối</span>
+                           }
                         </td>
                       </tr>
                     ))}
