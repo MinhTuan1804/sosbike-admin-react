@@ -55,7 +55,7 @@ function getTransactionTypeLabel(transactionType?: string | null) {
     case "ORDER_PAYMENT":
       return "Thanh toán đơn cứu hộ";
     case "COMMISSION_DEDUCTION":
-      return "Trừ phí nền tảng";
+      return "Trừ phí sàn";
     case "SUBSCRIPTION":
       return "Thanh toán gói thành viên";
     case "RESCUE_INCOME":

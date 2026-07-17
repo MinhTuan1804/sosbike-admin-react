@@ -18,6 +18,7 @@ import {
   FileText,
   Wallet,
   Ticket,
+  Tags,
   User,
   ClipboardCheck,
   Settings,
@@ -67,6 +68,7 @@ const navGroups: NavGroup[] = [
     title: "Tài chính",
     items: [
       { to: "/finance",    label: "Tài chính & Ví",  icon: Wallet },
+      { to: "/promotions", label: "Phiếu giảm giá", icon: Tags },
       { to: "/membership", label: "Gói & Quyền lợi", icon: Ticket }
     ]
   },
@@ -90,6 +92,7 @@ const routeLabels: Record<string, string> = {
   "/blogs":            "Blog",
   "/email-campaigns":  "Email Campaigns",
   "/finance":          "Tài chính & Ví",
+  "/promotions":       "Phiếu giảm giá",
   "/membership":       "Gói & Quyền lợi",
   "/users":            "Tài khoản",
   "/verify-mechanics": "Duyệt hồ sơ thợ",

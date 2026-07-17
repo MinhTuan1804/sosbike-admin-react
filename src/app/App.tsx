@@ -8,6 +8,7 @@ import { LoadingProvider, LoadingScreen } from "../shared/components/LoadingScre
 const DashboardPage = lazy(() => import("../features/dashboard/DashboardPage").then(m => ({ default: m.DashboardPage })));
 const OrdersPage = lazy(() => import("../features/orders/OrdersPage").then(m => ({ default: m.OrdersPage })));
 const FinancePage = lazy(() => import("../features/finance/FinancePage").then(m => ({ default: m.FinancePage })));
+const PromotionsPage = lazy(() => import("../features/promotions/PromotionsPage").then(m => ({ default: m.PromotionsPage })));
 const MembershipPage = lazy(() => import("../features/membership/MembershipPage").then(m => ({ default: m.MembershipPage })));
 const ServicesGaragesPage = lazy(() => import("../features/services/ServicesGaragesPage").then(m => ({ default: m.ServicesGaragesPage })));
 const ReviewsPage = lazy(() => import("../features/reviews/ReviewsPage").then(m => ({ default: m.ReviewsPage })));
@@ -30,6 +31,7 @@ export function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/finance" element={<FinancePage />} />
+              <Route path="/promotions" element={<PromotionsPage />} />
               <Route path="/membership" element={<MembershipPage />} />
               <Route path="/services" element={<ServicesGaragesPage />} />
               <Route path="/reviews" element={<ReviewsPage />} />

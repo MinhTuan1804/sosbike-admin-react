@@ -19,20 +19,20 @@ function formatDate(dateStr?: string | null) {
 
 const STATUS_OPTIONS = [
   { value: "",          label: "Tất cả trạng thái" },
-  { value: "PENDING",   label: "Chờ thợ (PENDING)" },
-  { value: "ACCEPTED",  label: "Đã nhận (ACCEPTED)" },
-  { value: "ARRIVED",   label: "Đã đến (ARRIVED)" },
-  { value: "COMPLETED", label: "Hoàn thành (COMPLETED)" },
-  { value: "CANCELLED", label: "Đã hủy (CANCELLED)" }
+  { value: "PENDING",   label: "Chờ thợ" },
+  { value: "ACCEPTED",  label: "Đã nhận" },
+  { value: "ARRIVED",   label: "Đã đến" },
+  { value: "COMPLETED", label: "Hoàn thành" },
+  { value: "CANCELLED", label: "Đã hủy" }
 ];
 
 function getStatusBadge(st: string) {
   const s = st.toUpperCase();
-  if (s === "COMPLETED")                    return <span className="badge badge--success">Hoàn thành</span>;
+  if (s === "COMPLETED")                     return <span className="badge badge--success">Hoàn thành</span>;
   if (s === "CANCELLED" || s === "CANCELED") return <span className="badge badge--danger">Đã hủy</span>;
-  if (s === "PENDING")                      return <span className="badge badge--warning">Chờ thợ</span>;
-  if (s === "ACCEPTED")                     return <span className="badge badge--info">Đang đến</span>;
-  if (s === "ARRIVED")                      return <span className="badge badge--primary">Đang sửa</span>;
+  if (s === "PENDING")                       return <span className="badge badge--warning">Chờ thợ</span>;
+  if (s === "ACCEPTED")                      return <span className="badge badge--info">Đã nhận</span>;
+  if (s === "ARRIVED")                       return <span className="badge badge--primary">Đã đến</span>;
   return <span className="badge">{st}</span>;
 }
 

@@ -2,7 +2,7 @@ import axios from "axios";
 import { getAccessToken } from "../features/auth/authStorage";
 
 const resolvedBaseUrl =
-  import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5200/api";
+  import.meta.env.VITE_API_BASE_URL?.trim() || "https://api.sosbike.io.vn/api";
 
 export const http = axios.create({
   baseURL: resolvedBaseUrl

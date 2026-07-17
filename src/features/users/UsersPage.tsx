@@ -563,11 +563,11 @@ export function UsersPage() {
                     </div>
                     {mechanicDetail.wallet ? (
                       <div className="card" style={{ display: "grid", gap: "8px", fontSize: "13px" }}>
-                        <div>Số dư ví: <strong>{mechanicDetail.wallet.balance?.toLocaleString("vi-VN") ?? 0} đ</strong></div>
-                        <div>Nhập sai mã PIN: <strong>{mechanicDetail.wallet.failedPinAttempts ?? 0} / 5</strong></div>
-                        <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
-                        <div>Số TK: <strong className="tabular-nums">{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
-                        <div>Chủ TK: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
+                          <div>Số dư ví: <strong>{mechanicDetail.wallet.balance?.toLocaleString("vi-VN") ?? 0} đ</strong></div>
+                          <div>Nhập sai mã PIN: <strong>{mechanicDetail.wallet.failedPinAttempts ?? 0} / 5</strong></div>
+                          <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
+                          <div>Số TK: <strong className="tabular-nums">{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
+                          <div>Chủ tài khoản: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
                           <div>
                             Ví: <span className={`badge ${mechanicDetail.wallet.status === "ACTIVE" ? "badge--success" : "badge--danger"}`}>
@@ -615,7 +615,7 @@ export function UsersPage() {
                       </div>
                     ) : (
                       <div className="card" style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic" }}>
-                        Không có chứng chỉ nghề
+                        (Không có chứng chỉ nghề)
                       </div>
                     )}
                   </div>

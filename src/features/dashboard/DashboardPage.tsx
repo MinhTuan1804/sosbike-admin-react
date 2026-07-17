@@ -413,7 +413,7 @@ export function DashboardPage() {
                   </div>
                   <div style={{ display: "grid", gap: "6px", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "12px" }}>
                     <div className="flex-between" style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Gói Hội viên (Saas):</span>
+                      <span style={{ color: "var(--text-muted)" }}>Gói Hội viên (SaaS):</span>
                       <span style={{ fontWeight: "600", fontVariantNumeric: "tabular-nums" }}>
                         {formatMoney(data.kpis.totalSubscriptionPayments)}
                       </span>

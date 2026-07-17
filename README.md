@@ -1,6 +1,6 @@
 # SOSBIKE Admin (React)
 
-Admin web app (React) để quản lý SOSBIKE: Orders, Finance, Membership, Services/Garages, Reviews, Analytics và **Config**.
+Admin web app (React) để quản lý SOSBIKE: đơn cứu hộ, tài chính, gói thành viên, dịch vụ/garage, đánh giá, phân tích và cấu hình hệ thống.
 
 ## Yêu cầu
 
@@ -16,16 +16,19 @@ npm run dev
 
 ## Cấu hình
 
-- API base URL: tạo file `.env.local`
+- API base URL mặc định trong code đang trỏ tới server online:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:5200/api
+https://api.sosbike.io.vn/api
 ```
 
-- Khi test local, đổi lại thành `http://localhost:5200/api`.
-- Khi test product, dùng `https://api.sosbike.io.vn/api`.
+- Nếu cần test môi trường khác, tạo `.env.local` và đặt:
+
+```bash
+VITE_API_BASE_URL=https://api.sosbike.io.vn/api
+```
 
 ## Ghi chú
 
-- Tab **Config** hiện lưu tạm vào `localStorage` (để bạn dùng ngay).
-- Khi BE có endpoint config (ví dụ `/api/admin/config`), chỉ cần thay `src/features/config/configApi.ts`.
+- Không commit `.env`, `.env.local`, credential Firebase/Google hoặc file seed/reset dữ liệu local.
+- Khi cần test local, chỉ đổi cấu hình tạm ở `.env.local` hoặc chạy bằng biến môi trường, không sửa lan man vào source.
