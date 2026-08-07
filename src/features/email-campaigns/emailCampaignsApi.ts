@@ -111,3 +111,32 @@ export async function getDashboardStats() {
   const res = await http.get<DashboardStatsResponse>("/admin/email-campaigns/dashboard-stats");
   return res.data;
 }
+
+export async function exportCampaignListExcel() {
+  const res = await http.get("/admin/email-campaigns/export", {
+    responseType: "blob"
+  });
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `email-campaigns-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function exportCampaignDetailsExcel(id: string, campaignName?: string) {
+  const res = await http.get(`/admin/email-campaigns/${id}/export`, {
+    responseType: "blob"
+  });
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  const safeName = (campaignName || "campaign").replace(/[^a-zA-Z0-9_-]/g, "_");
+  link.setAttribute("download", `campaign-report-${safeName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

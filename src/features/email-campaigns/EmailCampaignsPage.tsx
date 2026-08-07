@@ -9,7 +9,9 @@ import {
   listCampaigns,
   getCampaignDetail,
   createCampaign,
-  getDashboardStats
+  getDashboardStats,
+  exportCampaignListExcel,
+  exportCampaignDetailsExcel
 } from "./emailCampaignsApi";
 import {
   Mail,
@@ -26,12 +28,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Download
 } from "lucide-react";
 
 export function EmailCampaignsPage() {
   // Navigation states
   const [activeTab, setActiveTab] = useState<"list" | "stats">("list");
+  
+  // Export states
+  const [exportingList, setExportingList] = useState(false);
+  const [exportingDetailId, setExportingDetailId] = useState<string | null>(null);
   
   // Data list states
   const [campaigns, setCampaigns] = useState<CampaignListItem[]>([]);
@@ -107,6 +114,31 @@ export function EmailCampaignsPage() {
       console.error("Lỗi khi tải chi tiết chiến dịch:", err);
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  // Export handlers
+  async function handleExportListExcel() {
+    setExportingList(true);
+    try {
+      await exportCampaignListExcel();
+    } catch (err) {
+      console.error("Lỗi khi xuất file Excel chiến dịch:", err);
+      alert("Xuất báo cáo Excel thất bại.");
+    } finally {
+      setExportingList(false);
+    }
+  }
+
+  async function handleExportDetailExcel(id: string, campaignName?: string) {
+    setExportingDetailId(id);
+    try {
+      await exportCampaignDetailsExcel(id, campaignName);
+    } catch (err) {
+      console.error("Lỗi khi xuất file Excel chi tiết:", err);
+      alert("Xuất báo cáo chi tiết thất bại.");
+    } finally {
+      setExportingDetailId(null);
     }
   }
 
@@ -198,6 +230,16 @@ export function EmailCampaignsPage() {
           <p>Quản lý chiến dịch email marketing và theo dõi hiệu suất gửi tin theo thời gian thực.</p>
         </div>
         <div className="page-header__actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <button
+            onClick={handleExportListExcel}
+            disabled={exportingList}
+            className="btn btn--outline"
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            title="Xuất danh sách tất cả chiến dịch ra file Excel"
+          >
+            {exportingList ? <Activity className="animate-spin" size={16} /> : <Download size={16} />}
+            {exportingList ? "Đang xuất..." : "Xuất báo cáo Excel"}
+          </button>
           <button
             onClick={() => {
               loadCampaignsList();
@@ -372,13 +414,24 @@ export function EmailCampaignsPage() {
                           {formatDateTime(c.createdAt)}
                         </td>
                         <td style={{ textAlign: "right", verticalAlign: "middle" }}>
-                          <button
-                            onClick={() => setSelectedCampaignId(c.campaignId)}
-                            className="btn btn--ghost btn--sm"
-                            style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
-                          >
-                            <Eye size={14} /> Chi tiết
-                          </button>
+                          <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                            <button
+                              onClick={() => handleExportDetailExcel(c.campaignId, c.name)}
+                              disabled={exportingDetailId === c.campaignId}
+                              className="btn btn--ghost btn--sm"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "var(--success)" }}
+                              title="Xuất báo cáo chiến dịch này ra Excel"
+                            >
+                              {exportingDetailId === c.campaignId ? <Activity className="animate-spin" size={14} /> : <Download size={14} />} Excel
+                            </button>
+                            <button
+                              onClick={() => setSelectedCampaignId(c.campaignId)}
+                              className="btn btn--ghost btn--sm"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            >
+                              <Eye size={14} /> Chi tiết
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -564,9 +617,19 @@ export function EmailCampaignsPage() {
                       <strong>Tiêu đề:</strong> {detailData.campaignInfo.subject}
                     </p>
                   </div>
-                  <span style={{ fontSize: "11px", color: "var(--text-light)" }}>
-                    {formatDateTime(detailData.campaignInfo.createdAt)}
-                  </span>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <button
+                      onClick={() => handleExportDetailExcel(detailData.campaignInfo.campaignId, detailData.campaignInfo.name)}
+                      disabled={exportingDetailId === detailData.campaignInfo.campaignId}
+                      className="btn btn--primary btn--sm"
+                      style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      {exportingDetailId === detailData.campaignInfo.campaignId ? <Activity className="animate-spin" size={14} /> : <Download size={14} />} Xuất Excel
+                    </button>
+                    <span style={{ fontSize: "11px", color: "var(--text-light)" }}>
+                      {formatDateTime(detailData.campaignInfo.createdAt)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Campaign Rates Grid */}
