@@ -196,8 +196,11 @@ const nightSurchargeSchema = z
 export const AppConfigSchema = z
   .object({
     platform: z.object({
-      defaultPlatformFeeRate: feeRateSchema,
-      mechanicCommissionDefault: feeRateSchema.default(15)
+      defaultPlatformFeeRate: feeRateSchema.default(20),
+      mechanicCommissionDefault: feeRateSchema.default(15),
+      defaultPlatformBankName: z.string().trim().default("MBBank"),
+      defaultPlatformAccountNumber: z.string().trim().default("0900000001"),
+      defaultPlatformAccountHolderName: z.string().trim().default("CÔNG TY TNHH SOSBIKE VIỆT NAM")
     }),
     ui: z.object({
       homeBackgroundUrl: urlOrEmptySchema,

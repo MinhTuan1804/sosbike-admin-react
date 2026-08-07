@@ -292,6 +292,58 @@ export function ConfigPage() {
                   <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("platform.mechanicCommissionDefault")}</span>
                 )}
               </div>
+
+              {/* TÀI KHOẢN NGÂN HÀNG SÀN MẶC ĐỊNH */}
+              <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed var(--border-color)", display: "grid", gap: "12px" }}>
+                <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)" }}>
+                  🏦 Tài khoản Ngân hàng Sàn Mặc định (Nhận 20% Hoa Hồng)
+                </div>
+                <div className="form-group">
+                  <label>Tên Ngân hàng Sàn mặc định</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="VD: MBBank, Vietcombank, Techcombank..."
+                    value={draftConfig.platform.defaultPlatformBankName ?? "MBBank"}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        platform: { ...draftConfig.platform, defaultPlatformBankName: e.target.value }
+                      })
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Số tài khoản Ngân hàng Sàn mặc định</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="VD: 0900000001"
+                    value={draftConfig.platform.defaultPlatformAccountNumber ?? "0900000001"}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        platform: { ...draftConfig.platform, defaultPlatformAccountNumber: e.target.value }
+                      })
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tên Chủ tài khoản Ngân hàng Sàn mặc định</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="VD: CÔNG TY TNHH SOSBIKE VIỆT NAM"
+                    value={draftConfig.platform.defaultPlatformAccountHolderName ?? "CÔNG TY TNHH SOSBIKE VIỆT NAM"}
+                    onChange={(e) =>
+                      setDraftConfig({
+                        ...draftConfig,
+                        platform: { ...draftConfig.platform, defaultPlatformAccountHolderName: e.target.value }
+                      })
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

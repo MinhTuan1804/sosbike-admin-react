@@ -6,6 +6,9 @@ export type DashboardOverviewResponse = {
     totalPayments: number;
     totalSubscriptionPayments: number;
     totalRescuePayments: number;
+    platformCommissionRevenue?: number;
+    mechanicPayoutRevenue?: number;
+    totalMechanicWalletDeposit?: number;
     totalNewCustomers: number;
     totalNewMechanics: number;
     totalOrders: number;

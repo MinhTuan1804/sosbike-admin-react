@@ -442,6 +442,51 @@ export function DashboardPage() {
                 </div>
               </div>
 
+              {/* Row 1.5: Phân bổ Dòng Tiền & Doanh Thu Ròng Của Sàn (20% Hoa Hồng) */}
+              <div className="grid-3">
+                {/* Hoa hồng ròng Sàn SOSBIKE (20%) */}
+                <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.01) 100%)", border: "1px solid rgba(99, 102, 241, 0.2)" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#6366f1" }} />
+                  <div style={{ color: "#6366f1", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    💼 Hoa Hồng Ròng Sàn Nhận (20%)
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#4f46e5", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                    {formatMoney(data.kpis.platformCommissionRevenue ?? (data.kpis.totalRescuePayments * 0.2))}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    Doanh thu ròng thực tế của Sàn SOSBIKE bỏ túi (20% chiết khấu đơn thành công)
+                  </div>
+                </div>
+
+                {/* Thu nhập chia cho Thợ (80%) */}
+                <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.01) 100%)", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#10b981" }} />
+                  <div style={{ color: "#10b981", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    👨‍🔧 Thu Nhập Chia Cho Thợ (80%)
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#059669", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                    {formatMoney(data.kpis.mechanicPayoutRevenue ?? (data.kpis.totalRescuePayments * 0.8))}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    Số tiền được chuyển/phân bổ vào tài khoản Ví của các thợ cứu hộ
+                  </div>
+                </div>
+
+                {/* Tổng Quỹ Ký Quỹ Ví Thợ */}
+                <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.01) 100%)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#f59e0b" }} />
+                  <div style={{ color: "#d97706", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    🏦 Tổng Quỹ Ký Quỹ Ví Thợ
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#b45309", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                    {formatMoney(data.kpis.totalMechanicWalletDeposit ?? 0)}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    Tổng số dư hiển thị tại Ví thợ (gồm tiền ký quỹ nạp ban đầu + thu nhập)
+                  </div>
+                </div>
+              </div>
+
               {/* Row 2: Biểu đồ doanh thu theo thời gian */}
               <div className="card">
                 <h2 style={{ fontSize: "15px", fontWeight: 700, color: "var(--secondary)", marginBottom: "16px" }}>
