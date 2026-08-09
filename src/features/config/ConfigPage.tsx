@@ -1453,6 +1453,42 @@ export function ConfigPage() {
             
             <div style={{ display: "grid", gap: "12px" }}>
               <div className="form-group">
+                <label>Mức tiền ký quỹ tối thiểu cho thợ (VND)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.wallet?.minMechanicDeposit ?? 500000}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      wallet: { ...draftConfig.wallet, minMechanicDeposit: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("wallet.minMechanicDeposit") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("wallet.minMechanicDeposit")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label>Hạn mức nợ hoa hồng tối đa cho thợ (VND)</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={draftConfig.wallet?.maxMechanicDebtLimit ?? 200000}
+                  onChange={(e) =>
+                    setDraftConfig({
+                      ...draftConfig,
+                      wallet: { ...draftConfig.wallet, maxMechanicDebtLimit: Number(e.target.value) }
+                    })
+                  }
+                />
+                {fieldError("wallet.maxMechanicDebtLimit") && (
+                  <span style={{ color: "var(--danger)", fontSize: "11px" }}>{fieldError("wallet.maxMechanicDebtLimit")}</span>
+                )}
+              </div>
+
+              <div className="form-group">
                 <label>Số tiền rút tối thiểu mỗi lần (VND)</label>
                 <input
                   type="number"

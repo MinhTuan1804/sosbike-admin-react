@@ -747,6 +747,7 @@ export function FinancePage() {
                   <thead>
                     <tr>
                       <th>Người rút</th>
+                      <th>Nguồn rút</th>
                       <th>Số tiền</th>
                       <th>Ngân hàng</th>
                       <th>Trạng thái</th>
@@ -770,6 +771,11 @@ export function FinancePage() {
                           <td>
                             <div style={{ fontWeight: 600 }}>{request.fullName}</div>
                             <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{request.phoneNumber}</div>
+                          </td>
+                          <td>
+                            <span className={`badge ${request.withdrawSource === "DEPOSIT" ? "badge--warning" : "badge--info"}`} style={{ fontSize: "11px" }}>
+                              {request.withdrawSource === "DEPOSIT" ? "Ví Ký Quỹ" : "Ví Thu Nhập"}
+                            </span>
                           </td>
                           <td className="tabular-nums" style={{ fontWeight: 700 }}>
                             {formatMoney(request.amount)}

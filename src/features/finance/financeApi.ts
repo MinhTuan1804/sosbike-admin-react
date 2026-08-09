@@ -53,6 +53,7 @@ const WithdrawReqSchema = z.object({
   fullName: z.string(),
   amount: z.number(),
   status: z.string(),
+  withdrawSource: z.string().optional().default("INCOME"),
   note: z.string().nullable().optional(),
   requestedAt: z.string().nullable().optional(),
   reviewedAt: z.string().nullable().optional(),
