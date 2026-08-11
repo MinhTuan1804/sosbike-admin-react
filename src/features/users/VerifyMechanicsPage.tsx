@@ -1,8 +1,77 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, AlertCircle, Eye, ClipboardCheck, Search, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listUsers, getUser, verifyMechanic, maskIdentityCard, maskBankAccountNumber } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
+import { http } from "../../shared/http";
+
+// Component nạp ảnh bảo mật qua Token JWT của Admin
+function SecureDocImage({ 
+  mechanicId, 
+  docType, 
+  fallbackUrl, 
+  alt, 
+  onPreview 
+}: { 
+  mechanicId: string; 
+  docType: string; 
+  fallbackUrl?: string; 
+  alt: string; 
+  onPreview?: (src: string) => void;
+}) {
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let isMounted = true;
+    setLoading(true);
+
+    const docEndpoint = `/documents/mechanic/${mechanicId}/${docType}`;
+    http.get(docEndpoint, { responseType: "blob" })
+      .then((res) => {
+        if (!isMounted) return;
+        objectUrl = URL.createObjectURL(res.data);
+        setImgSrc(objectUrl);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        if (fallbackUrl) {
+          setImgSrc(fallbackUrl);
+        } else {
+          setError(true);
+        }
+        setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [mechanicId, docType, fallbackUrl]);
+
+  if (loading) {
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: "11px" }}>Đang tải bảo mật...</div>;
+  }
+  if (error || !imgSrc) {
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--danger)", fontSize: "11px" }}>Không thể tải ảnh</div>;
+  }
+
+  return (
+    <div 
+      onClick={() => onPreview?.(imgSrc)}
+      style={{ cursor: "pointer", width: "100%", height: "100%", position: "relative" }}
+      className="doc-thumbnail"
+    >
+      <img src={imgSrc} alt={alt} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
+        <Eye size={14} /> Phóng to
+      </div>
+    </div>
+  );
+}
 
 export function VerifyMechanicsPage() {
   const [q, setQ] = useState("");
@@ -324,8 +393,8 @@ export function VerifyMechanicsPage() {
                     </div>
                     {(() => {
                       const cccdDocs = [
-                        { label: "Ảnh mặt trước", url: mechanicDetail.mechanic?.cccdFrontUrl },
-                        { label: "Ảnh mặt sau",   url: mechanicDetail.mechanic?.cccdBackUrl }
+                        { label: "Ảnh mặt trước", docType: "cccd-front", url: mechanicDetail.mechanic?.cccdFrontUrl },
+                        { label: "Ảnh mặt sau",   docType: "cccd-back",  url: mechanicDetail.mechanic?.cccdBackUrl }
                       ].filter(item => Boolean(item.url));
 
                       if (cccdDocs.length === 0) {
@@ -338,18 +407,17 @@ export function VerifyMechanicsPage() {
 
                       return (
                         <div style={{ display: "grid", gridTemplateColumns: `repeat(${cccdDocs.length}, 1fr)`, gap: "16px" }}>
-                          {cccdDocs.map(({ label, url }) => (
+                          {cccdDocs.map(({ label, docType, url }) => (
                             <div key={label}>
                               <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>{label}:</div>
-                              <div 
-                                onClick={() => setPreviewImage(url!)}
-                                style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "160px", background: "#f5f5f5", position: "relative" }}
-                                className="doc-thumbnail"
-                              >
-                                <img src={url!} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                                  <Eye size={14} /> Click để phóng to
-                                </div>
+                              <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "160px", background: "#f5f5f5" }}>
+                                <SecureDocImage
+                                  mechanicId={mechanicDetail.userId}
+                                  docType={docType}
+                                  fallbackUrl={url!}
+                                  alt={label}
+                                  onPreview={(src) => setPreviewImage(src)}
+                                />
                               </div>
                             </div>
                           ))}
@@ -385,9 +453,9 @@ export function VerifyMechanicsPage() {
 
                     {(() => {
                       const vehicleDocs = [
-                        { label: "Đăng ký xe (Cà vẹt)", url: mechanicDetail.mechanic?.vehicleRegistrationUrl, alt: "Cà vẹt xe" },
-                        { label: "Bằng lái xe (GPLX)",  url: mechanicDetail.mechanic?.driverLicenseUrl,        alt: "Bằng lái xe" },
-                        { label: "Bảo hiểm xe",          url: mechanicDetail.mechanic?.vehicleInsuranceUrl,     alt: "Bảo hiểm xe" }
+                        { label: "Đăng ký xe (Cà vẹt)", docType: "vehicle-registration", url: mechanicDetail.mechanic?.vehicleRegistrationUrl, alt: "Cà vẹt xe" },
+                        { label: "Bằng lái xe (GPLX)",  docType: "driver-license",       url: mechanicDetail.mechanic?.driverLicenseUrl,        alt: "Bằng lái xe" },
+                        { label: "Bảo hiểm xe",          docType: "vehicle-insurance",    url: mechanicDetail.mechanic?.vehicleInsuranceUrl,     alt: "Bảo hiểm xe" }
                       ].filter(item => Boolean(item.url));
 
                       if (vehicleDocs.length === 0) {
@@ -400,18 +468,17 @@ export function VerifyMechanicsPage() {
 
                       return (
                         <div style={{ display: "grid", gridTemplateColumns: `repeat(${vehicleDocs.length}, 1fr)`, gap: "12px" }}>
-                          {vehicleDocs.map(({ label, url, alt }) => (
+                          {vehicleDocs.map(({ label, docType, url, alt }) => (
                             <div key={label}>
                               <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>{label}:</div>
-                              <div 
-                                onClick={() => setPreviewImage(url!)}
-                                style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5", position: "relative" }}
-                                className="doc-thumbnail"
-                              >
-                                <img src={url!} alt={alt} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                                  <Eye size={12} /> Xem
-                                </div>
+                              <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5" }}>
+                                <SecureDocImage
+                                  mechanicId={mechanicDetail.userId}
+                                  docType={docType}
+                                  fallbackUrl={url!}
+                                  alt={alt}
+                                  onPreview={(src) => setPreviewImage(src)}
+                                />
                               </div>
                             </div>
                           ))}
@@ -452,15 +519,14 @@ export function VerifyMechanicsPage() {
                       Chứng chỉ hành nghề
                     </h3>
                     {mechanicDetail.mechanic?.certificateUrl ? (
-                      <div 
-                        onClick={() => setPreviewImage(mechanicDetail.mechanic.certificateUrl)}
-                        style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "92px", background: "#f5f5f5", position: "relative" }}
-                        className="doc-thumbnail"
-                      >
-                        <img src={mechanicDetail.mechanic.certificateUrl} alt="Chứng chỉ" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                        <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                          <Eye size={12} /> Xem chứng chỉ
-                        </div>
+                      <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "92px", background: "#f5f5f5" }}>
+                        <SecureDocImage
+                          mechanicId={mechanicDetail.userId}
+                          docType="certificate"
+                          fallbackUrl={mechanicDetail.mechanic.certificateUrl}
+                          alt="Chứng chỉ"
+                          onPreview={(src) => setPreviewImage(src)}
+                        />
                       </div>
                     ) : (
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "42px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", fontStyle: "italic" }}>
