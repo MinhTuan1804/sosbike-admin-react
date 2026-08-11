@@ -57,13 +57,25 @@ export function ConfigPage() {
     return validationErrors[path];
   }
 
+function normalizeConfigKeys(obj: any): any {
+  if (!obj || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(normalizeConfigKeys);
+  const res: any = {};
+  for (const key of Object.keys(obj)) {
+    const camel = key.charAt(0).toLowerCase() + key.slice(1);
+    res[camel] = normalizeConfigKeys(obj[key]);
+  }
+  return res;
+}
+
   async function loadFromDb() {
     setLoading(true);
     setError(null);
     try {
       const res = await getAppConfig();
       setDbUpdatedAt(res.updatedAt);
-      const parsed = AppConfigSchema.parse(res.config);
+      const normalized = normalizeConfigKeys(res.config);
+      const parsed = AppConfigSchema.parse(normalized);
       setDraftConfig(parsed);
       setDbConfig(parsed);
       saveConfig(parsed);

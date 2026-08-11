@@ -173,13 +173,13 @@ const walletSchema = z
   .object({
     minWithdrawAmount: z.number().min(0, "Số tiền tối thiểu là 0đ.").default(50000),
     maxDailyWithdrawAmount: z.number().min(0, "Số tiền tối đa là 0đ.").default(5000000),
-    minMechanicDeposit: z.number().min(0, "Số tiền ký quỹ tối thiểu là 0đ.").default(500000),
+    minMechanicDeposit: z.number().min(0, "Số tiền ký quỹ tối thiểu là 0đ.").default(200000),
     maxMechanicDebtLimit: z.number().min(0, "Hạn mức nợ tối đa là 0đ.").default(200000)
   })
   .default({
     minWithdrawAmount: 50000,
     maxDailyWithdrawAmount: 5000000,
-    minMechanicDeposit: 500000,
+    minMechanicDeposit: 200000,
     maxMechanicDebtLimit: 200000
   });
 
