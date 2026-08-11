@@ -22,6 +22,7 @@ export type GarageListItem = {
   mechanicId: string;
   mechanicPhoneNumber: string;
   mechanicFullName: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
   isDeleted: boolean;
   createdAt: string | null;
 };
@@ -44,7 +45,13 @@ export async function deleteService(serviceId: number) {
   await http.delete(`/admin/services/${serviceId}`);
 }
 
-export async function listGarages(params: { q?: string; includeDeleted?: boolean; page?: number; pageSize?: number }) {
+export async function listGarages(params: {
+  q?: string;
+  status?: string;
+  includeDeleted?: boolean;
+  page?: number;
+  pageSize?: number;
+}) {
   const res = await http.get<PagedResponse<GarageListItem>>("/admin/garages", { params });
   return res.data;
 }
@@ -56,6 +63,16 @@ export async function createGarage(payload: { mechanicId: string; garageName: st
 
 export async function updateGarage(garageId: number, payload: any) {
   await http.patch(`/admin/garages/${garageId}`, payload);
+}
+
+export async function approveGarage(garageId: number) {
+  const res = await http.post<{ garageId: number; status: string }>(`/admin/garages/${garageId}/approve`);
+  return res.data;
+}
+
+export async function rejectGarage(garageId: number) {
+  const res = await http.post<{ garageId: number; status: string }>(`/admin/garages/${garageId}/reject`);
+  return res.data;
 }
 
 export async function deleteGarage(garageId: number) {

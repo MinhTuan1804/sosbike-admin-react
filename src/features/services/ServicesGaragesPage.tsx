@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Wrench, Store, CheckSquare, AlertTriangle } from "lucide-react";
 import {
+  approveGarage,
   createGarage,
   createService,
   deleteGarage,
   deleteService,
   listGarages,
   listServices,
+  rejectGarage,
   updateGarage,
   updateService
 } from "./servicesGaragesApi";
@@ -247,6 +249,22 @@ export function ServicesGaragesPage() {
     });
   }
 
+  async function onApproveGarage(garageId: number) {
+    try {
+      await approveGarage(garageId);
+      await refreshGarages();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Duyệt garage thất bại.");
+    }
+  }
+
+  async function onRejectGarage(garageId: number) {
+    triggerConfirm("Từ chối garage này? Khách sẽ không đặt lịch được.", async () => {
+      await rejectGarage(garageId);
+      await refreshGarages();
+    });
+  }
+
   async function onApproveMechanicService(item: MechanicServiceListItem) {
     try {
       await approveMechanicService(item.mechanicServiceId);
@@ -444,7 +462,7 @@ export function ServicesGaragesPage() {
                   <th>Tên Garage</th>
                   <th>Địa chỉ liên hệ</th>
                   <th>Thợ đại diện (Số điện thoại)</th>
-                  <th>Trạng thái</th>
+                  <th>Duyệt đặt lịch</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -459,12 +477,36 @@ export function ServicesGaragesPage() {
                       <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{g.mechanicPhoneNumber}</div>
                     </td>
                     <td>
-                      <span className={`badge ${g.isDeleted ? "badge--danger" : "badge--success"}`}>
-                        {g.isDeleted ? "Tạm ngưng" : "Đang mở cửa"}
+                      <span
+                        className={`badge ${
+                          g.isDeleted || g.status === "REJECTED"
+                            ? "badge--danger"
+                            : g.status === "PENDING"
+                              ? "badge--warning"
+                              : "badge--success"
+                        }`}
+                      >
+                        {g.isDeleted
+                          ? "Đã xóa"
+                          : g.status === "PENDING"
+                            ? "Chờ duyệt"
+                            : g.status === "REJECTED"
+                              ? "Từ chối"
+                              : "APPROVED"}
                       </span>
                     </td>
                     <td>
-                      <div className="flex-gap gap-8">
+                      <div className="flex-gap gap-8" style={{ flexWrap: "wrap" }}>
+                        {g.status !== "APPROVED" && !g.isDeleted && (
+                          <button className="btn btn--sm btn--primary" onClick={() => onApproveGarage(g.garageId)}>
+                            Duyệt
+                          </button>
+                        )}
+                        {g.status !== "REJECTED" && !g.isDeleted && (
+                          <button className="btn btn--sm" onClick={() => onRejectGarage(g.garageId)}>
+                            Từ chối
+                          </button>
+                        )}
                         <button className="btn btn--sm" onClick={() => openEditGarageModal(g)}>Sửa</button>
                         <button className="btn btn--sm btn--danger" onClick={() => onDeleteGarage(g.garageId)}>Xóa</button>
                       </div>

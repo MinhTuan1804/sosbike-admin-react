@@ -14,21 +14,28 @@ function formatDate(dateStr?: string | null) {
 }
 
 const STATUS_OPTIONS = [
-  { value: "",          label: "Tất cả trạng thái" },
-  { value: "PENDING",   label: "Chờ thợ (PENDING)" },
-  { value: "ACCEPTED",  label: "Đã nhận (ACCEPTED)" },
-  { value: "ARRIVED",   label: "Đã đến (ARRIVED)" },
-  { value: "COMPLETED", label: "Hoàn thành (COMPLETED)" },
-  { value: "CANCELLED", label: "Đã hủy (CANCELLED)" }
+  { value: "",                   label: "Tất cả trạng thái" },
+  { value: "PENDING",            label: "Chờ thợ (PENDING)" },
+  { value: "ACCEPTED",           label: "Đã nhận (ACCEPTED)" },
+  { value: "ARRIVED",            label: "Đã đến (ARRIVED)" },
+  { value: "QUOTING",            label: "Báo giá (QUOTING)" },
+  { value: "REPAIRING",          label: "Đang sửa (REPAIRING)" },
+  { value: "AWAITING_PAYMENT",   label: "Chờ thanh toán (AWAITING_PAYMENT)" },
+  { value: "COMPLETED",          label: "Hoàn thành (COMPLETED)" },
+  { value: "CANCELLED",          label: "Đã hủy (CANCELLED)" }
 ];
 
 function getStatusBadge(st: string) {
   const s = st.toUpperCase();
-  if (s === "COMPLETED")                    return <span className="badge badge--success">Hoàn thành</span>;
-  if (s === "CANCELLED" || s === "CANCELED") return <span className="badge badge--danger">Đã hủy</span>;
-  if (s === "PENDING")                      return <span className="badge badge--warning">Chờ thợ</span>;
-  if (s === "ACCEPTED")                     return <span className="badge badge--info">Đang đến</span>;
-  if (s === "ARRIVED")                      return <span className="badge badge--primary">Đang sửa</span>;
+  if (s === "COMPLETED")                     return <span className="badge badge--success">Hoàn thành</span>;
+  if (s === "AWAITING_PAYMENT")              return <span className="badge badge--warning">Chờ thanh toán</span>;
+  if (s === "CANCELLED" || s === "CANCELED" || s === "CANCELLED_AFTER_ARRIVED")
+                                             return <span className="badge badge--danger">Đã hủy</span>;
+  if (s === "PENDING")                       return <span className="badge badge--warning">Chờ thợ</span>;
+  if (s === "ACCEPTED")                      return <span className="badge badge--info">Đã nhận</span>;
+  if (s === "ARRIVED")                       return <span className="badge badge--primary">Đã đến</span>;
+  if (s === "QUOTING")                       return <span className="badge badge--info">Báo giá</span>;
+  if (s === "REPAIRING")                     return <span className="badge badge--primary">Đang sửa</span>;
   return <span className="badge">{st}</span>;
 }
 
