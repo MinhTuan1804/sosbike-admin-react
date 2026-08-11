@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle2, AlertCircle, Eye, ClipboardCheck, Search, RefreshCw } from "lucide-react";
+import { CheckCircle2, AlertCircle, Eye, ClipboardCheck, Search, RefreshCw, Lock, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { listUsers, getUser, verifyMechanic, maskIdentityCard, maskBankAccountNumber } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
@@ -392,6 +392,21 @@ export function VerifyMechanicsPage() {
                       Số CCCD: <strong style={{ fontSize: "14px" }}>{maskIdentityCard(mechanicDetail.mechanic?.identityCard)}</strong>
                     </div>
                     {(() => {
+                      const isVerified = mechanicDetail.mechanic?.isVerified === true || Boolean(mechanicDetail.verifiedAt);
+                      if (isVerified) {
+                        return (
+                          <div style={{ padding: "16px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", textAlign: "center" }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--secondary)", fontWeight: "600", fontSize: "13px" }}>
+                              <Lock size={15} style={{ color: "var(--primary)" }} />
+                              <span>Thông tin cá nhân nhạy cảm đã được bảo mật (Nghị định 13/2023/NĐ-CP)</span>
+                            </div>
+                            <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "var(--text-muted)" }}>
+                              Hồ sơ thợ đã xác minh thành công. Ảnh CCCD và giấy tờ cá nhân được khóa bảo vệ quyền riêng tư.
+                            </p>
+                          </div>
+                        );
+                      }
+
                       const cccdDocs = [
                         { label: "Ảnh mặt trước", docType: "cccd-front", url: mechanicDetail.mechanic?.cccdFrontUrl },
                         { label: "Ảnh mặt sau",   docType: "cccd-back",  url: mechanicDetail.mechanic?.cccdBackUrl }
@@ -452,6 +467,17 @@ export function VerifyMechanicsPage() {
                     </div>
 
                     {(() => {
+                      const isVerified = mechanicDetail.mechanic?.isVerified === true || Boolean(mechanicDetail.verifiedAt);
+                      if (isVerified) {
+                        return (
+                          <div style={{ padding: "14px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", textAlign: "center" }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--secondary)", fontWeight: "600", fontSize: "12px" }}>
+                              <ShieldCheck size={15} style={{ color: "#16a34a" }} />
+                              <span>Giấy tờ xe & GPLX đã được xác minh thành công</span>
+                            </div>
+                          </div>
+                        );
+                      }
                       const vehicleDocs = [
                         { label: "Đăng ký xe (Cà vẹt)", docType: "vehicle-registration", url: mechanicDetail.mechanic?.vehicleRegistrationUrl, alt: "Cà vẹt xe" },
                         { label: "Bằng lái xe (GPLX)",  docType: "driver-license",       url: mechanicDetail.mechanic?.driverLicenseUrl,        alt: "Bằng lái xe" },
