@@ -38,11 +38,7 @@ function SecureDocImage({
       })
       .catch(() => {
         if (!isMounted) return;
-        if (fallbackUrl) {
-          setImgSrc(fallbackUrl);
-        } else {
-          setError(true);
-        }
+        setError(true);
         setLoading(false);
       });
 
@@ -50,13 +46,18 @@ function SecureDocImage({
       isMounted = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [mechanicId, docType, fallbackUrl]);
+  }, [mechanicId, docType]);
 
   if (loading) {
     return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: "11px" }}>Đang tải bảo mật...</div>;
   }
   if (error || !imgSrc) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--danger)", fontSize: "11px" }}>Không thể tải ảnh</div>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: "12px", background: "var(--neutral-bg)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center" }}>
+        <Lock size={18} style={{ color: "var(--primary)", marginBottom: "4px" }} />
+        <span>Thông tin cá nhân đã được khóa bảo mật</span>
+      </div>
+    );
   }
 
   return (
