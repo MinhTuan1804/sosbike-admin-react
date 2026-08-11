@@ -62,4 +62,29 @@ export async function hardDeleteUser(userId: string) {
   await http.delete(`/admin/users/${userId}/hard`);
 }
 
+/**
+ * Che mờ số CCCD/CMND: giữ 4 số đầu và 4 số cuối, giữa thay bằng ****
+ * Ví dụ: 079200012345 -> 0792****2345
+ */
+export function maskIdentityCard(id?: string | null): string {
+  if (!id || !id.trim()) return "(Chưa cập nhật)";
+  const trimmed = id.trim();
+  if (trimmed.length <= 6) return trimmed.slice(0, 2) + "****" + trimmed.slice(-2);
+  const prefix = trimmed.slice(0, 4);
+  const suffix = trimmed.slice(-4);
+  return `${prefix}****${suffix}`;
+}
+
+/**
+ * Che mờ số Tài khoản ngân hàng: giữ 4 số cuối
+ * Ví dụ: 1234567890 -> ****7890
+ */
+export function maskBankAccountNumber(accountNo?: string | null): string {
+  if (!accountNo || !accountNo.trim()) return "(Chưa cập nhật)";
+  const trimmed = accountNo.trim();
+  if (trimmed.length <= 4) return "****" + trimmed;
+  return "****" + trimmed.slice(-4);
+}
+
+
 

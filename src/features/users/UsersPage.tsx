@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle, Eye, Users, UserPlus, Search, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic, hardDeleteUser, updateWalletStatus } from "./usersApi";
+import { createUser, listUsers, updateUserFlags, getUser, verifyMechanic, hardDeleteUser, updateWalletStatus, maskIdentityCard, maskBankAccountNumber } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
 
 export function UsersPage() {
@@ -472,30 +472,38 @@ export function UsersPage() {
                   </div>
                   <div style={{ display: "grid", gap: "10px" }}>
                     <div style={{ fontSize: "13px", background: "var(--card-bg)", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      Số CCCD: <strong style={{ fontSize: "14px" }}>{mechanicDetail.mechanic?.identityCard || "(Chưa cập nhật)"}</strong>
+                      Số CCCD: <strong style={{ fontSize: "14px" }}>{maskIdentityCard(mechanicDetail.mechanic?.identityCard)}</strong>
                     </div>
-                    <div className="grid-2">
-                      {[
+                    {(() => {
+                      const cccdDocs = [
                         { label: "Ảnh mặt trước", url: mechanicDetail.mechanic?.cccdFrontUrl },
                         { label: "Ảnh mặt sau",   url: mechanicDetail.mechanic?.cccdBackUrl }
-                      ].map(({ label, url }) => (
-                        <div key={label}>
-                          <div className="text-xs text-muted mb-4">{label}:</div>
-                          {url ? (
-                            <div onClick={() => setPreviewImage(url)} style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "150px", background: "#f5f5f5", position: "relative" }} className="doc-thumbnail">
-                              <img src={url} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                              <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                                <Eye size={14} /> Click để phóng to
+                      ].filter(item => Boolean(item.url));
+
+                      if (cccdDocs.length === 0) {
+                        return (
+                          <div style={{ padding: "10px 14px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)", color: "var(--text-muted)", fontSize: "12px", fontStyle: "italic" }}>
+                            Chưa cập nhật ảnh CCCD (Mặt trước & Mặt sau)
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cccdDocs.length}, 1fr)`, gap: "12px" }}>
+                          {cccdDocs.map(({ label, url }) => (
+                            <div key={label}>
+                              <div className="text-xs text-muted mb-4">{label}:</div>
+                              <div onClick={() => setPreviewImage(url!)} style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "140px", background: "#f5f5f5", position: "relative" }} className="doc-thumbnail">
+                                <img src={url!} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
+                                  <Eye size={14} /> Click để phóng to
+                                </div>
                               </div>
                             </div>
-                          ) : (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "150px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "12px" }}>
-                              Chưa tải ảnh
-                            </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -524,29 +532,38 @@ export function UsersPage() {
                         <div className="font-semi">{mechanicDetail.mechanic?.driverLicenseNumber || "(Chưa cập nhật)"}</div>
                       </div>
                     </div>
-                    <div className="grid-3">
-                      {[
+
+                    {(() => {
+                      const vehicleDocs = [
                         { label: "Đăng ký xe (Cà vẹt)", url: mechanicDetail.mechanic?.vehicleRegistrationUrl, alt: "Cà vẹt xe" },
                         { label: "Bằng lái xe (GPLX)",  url: mechanicDetail.mechanic?.driverLicenseUrl,        alt: "Bằng lái xe" },
                         { label: "Bảo hiểm xe",          url: mechanicDetail.mechanic?.vehicleInsuranceUrl,     alt: "Bảo hiểm xe" }
-                      ].map(({ label, url, alt }) => (
-                        <div key={label}>
-                          <div className="text-xs text-muted mb-4">{label}:</div>
-                          {url ? (
-                            <div onClick={() => setPreviewImage(url)} style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "100px", background: "#f5f5f5", position: "relative" }} className="doc-thumbnail">
-                              <img src={url} alt={alt} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                              <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                                <Eye size={12} /> Xem
+                      ].filter(item => Boolean(item.url));
+
+                      if (vehicleDocs.length === 0) {
+                        return (
+                          <div style={{ padding: "10px 14px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)", color: "var(--text-muted)", fontSize: "12px", fontStyle: "italic" }}>
+                            Chưa cập nhật ảnh giấy tờ xe (Cà vẹt, GPLX, Bảo hiểm)
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "grid", gridTemplateColumns: `repeat(${vehicleDocs.length}, 1fr)`, gap: "12px" }}>
+                          {vehicleDocs.map(({ label, url, alt }) => (
+                            <div key={label}>
+                              <div className="text-xs text-muted mb-4">{label}:</div>
+                              <div onClick={() => setPreviewImage(url!)} style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "100px", background: "#f5f5f5", position: "relative" }} className="doc-thumbnail">
+                                <img src={url!} alt={alt} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                                  <Eye size={12} /> Xem
+                                </div>
                               </div>
                             </div>
-                          ) : (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center" }}>
-                              Chưa tải
-                            </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -563,11 +580,10 @@ export function UsersPage() {
                     </div>
                     {mechanicDetail.wallet ? (
                       <div className="card" style={{ display: "grid", gap: "8px", fontSize: "13px" }}>
-                          <div>Số dư ví: <strong>{mechanicDetail.wallet.balance?.toLocaleString("vi-VN") ?? 0} đ</strong></div>
-                          <div>Nhập sai mã PIN: <strong>{mechanicDetail.wallet.failedPinAttempts ?? 0} / 5</strong></div>
-                          <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
-                          <div>Số TK: <strong className="tabular-nums">{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
-                          <div>Chủ tài khoản: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
+                        <div>Số dư ví: <strong>{mechanicDetail.wallet.balance?.toLocaleString("vi-VN") ?? 0} đ</strong></div>
+                        <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
+                        <div>Số TK: <strong className="tabular-nums">{maskBankAccountNumber(mechanicDetail.wallet.accountNumber)}</strong></div>
+                        <div>Chủ tài khoản: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
                           <div>
                             Ví: <span className={`badge ${mechanicDetail.wallet.status === "ACTIVE" ? "badge--success" : "badge--danger"}`}>
@@ -615,7 +631,7 @@ export function UsersPage() {
                       </div>
                     ) : (
                       <div className="card" style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic" }}>
-                        (Không có chứng chỉ nghề)
+                        (Chưa bổ sung chứng chỉ nghề)
                       </div>
                     )}
                   </div>

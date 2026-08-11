@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { CheckCircle2, AlertCircle, Eye, ClipboardCheck, Search, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { listUsers, getUser, verifyMechanic } from "./usersApi";
+import { listUsers, getUser, verifyMechanic, maskIdentityCard, maskBankAccountNumber } from "./usersApi";
 import { Modal } from "../../shared/components/Modal";
 
 export function VerifyMechanicsPage() {
@@ -320,49 +320,42 @@ export function VerifyMechanicsPage() {
                   </h3>
                   <div style={{ display: "grid", gap: "12px" }}>
                     <div style={{ fontSize: "13px", background: "var(--card-bg)", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                      Số CCCD: <strong style={{ fontSize: "14px" }}>{mechanicDetail.mechanic?.identityCard || "(Chưa cập nhật)"}</strong>
+                      Số CCCD: <strong style={{ fontSize: "14px" }}>{maskIdentityCard(mechanicDetail.mechanic?.identityCard)}</strong>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>Ảnh mặt trước:</div>
-                        {mechanicDetail.mechanic?.cccdFrontUrl ? (
-                          <div 
-                            onClick={() => setPreviewImage(mechanicDetail.mechanic.cccdFrontUrl)}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "160px", background: "#f5f5f5", position: "relative" }}
-                            className="doc-thumbnail"
-                          >
-                            <img src={mechanicDetail.mechanic.cccdFrontUrl} alt="CCCD Mặt trước" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                              <Eye size={14} /> Click để phóng to
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "160px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "12px" }}>
-                            Chưa tải ảnh mặt trước
-                          </div>
-                        )}
-                      </div>
+                    {(() => {
+                      const cccdDocs = [
+                        { label: "Ảnh mặt trước", url: mechanicDetail.mechanic?.cccdFrontUrl },
+                        { label: "Ảnh mặt sau",   url: mechanicDetail.mechanic?.cccdBackUrl }
+                      ].filter(item => Boolean(item.url));
 
-                      <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>Ảnh mặt sau:</div>
-                        {mechanicDetail.mechanic?.cccdBackUrl ? (
-                          <div 
-                            onClick={() => setPreviewImage(mechanicDetail.mechanic.cccdBackUrl)}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "160px", background: "#f5f5f5", position: "relative" }}
-                            className="doc-thumbnail"
-                          >
-                            <img src={mechanicDetail.mechanic.cccdBackUrl} alt="CCCD Mặt sau" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
-                              <Eye size={14} /> Click để phóng to
+                      if (cccdDocs.length === 0) {
+                        return (
+                          <div style={{ padding: "10px 14px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)", color: "var(--text-muted)", fontSize: "12px", fontStyle: "italic" }}>
+                            Chưa cập nhật ảnh CCCD (Mặt trước & Mặt sau)
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "grid", gridTemplateColumns: `repeat(${cccdDocs.length}, 1fr)`, gap: "16px" }}>
+                          {cccdDocs.map(({ label, url }) => (
+                            <div key={label}>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>{label}:</div>
+                              <div 
+                                onClick={() => setPreviewImage(url!)}
+                                style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "160px", background: "#f5f5f5", position: "relative" }}
+                                className="doc-thumbnail"
+                              >
+                                <img src={url!} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "12px" }}>
+                                  <Eye size={14} /> Click để phóng to
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "160px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "12px" }}>
-                            Chưa tải ảnh mặt sau
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -390,67 +383,41 @@ export function VerifyMechanicsPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                      <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>Đăng ký xe (Cà vẹt):</div>
-                        {mechanicDetail.mechanic?.vehicleRegistrationUrl ? (
-                          <div 
-                            onClick={() => setPreviewImage(mechanicDetail.mechanic.vehicleRegistrationUrl)}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5", position: "relative" }}
-                            className="doc-thumbnail"
-                          >
-                            <img src={mechanicDetail.mechanic.vehicleRegistrationUrl} alt="Cà vẹt xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              <Eye size={12} /> Xem
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "110px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", padding: "8px" }}>
-                            Chưa tải
-                          </div>
-                        )}
-                      </div>
+                    {(() => {
+                      const vehicleDocs = [
+                        { label: "Đăng ký xe (Cà vẹt)", url: mechanicDetail.mechanic?.vehicleRegistrationUrl, alt: "Cà vẹt xe" },
+                        { label: "Bằng lái xe (GPLX)",  url: mechanicDetail.mechanic?.driverLicenseUrl,        alt: "Bằng lái xe" },
+                        { label: "Bảo hiểm xe",          url: mechanicDetail.mechanic?.vehicleInsuranceUrl,     alt: "Bảo hiểm xe" }
+                      ].filter(item => Boolean(item.url));
 
-                      <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>Bằng lái xe (GPLX):</div>
-                        {mechanicDetail.mechanic?.driverLicenseUrl ? (
-                          <div 
-                            onClick={() => setPreviewImage(mechanicDetail.mechanic.driverLicenseUrl)}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5", position: "relative" }}
-                            className="doc-thumbnail"
-                          >
-                            <img src={mechanicDetail.mechanic.driverLicenseUrl} alt="Bằng lái xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              <Eye size={12} /> Xem
-                            </div>
+                      if (vehicleDocs.length === 0) {
+                        return (
+                          <div style={{ padding: "10px 14px", background: "var(--neutral-bg)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)", color: "var(--text-muted)", fontSize: "12px", fontStyle: "italic" }}>
+                            Chưa cập nhật ảnh giấy tờ xe (Cà vẹt, GPLX, Bảo hiểm)
                           </div>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "110px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", padding: "8px" }}>
-                            Chưa tải
-                          </div>
-                        )}
-                      </div>
+                        );
+                      }
 
-                      <div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>Bảo hiểm xe:</div>
-                        {mechanicDetail.mechanic?.vehicleInsuranceUrl ? (
-                          <div 
-                            onClick={() => setPreviewImage(mechanicDetail.mechanic.vehicleInsuranceUrl)}
-                            style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5", position: "relative" }}
-                            className="doc-thumbnail"
-                          >
-                            <img src={mechanicDetail.mechanic.vehicleInsuranceUrl} alt="Bảo hiểm xe" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                            <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
-                              <Eye size={12} /> Xem
+                      return (
+                        <div style={{ display: "grid", gridTemplateColumns: `repeat(${vehicleDocs.length}, 1fr)`, gap: "12px" }}>
+                          {vehicleDocs.map(({ label, url, alt }) => (
+                            <div key={label}>
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>{label}:</div>
+                              <div 
+                                onClick={() => setPreviewImage(url!)}
+                                style={{ cursor: "pointer", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", height: "110px", background: "#f5f5f5", position: "relative" }}
+                                className="doc-thumbnail"
+                              >
+                                <img src={url!} alt={alt} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                <div className="doc-thumbnail-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", opacity: 0, transition: "opacity 0.2s", color: "#fff", fontSize: "11px" }}>
+                                  <Eye size={12} /> Xem
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "110px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", padding: "8px" }}>
-                            Chưa tải
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -464,7 +431,7 @@ export function VerifyMechanicsPage() {
                     {mechanicDetail.wallet ? (
                       <div style={{ display: "grid", gap: "6px", background: "var(--card-bg)", padding: "12px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", fontSize: "13px" }}>
                         <div>Ngân hàng: <strong>{mechanicDetail.wallet.bankName || "(Chưa nhập)"}</strong></div>
-                        <div>Số tài khoản: <strong>{mechanicDetail.wallet.accountNumber || "(Chưa nhập)"}</strong></div>
+                        <div>Số tài khoản: <strong>{maskBankAccountNumber(mechanicDetail.wallet.accountNumber)}</strong></div>
                         <div>Chủ tài khoản: <strong>{mechanicDetail.wallet.accountHolderName || "(Chưa nhập)"}</strong></div>
                         <div style={{ marginTop: "4px" }}>
                           Trạng thái: <span className={`badge ${mechanicDetail.wallet.bankName ? "badge--success" : "badge--danger"}`} style={{ fontSize: "9px" }}>
@@ -496,8 +463,8 @@ export function VerifyMechanicsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "92px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", padding: "12px" }}>
-                        Không có chứng chỉ nghề được gửi kèm
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "42px", background: "var(--neutral-bg)", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontSize: "11px", textAlign: "center", fontStyle: "italic" }}>
+                        (Chưa bổ sung chứng chỉ nghề)
                       </div>
                     )}
                   </div>
