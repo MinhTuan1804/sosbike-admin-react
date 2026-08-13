@@ -468,14 +468,14 @@ export function FinancePage() {
                                 }}
                               >
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                                  <span style={{ color: "#16a34a", fontWeight: 600 }}>🟢 Thu nhập (Rút):</span>
-                                  <strong className="tabular-nums" style={{ color: "#15803d" }}>
+                                  <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Thu nhập (khả dụng):</span>
+                                  <strong className="tabular-nums" style={{ color: "var(--success, #15803d)", fontWeight: 600 }}>
                                     {formatMoney(wallet.incomeBalance ?? 0)}
                                   </strong>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                                  <span style={{ color: "#d97706", fontWeight: 600 }}>🔒 Ký quỹ (Cọc):</span>
-                                  <strong className="tabular-nums" style={{ color: "#b45309" }}>
+                                  <span style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Tiền ký quỹ (cọc):</span>
+                                  <strong className="tabular-nums" style={{ color: "var(--warning, #b45309)", fontWeight: 600 }}>
                                     {formatMoney(wallet.depositBalance ?? 0)}
                                   </strong>
                                 </div>

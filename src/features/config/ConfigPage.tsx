@@ -308,7 +308,7 @@ function normalizeConfigKeys(obj: any): any {
               {/* TÀI KHOẢN NGÂN HÀNG SÀN MẶC ĐỊNH */}
               <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed var(--border-color)", display: "grid", gap: "12px" }}>
                 <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--primary)" }}>
-                  🏦 Tài khoản Ngân hàng Sàn Mặc định (Nhận 20% Hoa Hồng)
+                  Tài khoản Ngân hàng Sàn Mặc định (Nhận 20% Hoa hồng)
                 </div>
                 <div className="form-group">
                   <label>Tên Ngân hàng Sàn mặc định</label>

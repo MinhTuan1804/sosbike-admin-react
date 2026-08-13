@@ -448,7 +448,7 @@ export function DashboardPage() {
                 <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.01) 100%)", border: "1px solid rgba(99, 102, 241, 0.2)" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#6366f1" }} />
                   <div style={{ color: "#6366f1", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    💼 Hoa Hồng Ròng Sàn Nhận (20%)
+                    Hoa hồng ròng sàn nhận (20%)
                   </div>
                   <div style={{ fontSize: "24px", fontWeight: 800, color: "#4f46e5", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                     {formatMoney(data.kpis.platformCommissionRevenue ?? (data.kpis.totalRescuePayments * 0.2))}
@@ -462,7 +462,7 @@ export function DashboardPage() {
                 <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.01) 100%)", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#10b981" }} />
                   <div style={{ color: "#10b981", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    👨‍🔧 Thu Nhập Chia Cho Thợ (80%)
+                    Thu nhập chia cho thợ (80%)
                   </div>
                   <div style={{ fontSize: "24px", fontWeight: 800, color: "#059669", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                     {formatMoney(data.kpis.mechanicPayoutRevenue ?? (data.kpis.totalRescuePayments * 0.8))}
@@ -476,7 +476,7 @@ export function DashboardPage() {
                 <div className="card" style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.01) 100%)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "#f59e0b" }} />
                   <div style={{ color: "#d97706", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    🏦 Tổng Quỹ Ký Quỹ Ví Thợ
+                    Tổng quỹ ký quỹ ví thợ
                   </div>
                   <div style={{ fontSize: "24px", fontWeight: 800, color: "#b45309", margin: "8px 0", letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
                     {formatMoney(data.kpis.totalMechanicWalletDeposit ?? 0)}
