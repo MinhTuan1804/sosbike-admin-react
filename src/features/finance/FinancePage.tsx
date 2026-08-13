@@ -423,7 +423,7 @@ export function FinancePage() {
                     <tr>
                       <th>Chủ tài khoản</th>
                       <th>Vai trò</th>
-                      <th>Số dư ví</th>
+                      <th>Số dư ví & Ký quỹ</th>
                       <th>Trạng thái</th>
                       <th>Thông tin ngân hàng</th>
                       <th>Hạn mức rút / ngày</th>
@@ -447,9 +447,41 @@ export function FinancePage() {
                           </span>
                         </td>
                         <td>
-                          <span className="tabular-nums" style={{ fontWeight: 700, color: "var(--secondary)", fontSize: "15px" }}>
-                            {wallet.balance != null ? formatMoney(wallet.balance) : "0 đ"}
-                          </span>
+                          <div style={{ display: "grid", gap: "4px", minWidth: "160px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>Tổng:</span>
+                              <span className="tabular-nums" style={{ fontWeight: 700, color: "var(--secondary)", fontSize: "14px" }}>
+                                {wallet.balance != null ? formatMoney(wallet.balance) : "0 đ"}
+                              </span>
+                            </div>
+                            {wallet.userType === "MECHANIC" && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "3px",
+                                  fontSize: "11px",
+                                  background: "rgba(0, 0, 0, 0.03)",
+                                  padding: "5px 8px",
+                                  borderRadius: "6px",
+                                  border: "1px solid rgba(0, 0, 0, 0.05)"
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                                  <span style={{ color: "#16a34a", fontWeight: 600 }}>🟢 Thu nhập (Rút):</span>
+                                  <strong className="tabular-nums" style={{ color: "#15803d" }}>
+                                    {formatMoney(wallet.incomeBalance ?? 0)}
+                                  </strong>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                                  <span style={{ color: "#d97706", fontWeight: 600 }}>🔒 Ký quỹ (Cọc):</span>
+                                  <strong className="tabular-nums" style={{ color: "#b45309" }}>
+                                    {formatMoney(wallet.depositBalance ?? 0)}
+                                  </strong>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <span className={`badge ${wallet.status === "ACTIVE" ? "badge--success" : "badge--warning"}`}>

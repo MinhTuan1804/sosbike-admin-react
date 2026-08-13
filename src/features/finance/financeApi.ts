@@ -16,6 +16,8 @@ const WalletSchema = z.object({
   phoneNumber: z.string(),
   fullName: z.string(),
   balance: z.number().nullable().optional(),
+  depositBalance: z.number().nullable().optional(),
+  incomeBalance: z.number().nullable().optional(),
   status: z.string().nullable().optional(),
   bankName: z.string().nullable().optional(),
   accountNumber: z.string().nullable().optional(),
