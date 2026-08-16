@@ -403,14 +403,6 @@ export function FinancePage() {
               <RefreshCw size={14} />
               {walletsQuery.isFetching ? "Đang tải..." : "Tải lại"}
             </button>
-            <button
-              className="btn btn--primary"
-              style={{ backgroundColor: "#10B981", borderColor: "#10B981" }}
-              onClick={handleGift}
-              disabled={gifting || walletsQuery.isFetching}
-            >
-              {gifting ? "Đang xử lý..." : "Tặng 5Tr cho tất cả thợ"}
-            </button>
           </div>
 
           {walletsQuery.isError ? (
