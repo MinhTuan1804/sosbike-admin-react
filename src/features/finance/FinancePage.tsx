@@ -87,6 +87,33 @@ function getTransactionStatusLabel(status?: string | null) {
   }
 }
 
+function getWithdrawStatusLabel(status?: string | null) {
+  switch ((status ?? "").toUpperCase()) {
+    case "APPROVED":
+    case "COMPLETED":
+      return "Đã duyệt";
+    case "REJECTED":
+      return "Đã từ chối";
+    case "PENDING":
+      return "Chờ duyệt";
+    default:
+      return status || "-";
+  }
+}
+
+function getWithdrawStatusBadgeClass(status?: string | null) {
+  switch ((status ?? "").toUpperCase()) {
+    case "APPROVED":
+    case "COMPLETED":
+      return "badge--success";
+    case "REJECTED":
+      return "badge--danger";
+    case "PENDING":
+    default:
+      return "badge--warning";
+  }
+}
+
 function getVietQRBankId(bankName: string) {
   if (!bankName) return "";
 
@@ -837,16 +864,8 @@ export function FinancePage() {
                             )}
                           </td>
                           <td>
-                            <span
-                              className={`badge ${
-                                request.status === "APPROVED"
-                                  ? "badge--success"
-                                  : request.status === "REJECTED"
-                                    ? "badge--danger"
-                                    : "badge--warning"
-                              }`}
-                            >
-                              {request.status}
+                            <span className={`badge ${getWithdrawStatusBadgeClass(request.status)}`}>
+                              {getWithdrawStatusLabel(request.status)}
                             </span>
                           </td>
                           <td>{request.note || "-"}</td>
@@ -895,7 +914,7 @@ export function FinancePage() {
                     })}
                     {wrQuery.data.items.length === 0 && (
                       <tr>
-                        <td colSpan={7}>
+                        <td colSpan={8}>
                           <div className="empty-state">Không có yêu cầu rút tiền nào.</div>
                         </td>
                       </tr>
