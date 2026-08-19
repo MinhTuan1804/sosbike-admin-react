@@ -211,12 +211,12 @@ export function DashboardPage() {
           </button>
           <button
             className="btn btn--success"
-            onClick={downloadDashboardOverview}
+            onClick={activeTab === "marketing" ? downloadBlogAnalytics : downloadDashboardOverview}
             disabled={exporting}
             id="dashboard-export-btn"
           >
             <Download size={14} />
-            {exporting ? "Đang xuất..." : "Xuất Excel"}
+            {exporting ? "Đang xuất..." : activeTab === "marketing" ? "Xuất Excel Blog" : "Xuất Excel"}
           </button>
         </div>
       </div>
@@ -721,8 +721,9 @@ export function DashboardPage() {
                   <button className="btn btn--primary btn--sm" onClick={() => navigate("/blogs")}>
                     Mở trang quản lý Blog
                   </button>
-                  <button className="btn btn--sm" onClick={downloadDashboardOverview} disabled={exporting}>
-                    {exporting ? "Đang xuất..." : "Xuất Excel"}
+                  <button className="btn btn--success btn--sm" onClick={downloadBlogAnalytics} disabled={exporting}>
+                    <Download size={14} />
+                    {exporting ? "Đang xuất..." : "Xuất Excel Blog"}
                   </button>
                 </div>
               </div>

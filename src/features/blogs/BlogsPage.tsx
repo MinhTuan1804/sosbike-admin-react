@@ -9,9 +9,10 @@ import {
   listBlogs,
   updateBlog,
   getBlogAnalytics,
+  exportBlogAnalytics,
   BlogAnalyticsResponse
 } from "./blogsApi";
-import { Trophy, Eye, Users, Globe, Smartphone } from "lucide-react";
+import { Trophy, Eye, Users, Globe, Smartphone, Download } from "lucide-react";
 
 function parseUTCDate(dateStr?: string | null) {
   if (!dateStr) return new Date();
@@ -27,6 +28,7 @@ export function BlogsPage() {
   const [analytics, setAnalytics] = useState<BlogAnalyticsResponse | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [editing, setEditing] = useState<BlogListItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -151,6 +153,25 @@ export function BlogsPage() {
     });
   }
 
+  async function handleExportExcel() {
+    setExporting(true);
+    try {
+      const blob = await exportBlogAnalytics();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `thong-ke-blog-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Không xuất được Excel.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: "20px" }}>
       {/* Page Header */}
@@ -160,6 +181,10 @@ export function BlogsPage() {
           <p>Tạo, sửa, xuất bản và ẩn bài viết hiển thị trên landing page.</p>
         </div>
         <div className="page-header__actions">
+          <button className="btn btn--success" onClick={handleExportExcel} disabled={exporting}>
+            <Download size={14} />
+            {exporting ? "Đang xuất..." : "Xuất Excel"}
+          </button>
           <button className="btn btn--primary" onClick={openCreate}>+ Tạo bài mới</button>
         </div>
       </div>
