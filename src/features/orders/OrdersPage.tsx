@@ -26,6 +26,12 @@ const STATUS_OPTIONS = [
   { value: "CANCELLED", label: "Đã hủy" }
 ];
 
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "",              label: "Tất cả phương thức" },
+  { value: "BANK_TRANSFER", label: "Chuyển khoản (PayOS)" },
+  { value: "CASH",          label: "Tiền mặt" }
+];
+
 function getStatusBadge(st: string) {
   const s = st.toUpperCase();
   if (s === "COMPLETED")                     return <span className="badge badge--success">Hoàn thành</span>;
@@ -36,16 +42,29 @@ function getStatusBadge(st: string) {
   return <span className="badge">{st}</span>;
 }
 
+function getPaymentBadge(pm?: string | null) {
+  if (!pm) return <span style={{ color: "var(--text-light)" }}>—</span>;
+  const p = pm.toUpperCase();
+  if (p === "BANK_TRANSFER" || p === "PAYOS") {
+    return <span className="badge badge--info" style={{ backgroundColor: "#8B5CF6", color: "#fff", border: "none", fontSize: "11px" }}>Chuyển khoản</span>;
+  }
+  if (p === "CASH") {
+    return <span className="badge badge--warning" style={{ fontSize: "11px" }}>Tiền mặt</span>;
+  }
+  return <span className="badge" style={{ fontSize: "11px" }}>{pm}</span>;
+}
+
 export function OrdersPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [page, setPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  const queryKey = useMemo(() => ["admin-orders", { q, status, page }], [q, status, page]);
+  const queryKey = useMemo(() => ["admin-orders", { q, status, paymentMethod, page }], [q, status, paymentMethod, page]);
   const ordersQuery = useQuery({
     queryKey,
-    queryFn: () => listOrders({ q: q || undefined, status: status || undefined, page, pageSize: 20 })
+    queryFn: () => listOrders({ q: q || undefined, status: status || undefined, paymentMethod: paymentMethod || undefined, page, pageSize: 20 })
   });
 
   const detailQuery = useQuery({
@@ -99,7 +118,7 @@ export function OrdersPage() {
         </div>
         <select
           className="select"
-          style={{ width: "210px" }}
+          style={{ width: "180px" }}
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
           id="orders-status-filter"
@@ -107,6 +126,18 @@ export function OrdersPage() {
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        <select
+          className="select"
+          style={{ width: "210px" }}
+          value={paymentMethod}
+          onChange={(e) => { setPaymentMethod(e.target.value); setPage(1); }}
+          id="orders-payment-filter"
+          aria-label="Lọc theo phương thức thanh toán"
+        >
+          {PAYMENT_METHOD_OPTIONS.map((pm) => (
+            <option key={pm.value} value={pm.value}>{pm.label}</option>
           ))}
         </select>
       </div>
@@ -138,6 +169,7 @@ export function OrdersPage() {
               <thead>
                 <tr>
                   <th>Trạng thái</th>
+                  <th>Phương thức</th>
                   <th>Khách hàng</th>
                   <th>Thợ cứu hộ</th>
                   <th>Địa chỉ cứu hộ</th>
@@ -156,6 +188,7 @@ export function OrdersPage() {
                     onKeyDown={(e) => e.key === "Enter" && setSelectedOrderId(o.orderId)}
                   >
                     <td>{getStatusBadge(o.status)}</td>
+                    <td>{getPaymentBadge(o.paymentMethod)}</td>
                     <td>
                       <div style={{ fontWeight: 600 }}>{o.customerName}</div>
                       <div className="text-muted text-xs">{o.customerPhone}</div>

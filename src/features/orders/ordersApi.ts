@@ -17,7 +17,8 @@ const OrderListItemSchema = z.object({
   mechanicId: z.string().nullable().optional(),
   mechanicPhone: z.string().nullable().optional(),
   mechanicName: z.string().nullable().optional(),
-  totalAmount: z.number().nullable().optional()
+  totalAmount: z.number().nullable().optional(),
+  paymentMethod: z.string().nullable().optional()
 });
 
 const PagedSchema = z.object({
@@ -27,7 +28,7 @@ const PagedSchema = z.object({
   pageSize: z.number()
 });
 
-export async function listOrders(params: { q?: string; status?: string; page?: number; pageSize?: number }) {
+export async function listOrders(params: { q?: string; status?: string; paymentMethod?: string; page?: number; pageSize?: number }) {
   const resp = await http.get("/admin/orders", { params });
   return PagedSchema.parse(resp.data);
 }
